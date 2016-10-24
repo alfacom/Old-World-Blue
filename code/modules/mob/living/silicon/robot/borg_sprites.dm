@@ -152,7 +152,7 @@ var/global/list/borg_sprites = list(
 ////CONSTRUCTOR////
 /datum/borg_sprite/constructor
 	name = "Constructor"
-	icon_state = "constructor"
+	icon_state = "constructiondrone"
 	module = MOD_ENG
 
 ////ENGINEER////
@@ -551,6 +551,19 @@ var/global/list/borg_sprites = list(
 /datum/borg_sprite/cyberflower/janitor
 	icon_state = "cyberflower-janitor"
 	module = MOD_JAN
+
+////MOTILE////
+/datum/borg_sprite/motile
+	name = "Motile"
+	icon_state = "motile"
+
+/datum/borg_sprite/motile/security
+	icon_state = "motile-security"
+	module = MOD_SEC
+
+/datum/borg_sprite/motile/combat
+	icon_state = "motile-combat"
+	module = MOD_CMB
 
 #undef MOD_STD
 #undef MOD_SEC

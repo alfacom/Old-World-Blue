@@ -2,10 +2,8 @@
 	name = "scientist's locker"
 	req_access = list(access_tox_storage)
 	icon_state = "secureres"
-	icon_closed = "secureres"
 	icon_opened = "secureresopen"
 	icon_broken = "secureresbroken"
-	icon_off = "secureresoff"
 
 	New()
 		..()
@@ -25,10 +23,8 @@
 	name = "research director's locker"
 	req_access = list(access_rd)
 	icon_state = "rdsecure"
-	icon_closed = "rdsecure"
 	icon_opened = "rdsecureopen"
 	icon_broken = "rdsecurebroken"
-	icon_off = "rdsecureoff"
 
 	New()
 		..()
@@ -43,6 +39,7 @@
 		new /obj/item/clothing/shoes/leather(src)
 		new /obj/item/clothing/gloves/white/latex(src)
 		new /obj/item/device/radio/headset/heads/rd(src)
+		new /obj/item/device/radio/headset/heads/rd/alt(src)
 		new /obj/item/weapon/tank/air(src)
 		new /obj/item/clothing/mask/gas(src)
 		new /obj/item/weapon/melee/baton/shocker(src)

@@ -12,7 +12,7 @@ datum/preferences
 		qdel(preview_east)
 		qdel(preview_west)
 
-		var/datum/body_build/body_build = get_body_build(gender, body)
+		var/datum/body_build/body_build = current_species.get_body_build(gender, body)
 		var/g = "_m"
 		if(gender == FEMALE)
 			g = "_f"
@@ -63,6 +63,25 @@ datum/preferences
 				else
 					temp.Blend(rgb(-s_tone,  -s_tone,  -s_tone), ICON_SUBTRACT)
 			preview_icon.Blend(temp, ICON_OVERLAY)
+
+		// Underwear
+		if(underwear && current_species.flags & HAS_UNDERWEAR)
+			var/obj/item/clothing/hidden/H = all_underwears[underwear]
+			var/t_state = initial(H.wear_state)
+			if(!t_state) t_state = initial(H.icon_state)
+			preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
+		// Socks
+		if(socks)
+			var/obj/item/clothing/hidden/H = all_socks[socks]
+			var/t_state = initial(H.wear_state)
+			if(!t_state) t_state = initial(H.icon_state)
+			preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
+		// Undershirt
+		if(undershirt && current_species.flags & HAS_UNDERWEAR)
+			var/obj/item/clothing/hidden/H = all_undershirts[undershirt]
+			var/t_state = initial(H.wear_state)
+			if(!t_state) t_state = initial(H.icon_state)
+			preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
 
 		// Eyes color
 		var/icon/eyes = new /icon('icons/mob/human.dmi', "blank")
@@ -135,6 +154,4 @@ datum/preferences
 		preview_west  = new(preview_icon, dir = WEST)
 
 		qdel(eyes)
-		qdel(underwear)
-		qdel(undershirt)
 		qdel(clothes)

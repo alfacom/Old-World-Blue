@@ -15,7 +15,11 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 	req_admin_notify = 1
 	access = list() 			//See get_access()
 	minimal_access = list() 	//See get_access()
-	minimal_player_age = 14
+	minimal_player_age = 30
+	economic_modifier = 20
+
+	minimum_character_age = 27
+	ideal_character_age = 70 // Old geezer captains ftw
 
 	implanted = 1
 	uniform = /obj/item/clothing/under/rank/captain
@@ -61,8 +65,13 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 	supervisors = "the captain"
 	selection_color = "#ddddff"
 	idtype = /obj/item/weapon/card/id/silver
+	alt_titles = list("Crew Resources Officer")
 	req_admin_notify = 1
 	minimal_player_age = 10
+	economic_modifier = 10
+
+	minimum_character_age = 25
+	ideal_character_age = 50
 
 	implanted = 1
 	uniform = /obj/item/clothing/under/rank/head_of_personnel
@@ -75,15 +84,19 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 		/obj/item/weapon/storage/box/ids \
 		)
 
-	access = list(access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
-			            access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
-			            access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
-			            access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
-			            access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
-			            access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway)
-	minimal_access = list(access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
-			            access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
-			            access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
-			            access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
-			            access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
-			            access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway)
+	access = list(
+		access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
+		access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
+		access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
+		access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
+		access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
+		access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway
+	)
+	minimal_access = list(
+		access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
+		access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
+		access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
+		access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
+		access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
+		access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway
+	)

@@ -27,33 +27,20 @@
 	gloves_icon		= 'icons/mob/hands_f.dmi'
 	glasses_icon	= 'icons/mob/eyes_f.dmi'
 	ears_icon		= 'icons/mob/ears_f.dmi'
-	mask_icon		= 'icons/mob/mask_f.dmi'
+	mask_icon		= 'icons/mob/mask_slim.dmi'
 	shoes_icon		= 'icons/mob/feet_f.dmi'
 	belt_icon		= 'icons/mob/belt_f.dmi'
 	back_icon		= 'icons/mob/back_f.dmi'
-	ties_icon		= 'icons/mob/ties_f.dmi'
+	ties_icon		= 'icons/mob/ties_slim.dmi'
 	hidden_icon 	= 'icons/mob/hidden_f.dmi'
 	rig_back		= 'icons/mob/rig_back_slim.dmi'
 
-/proc/get_body_build(gender, prefered_build = "Default", var/list/limited_to)
-	if(limited_to && !(prefered_build in limited_to))
-		prefered_build = limited_to[1]
-	if(prefered_build in body_builds[gender])
-		return body_builds[gender][prefered_build]
-
-	for(var/name in limited_to)
-		if(body_builds[gender][name])
-			return body_builds[gender][name]
-
-	return body_builds[gender][body_builds[gender][1]]
-
-/proc/get_body_build_list(gender = MALE, limited_to)
-	return body_builds[gender]&limited_to
-
-/mob/living/carbon/human/proc/update_body_build(var/update_icon = 1)
-	if(gender in body_build.genders && body_build.name in species.body_builds)
-		return 1
-
-	body_build = get_body_build(gender, body_build.name, species.body_builds)
-	if(update_icon) regenerate_icons()
-	return 0
+/datum/body_build/vox
+	name		= "Vox"
+	uniform_icon= 'icons/mob/species/vox/uniform.dmi'
+	suit_icon	= 'icons/mob/species/vox/suit.dmi'
+	gloves_icon	= 'icons/mob/species/vox/gloves.dmi'
+	glasses_icon= 'icons/mob/species/vox/eyes.dmi'
+	mask_icon	= 'icons/mob/species/vox/masks.dmi'
+	shoes_icon	= 'icons/mob/species/vox/shoes.dmi'
+	ties_icon	= 'icons/mob/species/vox/ties.dmi'

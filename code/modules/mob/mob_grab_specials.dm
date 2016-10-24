@@ -3,7 +3,7 @@
 
 	var/obj/item/organ/external/E = H.get_organ(target_zone)
 
-	if(!E || (E.status & ORGAN_DESTROYED))
+	if(!E || E.is_stump())
 		user << "<span class='notice'>[H] is missing that bodypart.</span>"
 		return
 
@@ -68,7 +68,7 @@
 		attacker << "<span class='warning'>You require a better grab to do this.</span>"
 		return
 	for(var/obj/item/protection in list(target.head, target.wear_mask, target.glasses))
-		if(protection && (protection.flags & HEADCOVERSEYES))
+		if(protection && (protection.body_parts_covered & EYES))
 			attacker << "<span class='danger'>You're going to need to remove the eye covering first.</span>"
 			return
 	if(!target.has_eyes())
@@ -156,9 +156,9 @@
 		var/mob/living/carbon/attacker = user
 		user.visible_message("<span class='danger'>[user] is attempting to devour [target]!</span>")
 		if(can_eat == 2)
-			if(!do_mob(user, target)||!do_after(user, 30)) return
+			if(!do_mob(user, target, 30)) return
 		else
-			if(!do_mob(user, target)||!do_after(user, 100)) return
+			if(!do_mob(user, target, 100)) return
 		user.visible_message("<span class='danger'>[user] devours [target]!</span>")
 		target.loc = user
 		attacker.stomach_contents.Add(target)

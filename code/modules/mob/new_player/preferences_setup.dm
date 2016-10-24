@@ -13,8 +13,9 @@
 	randomize_hair_color("facial")
 	randomize_eyes_color()
 	randomize_skin_color()
-	underwear = rand(1,underwear_m.len)
-	undershirt = rand(1,undershirt_t.len)
+	underwear = pick(all_underwears)
+	undershirt = pick(all_undershirts)
+	socks = pick(all_socks)
 	backbag = rand(1,4)
 	age = rand(current_species.min_age, current_species.max_age)
 	if(H) copy_to(H,1)
@@ -171,7 +172,7 @@
 	qdel(preview_icon_side)
 	qdel(preview_icon)
 
-	var/datum/body_build/body_build = get_body_build(gender, body)
+	var/datum/body_build/body_build = current_species.get_body_build(gender, body)
 	var/g = "_m"
 	if(gender == FEMALE)
 		g = "_f"
@@ -179,7 +180,7 @@
 	g+=b
 
 	var/icon/icobase
-	var/datum/species/current_species = all_species[species]
+//	var/datum/species/current_species = all_species[species]
 
 	if(current_species)
 		icobase = current_species.icobase
@@ -222,6 +223,23 @@
 		else
 			preview_icon.Blend(rgb(-s_tone,  -s_tone,  -s_tone), ICON_SUBTRACT)
 
+	if(underwear && current_species.flags & HAS_UNDERWEAR)
+		var/obj/item/clothing/hidden/H = all_underwears[underwear]
+		var/t_state = initial(H.wear_state)
+		if(!t_state) t_state = initial(H.icon_state)
+		preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
+	if(socks)
+		var/obj/item/clothing/hidden/H = all_socks[socks]
+		var/t_state = initial(H.wear_state)
+		if(!t_state) t_state = initial(H.icon_state)
+		preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
+	if(undershirt && current_species.flags & HAS_UNDERWEAR)
+		var/obj/item/clothing/hidden/H = all_undershirts[undershirt]
+		var/t_state = initial(H.wear_state)
+		if(!t_state) t_state = initial(H.icon_state)
+		preview_icon.Blend(icon(body_build.hidden_icon, t_state), ICON_OVERLAY)
+
+
 	// Eyes color
 	var/icon/eyes = new/icon(icobase, "eyes[b]")
 	if ((current_species && (current_species.flags & HAS_EYE_COLOR)))
@@ -244,12 +262,6 @@
 		eyes.Blend(facial, ICON_OVERLAY)
 
 	preview_icon.Blend(eyes, ICON_OVERLAY)
-
-	if(underwear && current_species.flags & HAS_UNDERWEAR)
-		preview_icon.Blend(new/icon('icons/mob/human.dmi', "[underwear][g]"), ICON_OVERLAY)
-
-	if(undershirt && current_species.flags & HAS_UNDERWEAR)
-		preview_icon.Blend(new/icon('icons/mob/human.dmi', "[undershirt][g]"), ICON_OVERLAY)
 
 	var/icon/clothes = null
 	//This gives the preview icon clothes depending on which job(if any) is set to 'high'

@@ -1,15 +1,21 @@
 /obj/item/clothing
 	name = "clothing"
 	siemens_coefficient = 0.9
-	var/on_mob_icon = "" 				//If set used instead icon_state for mob drawing.
-	var/list/species_restricted = null  //Only these species can wear this kit.
+	var/wear_state = "" 				//If set used instead icon_state for mob drawing.
+	var/list/species_restricted = null //Only these species can wear this kit.
 	var/gunshot_residue //Used by forensics.
+
+	var/list/accessories = list()
+	var/list/valid_accessory_slots
+	var/list/restricted_accessory_slots
+	var/list/starting_accessories
 
 	/*
 		Sprites used when the clothing item is refit. This is done by setting icon_override.
-		Ideally, sprite_sheets_refit should be used for "hard" clothing items that can't change shape very well to fit the wearer (e.g. helmets, hardsuits),
+		Ideally, sprite_sheets_refit should be used for "hard" clothing items that can't change shape very well to fit the wearer (e.g. helmets, hardsuits).
 	*/
 	var/list/sprite_sheets_refit = null
+	var/ear_protection = 0
 
 //Updates the icons of the mob wearing the clothing item, if any.
 /obj/item/clothing/proc/update_clothing_icon()
@@ -24,6 +30,14 @@
 		M.update_icon = 1
 		M.update_icons()
 
+/obj/item/clothing/New()
+	..()
+	if(!wear_state)
+		wear_state = icon_state
+	if(starting_accessories)
+		for(var/T in starting_accessories)
+			var/obj/item/clothing/accessory/tie = new T(src)
+			src.attach_accessory(null, tie)
 
 //BS12: Species-restricted clothing check.
 /obj/item/clothing/mob_can_equip(M as mob, slot)
@@ -89,13 +103,13 @@
 			species_restricted = list(target_species)
 
 	if(target_species == "Vox")
-		src.flags &= ~BLOCKHAIR
-		src.flags &= ~BLOCKHEADHAIR
+		flags_inv &= ~BLOCKHAIR
+		flags_inv &= ~BLOCKHEADHAIR
 	else
-		if(initial(src.flags)&BLOCKHAIR)
-			flags |= BLOCKHAIR
-		if(initial(src.flags)&BLOCKHEADHAIR)
-			flags |= BLOCKHEADHAIR
+		if(initial(flags_inv) & BLOCKHAIR)
+			flags_inv |= BLOCKHAIR
+		if(initial(flags_inv) & BLOCKHEADHAIR)
+			flags_inv |= BLOCKHEADHAIR
 
 	//Set icon
 	if (sprite_sheets_refit && (target_species in sprite_sheets_refit))
@@ -171,31 +185,6 @@
 		qdel(src)
 		return
 
-///////////////////////////////////////////////////////////////////////
-//Glasses
-/*
-SEE_SELF  // can see self, no matter what
-SEE_MOBS  // can see all mobs, no matter what
-SEE_OBJS  // can see all objs, no matter what
-SEE_TURFS // can see all turfs (and areas), no matter what
-SEE_PIXELS// if an object is located on an unlit area, but some of its pixels are
-          // in a lit area (via pixel_x,y or smooth movement), can see those pixels
-BLIND     // can't see anything
-*/
-/obj/item/clothing/glasses
-	name = "glasses"
-	icon = 'icons/obj/clothing/glasses.dmi'
-	w_class = 2.0
-	flags = GLASSESCOVERSEYES
-	slot_flags = SLOT_EYES
-	var/vision_flags = 0
-	var/darkness_view = 0//Base human is 2
-	var/see_invisible = -1
-
-/obj/item/clothing/glasses/update_clothing_icon()
-	if (ismob(src.loc))
-		var/mob/M = src.loc
-		M.update_inv_glasses()
 
 ///////////////////////////////////////////////////////////////////////
 //Gloves
@@ -316,6 +305,10 @@ BLIND     // can't see anything
 	slot_flags = SLOT_MASK
 	body_parts_covered = FACE|EYES
 
+	var/voicechange = 0
+	var/list/say_messages
+	var/list/say_verbs
+
 /obj/item/clothing/mask/update_clothing_icon()
 	if (ismob(src.loc))
 		var/mob/M = src.loc
@@ -384,9 +377,21 @@ BLIND     // can't see anything
 		2 = Report detailed damages
 		3 = Report location
 		*/
-	var/list/accessories = list()
 	var/displays_id = 1
 	var/rolled_down = -1 //0 = unrolled, 1 = rolled, -1 = cannot be toggled
+
+	//convenience var for defining the icon state for the overlay used when the clothing is worn.
+	//Also used by rolling/unrolling.
+	valid_accessory_slots = list("utility","armband","decor")
+	restricted_accessory_slots = list("utility", "armband")
+
+
+/obj/item/clothing/under/attack_hand(var/mob/user)
+	if(accessories && accessories.len)
+		..()
+	if ((ishuman(usr) || issmall(usr)) && src.loc == user)
+		return
+	..()
 
 /obj/item/clothing/under/proc/update_rolldown_status()
 
@@ -407,73 +412,10 @@ BLIND     // can't see anything
 		var/mob/M = src.loc
 		M.update_inv_w_uniform()
 
-/obj/item/clothing/under/proc/can_attach_accessory(obj/item/clothing/accessory/A)
-	if(istype(A))
-		.=1
-	else
-		return 0
-	if(accessories.len && (A.slot in list("utility","armband")))
-		for(var/obj/item/clothing/accessory/AC in accessories)
-			if (AC.slot == A.slot)
-				return 0
-
-/obj/item/clothing/under/attackby(obj/item/I, mob/user)
-	if(istype(I, /obj/item/clothing/accessory))
-		var/obj/item/clothing/accessory/A = I
-		if(can_attach_accessory(A))
-			user.drop_item()
-			accessories += A
-			A.on_attached(src, user)
-
-			if(ishuman(loc))
-				var/mob/living/carbon/human/H = loc
-				H.update_inv_w_uniform()
-
-			return
-		else
-			user << "<span class='notice'>You cannot attach more accessories of this type to [src].</span>"
-
-	if(accessories.len)
-		for(var/obj/item/clothing/accessory/A in accessories)
-			A.attackby(I, user)
-		return
-
-	..()
-
-/obj/item/clothing/under/attack_hand(mob/user as mob)
-	//only forward to the attached accessory if the clothing is equipped (not in a storage)
-	if(accessories.len && src.loc == user)
-		for(var/obj/item/clothing/accessory/A in accessories)
-			A.attack_hand(user)
-		return
-
-	if ((ishuman(usr) || issmall(usr)) && src.loc == user)	//make it harder to accidentally undress yourself
-		return
-
-	..()
-
-/obj/item/clothing/under/MouseDrop(obj/over_object as obj)
-	if (ishuman(usr) || issmall(usr))
-		//makes sure that the clothing is equipped so that we can't drag it into our hand from miles away.
-		if (!(src.loc == usr))
-			return
-
-		if (( usr.restrained() ) || ( usr.stat ))
-			return
-
-		if (!usr.unEquip(src))
-			return
-
-		switch(over_object.name)
-			if(BP_R_HAND)
-				usr.put_in_r_hand(src)
-			if(BP_L_HAND)
-				usr.put_in_l_hand(src)
-		src.add_fingerprint(usr)
 
 /obj/item/clothing/under/examine(mob/user, return_dist=1)
 	.=..()
-	if(.<=1)
+	if(.<=2)
 		switch(src.sensor_mode)
 			if(0)
 				user << "Its sensors appear to be disabled."
@@ -483,9 +425,6 @@ BLIND     // can't see anything
 				user << "Its vital tracker appears to be enabled."
 			if(3)
 				user << "Its vital tracker and tracking beacon appear to be enabled."
-	if(accessories.len)
-		for(var/obj/item/clothing/accessory/A in accessories)
-			user << "\A [A] is attached to it."
 
 /obj/item/clothing/under/proc/set_sensors(mob/usr as mob)
 	var/mob/M = usr
@@ -508,27 +447,16 @@ BLIND     // can't see anything
 	if (src.loc == usr)
 		switch(sensor_mode)
 			if(0)
-				usr << "You disable your suit's remote sensing equipment."
+				usr.visible_message("[usr] adjusts their sensors.", "You disable your suit's remote sensing equipment.")
 			if(1)
-				usr << "Your suit will now report whether you are live or dead."
+				usr.visible_message("[usr] adjusts their sensors.", "Your suit will now report whether you are live or dead.")
 			if(2)
-				usr << "Your suit will now report your vital lifesigns."
+				usr.visible_message("[usr] adjusts their sensors.", "Your suit will now report your vital lifesigns.")
 			if(3)
-				usr << "Your suit will now report your vital lifesigns as well as your coordinate position."
+				usr.visible_message("[usr] adjusts their sensors.", "Your suit will now report your vital lifesigns as well as your coordinate position.")
+
 	else if (istype(src.loc, /mob))
-		switch(sensor_mode)
-			if(0)
-				for(var/mob/V in viewers(usr, 1))
-					V.show_message("\red [usr] disables [src.loc]'s remote sensing equipment.", 1)
-			if(1)
-				for(var/mob/V in viewers(usr, 1))
-					V.show_message("[usr] turns [src.loc]'s remote sensors to binary.", 1)
-			if(2)
-				for(var/mob/V in viewers(usr, 1))
-					V.show_message("[usr] sets [src.loc]'s sensors to track vitals.", 1)
-			if(3)
-				for(var/mob/V in viewers(usr, 1))
-					V.show_message("[usr] sets [src.loc]'s sensors to maximum.", 1)
+		usr.visible_message("[usr] adjusts [src.loc]'s sensors.", "You adjust [src.loc]'s sensors.")
 
 /obj/item/clothing/under/verb/toggle()
 	set name = "Toggle Suit Sensors"
@@ -558,34 +486,7 @@ BLIND     // can't see anything
 //		item_state_slots[slot_w_uniform_str] = "[worn_state]"
 	update_clothing_icon()
 
-/obj/item/clothing/under/proc/remove_accessory(mob/user, obj/item/clothing/accessory/A)
-	if(!(A in accessories))
-		return
-
-	A.on_removed(user)
-	accessories -= A
-	update_clothing_icon()
-
-/obj/item/clothing/under/verb/removetie()
-	set name = "Remove Accessory"
-	set category = "Object"
-	set src in usr
-	if(!istype(usr, /mob/living)) return
-	if(usr.stat) return
-	if(!accessories.len) return
-	var/obj/item/clothing/accessory/A
-	if(accessories.len > 1)
-		A = input("Select an accessory to remove from [src]") as null|anything in accessories
-	else
-		A = accessories[1]
-	src.remove_accessory(usr,A)
 
 /obj/item/clothing/under/rank/New()
 	sensor_mode = pick(0,1,2,3)
-	..()
-
-/obj/item/clothing/under/emp_act(severity)
-	if(accessories.len)
-		for(var/obj/item/clothing/accessory/A in accessories)
-			A.emp_act(severity)
 	..()

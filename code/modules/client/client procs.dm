@@ -64,7 +64,7 @@
 	switch(href_list["_src_"])
 		if("holder")	hsrc = holder
 		if("usr")		hsrc = mob
-		if("prefs")		return prefs.process_link(usr,href_list)
+		if("prefs")		world << "Outdated link used. href = [href]"
 		if("vars")		return view_var_Topic(href,href_list,hsrc)
 
 	..()	//redirect to hsrc.Topic()
@@ -181,6 +181,10 @@
 
 
 
+/client/proc/last_activity_seconds()
+	return inactivity / 10
+
+
 	//////////////
 	//DISCONNECT//
 	//////////////
@@ -257,6 +261,11 @@
 	var/admin_rank = "Player"
 	if(src.holder)
 		admin_rank = src.holder.rank
+
+
+	var/watchreason = check_watchlist(sql_ckey)
+	if(watchreason)
+		message_admins("<font color='red'><B>Notice: </B></font><font color='blue'>[key_name_admin(src)] is on the watchlist and has just connected - Reason: [watchreason]</font>")
 
 	var/sql_ip = sql_sanitize_text(src.address)
 	var/sql_computerid = sql_sanitize_text(src.computer_id)
@@ -347,3 +356,15 @@ client/proc/MayRespawn()
 
 	// Something went wrong, client is usually kicked or transfered to a new mob at this point
 	return 0
+
+client/verb/character_setup()
+	set name = "Character Setup"
+	set category = "Preferences"
+	if(prefs)
+		prefs.ShowChoices(usr)
+
+client/verb/new_character_setup()
+	set name = "New Character Setup"
+	set hidden = 1
+	if(prefs)
+		prefs.NewShowChoices(usr)

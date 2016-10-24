@@ -286,12 +286,6 @@ datum/design/circuit/order/supply
 	req_tech = list("programming" = 3)
 	build_path = /obj/item/weapon/circuitboard/order/supply
 
-datum/design/circuit/order/supply/qm
-	name = "quartermaster control console"
-	id = "supplycomp"
-	req_tech = list("programming" = 4)
-	build_path = /obj/item/weapon/circuitboard/order/supply/qm
-
 datum/design/circuit/comm_monitor
 	name = "telecommunications monitoring console"
 	id = "comm_monitor"
@@ -309,6 +303,12 @@ datum/design/circuit/message_monitor
 	id = "message_monitor"
 	req_tech = list("programming" = 5)
 	build_path = /obj/item/weapon/circuitboard/message_monitor
+
+/datum/design/circuit/traffic_control
+	name = "traffic control console"
+	id = "traffic_control"
+	req_tech = list("programming" = 3)
+	build_path = /obj/item/weapon/circuitboard/comm_traffic
 
 datum/design/circuit/aifixer
 	name = "AI integrity restorer"
@@ -1380,7 +1380,8 @@ datum/design/item/weapon/lasercannon
 datum/design/item/weapon/decloner
 	id = "decloner"
 	req_tech = list("combat" = 8, "materials" = 7, "biotech" = 5, "powerstorage" = 6)
-	materials = list("$gold" = 5000,"$uranium" = 10000, "mutagen" = 40)
+	materials = list("$gold" = 5000,"$uranium" = 10000)
+//	materials = list("$gold" = 5000,"$uranium" = 10000, "mutagen" = 40)
 	build_path = /obj/item/weapon/gun/energy/decloner
 	locked = 1
 

@@ -55,6 +55,7 @@
 			visible_message("<span class='warning'>[user] rips [src] in a single, decisive motion!</span>" )
 			playsound(src.loc, 'sound/items/poster_ripped.ogg', 100, 1)
 			ruined = 1
+			icon = initial(icon)
 			icon_state = "poster_ripped"
 			name = "ripped poster"
 			desc = "You can't make out anything from the poster's original print. It's ruined."
@@ -120,7 +121,7 @@
 	//Looks like it's uncluttered enough. Place the poster.
 	user << "<span class='notice'>You start placing the poster on the wall...</span>"
 
-	if(do_after(user, 17, 5, 1))
+	if(do_after(user, 17))
 		user.drop_from_inventory(src, new_loc)
 		placement_dir = get_dir(W, new_loc)
 		if(placement_dir&NORTH)

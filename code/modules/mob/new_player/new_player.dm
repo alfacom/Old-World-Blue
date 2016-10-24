@@ -27,7 +27,7 @@
 		var/output = "<div align='center'><B>New Player Options</B>"
 		output +="<hr>"
 		output += "<p><a href='byond://?src=\ref[src];show_preferences=1'>Setup Character</A></p>"
-		output += "<p><a href='byond://?src=\ref[src];show_preferences_new=1'>New Setup Character (WIP)</A></p>"
+		//output += "<p><a href='byond://?src=\ref[src];show_preferences_new=1'>New Setup Character (WIP)</A></p>"
 
 		if(!ticker || ticker.current_state <= GAME_STATE_PREGAME)
 			if(ready)
@@ -197,9 +197,8 @@
 			AttemptLateSpawn(href_list["SelectedJob"],client.prefs.spawnpoint)
 			return
 
-		if(!ready && href_list["preference"])
-			if(client)
-				client.prefs.process_link(src, href_list)
+		if(href_list["preference"])
+			world << "Outdated link format. HREF = [href]"
 		else if(!href_list["late_join"])
 			new_player_panel()
 

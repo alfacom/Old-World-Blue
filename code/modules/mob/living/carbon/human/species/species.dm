@@ -30,6 +30,8 @@
 	var/icon/icon_template                               // Used for mob icon generation for non-32x32 species.
 	var/is_small
 	var/show_ssd = "fast asleep"
+	var/virus_immune
+	var/blood_volume = 560                               // Initial blood volume.
 	var/hunger_factor = 0.05                             // Multiplier for hunger.
 	var/taste_sensitivity = TASTE_NORMAL
 
@@ -58,8 +60,6 @@
 
 	// Death vars.
 	var/meat_type = /obj/item/weapon/reagent_containers/food/snacks/meat/human
-	var/gibber_type = /obj/effect/gibspawner/human
-	var/single_gib_type = /obj/effect/decal/cleanable/blood/gibs
 	var/remains_type = /obj/effect/decal/remains/xeno
 	var/gibbed_anim = "gibbed-h"
 	var/dusted_anim = "dust-h"
@@ -142,7 +142,9 @@
 		BP_R_FOOT = new /datum/organ_description/foot/right
 	)
 
-	var/list/body_builds = list("Default")
+	var/list/body_builds = list(
+		new/datum/body_build
+	)
 
 	// Bump vars
 	var/bump_flag = HUMAN	// What are we considered to be when bumped?
@@ -159,7 +161,6 @@
 	var/tmp/evolution_points = 0 //How many points race have for abilities
 
 /datum/species/New()
-
 	//If the species has eyes, they are the default vision organ
 	if(!vision_organ && has_organ[O_EYES])
 		vision_organ = O_EYES
@@ -211,7 +212,7 @@
 		H.equip_to_slot_or_del(new custom_survival_gear(H), slot_r_hand)
 
 
-/datum/species/proc/create_organs(var/mob/living/carbon/human/H, var/datum/preferences/prefs = null) //Handles creation of mob organs.
+/datum/species/proc/create_organs(var/mob/living/carbon/human/H,) //Handles creation of mob organs.
 
 	for(var/obj/item/organ/organ in (H.organs|H.internal_organs))
 		qdel(organ)
@@ -328,17 +329,4 @@
 	return
 
 /datum/species/proc/Stat(var/mob/living/carbon/human/H)
-	if (H.internal)
-		if (!H.internal.air_contents)
-			qdel(H.internal)
-		else
-			stat("Internal Atmosphere Info", H.internal.name)
-			stat("Tank Pressure", H.internal.air_contents.return_pressure())
-			stat("Distribution Pressure", H.internal.distribute_pressure)
-
-	if(H.back && istype(H.back,/obj/item/weapon/rig))
-		var/obj/item/weapon/rig/suit = H.back
-		var/cell_status = "ERROR"
-		if(suit.cell) cell_status = "[suit.cell.charge]/[suit.cell.maxcharge]"
-		stat(null, "Suit charge: [cell_status]")
 	return

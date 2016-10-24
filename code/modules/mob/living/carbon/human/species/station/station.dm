@@ -17,7 +17,10 @@
 	min_age = 17
 	max_age = 110
 
-	body_builds = list("Default", "Slim")
+	body_builds = list(
+		new/datum/body_build,
+		new/datum/body_build/slim
+	)
 
 	flags = CAN_JOIN | HAS_SKIN_TONE | HAS_LIPS | HAS_UNDERWEAR | HAS_EYE_COLOR
 
@@ -211,9 +214,17 @@
 	base_color = "#006666"
 
 	reagent_tag = IS_SKRELL
-	restricted_jobs = list("Captain", "Head of Personnel", "Head of Security", "Chief Engineer", "Warden",\
-						"Detective", "Security Officer", "Station Engineer", "Atmospheric Technician",\
-						"Quartermaster", "Cargo Technician", "Shaft Miner")
+
+	body_builds = list(
+		new/datum/body_build,
+		new/datum/body_build/slim
+	)
+
+	restricted_jobs = list(
+		"Captain", "Head of Personnel", "Head of Security", "Chief Engineer", "Warden",
+		"Detective", "Security Officer", "Station Engineer", "Atmospheric Technician",
+		"Quartermaster", "Cargo Technician", "Shaft Miner"
+	)
 
 /datum/species/diona
 	name = "Diona"
@@ -264,7 +275,7 @@
 		BP_L_HAND = new /datum/organ_description/hand/left/diona,
 		BP_R_HAND = new /datum/organ_description/hand/right/diona,
 		BP_L_FOOT = new /datum/organ_description/foot/left/diona,
-		BP_R_FOOT = new /datum/organ_description/foot/right/diona,
+		BP_R_FOOT = new /datum/organ_description/foot/right/diona
 	)
 
 	inherent_verbs = list(
@@ -345,6 +356,7 @@
 	brute_mod = 0.5
 	burn_mod = 1
 	show_ssd = "flashing a 'system offline' glyph on their monitor"
+	virus_immune = 1
 
 	warning_low_pressure = 50
 	hazard_low_pressure = 0
@@ -374,6 +386,10 @@
 
 /datum/species/machine/equip_survival_gear(var/mob/living/carbon/human/H)
 	return
+
+/datum/species/machine/handle_post_spawn(var/mob/living/carbon/human/H)
+	for(var/obj/item/organ/O in H.organs)
+		O.robotize()
 
 /datum/species/machine/handle_death(var/mob/living/carbon/human/H)
 	..()
