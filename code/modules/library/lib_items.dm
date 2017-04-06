@@ -27,8 +27,7 @@
 
 /obj/structure/bookcase/attackby(obj/O as obj, mob/user as mob)
 	if(istype(O, /obj/item/weapon/book))
-		user.drop_item()
-		O.loc = src
+		user.drop_from_inventory(O, src)
 		update_icon()
 	else if(istype(O, /obj/item/weapon/pen))
 		var/newname = sanitizeSafe(input("What would you like to title this bookshelf?"), MAX_NAME_LEN)
@@ -45,11 +44,8 @@
 		if(choice)
 			if(!usr.canmove || usr.stat || usr.restrained() || !in_range(loc, usr))
 				return
-			if(ishuman(user))
-				if(!user.get_active_hand())
-					user.put_in_hands(choice)
-			else
-				choice.loc = get_turf(src)
+			if(!user.put_in_hands(choice))
+				choice.forceMove(get_turf(src))
 			update_icon()
 
 /obj/structure/bookcase/ex_act(severity)
@@ -155,9 +151,7 @@
 /obj/item/weapon/book/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(carved)
 		if(!store)
-			if(W.w_class < 3)
-				user.drop_item()
-				W.loc = src
+			if(W.w_class < 3 && user.unEquip(W, src))
 				store = W
 				user << "<span class='notice'>You put [W] in [title].</span>"
 				return
@@ -241,6 +235,7 @@
 		user.visible_message("<span class='notice'>You open up the book and show it to [M]. </span>", \
 			"<span class='notice'> [user] opens up a book and shows it to [M]. </span>")
 		M << browse("<TT><I>Penned by [author].</I></TT> <BR>" + "[dat]", "window=book")
+		user.setClickCooldown(DEFAULT_QUICK_COOLDOWN) //to prevent spam
 
 
 /*

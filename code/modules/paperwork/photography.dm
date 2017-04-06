@@ -29,6 +29,7 @@ var/global/photo_count = 0
 	icon_state = "photo"
 	item_state = "paper"
 	w_class = 2.0
+	randpixel = 10
 	var/id
 	var/icon/img	//Big photo image
 	var/scribble	//Scribble on the back.
@@ -43,8 +44,8 @@ var/global/photo_count = 0
 
 /obj/item/weapon/photo/attackby(obj/item/weapon/P as obj, mob/user as mob)
 	if(istype(P, /obj/item/weapon/pen))
-		var/txt = sanitize(input(user, "What would you like to write on the back?", "Photo Writing", null)  as text, 128)
-		if(loc == user && user.stat == 0)
+		var/txt = sanitize(input_utf8(user, "What would you like to write on the back?", "Photo Writing", null, "text"), 128)
+		if(!user.stat && Adjacent(user))
 			scribble = txt
 	..()
 
@@ -54,6 +55,12 @@ var/global/photo_count = 0
 		show(user)
 	else
 		user << "<span class='notice'>It is too far away.</span>"
+
+/obj/item/weapon/photo/attack(mob/living/carbon/M as mob, mob/living/carbon/user as mob)
+	if(user.zone_sel.selecting == O_EYES)
+		user.visible_message("<span class='notice'> [user] holds up a paper and shows it to [M]. </span>",\
+			"<span class='notice'>You show the paper to [M]. </span>")
+		M.examinate(src)
 
 /obj/item/weapon/photo/proc/show(mob/user as mob)
 	user << browse_rsc(img, "tmp_photo_[id].png")
@@ -78,9 +85,10 @@ var/global/photo_count = 0
 	return
 
 
-/obj/item/weapon/photo/custom/attack_self(mob/user as mob)
+/obj/item/weapon/photo/custom/show(mob/user)
 	if(!img)
-		img = input("Set image for phote") as icon
+		img = input("Set image for photo") as icon
+		if(!img) return
 		var/icon/small_img = icon(img)
 		var/icon/ic = icon('icons/obj/items.dmi',"photo")
 		small_img.Scale(8, 8)
@@ -102,26 +110,29 @@ var/global/photo_count = 0
 
 /obj/item/weapon/storage/photo_album/MouseDrop(obj/over_object as obj)
 
-	if(ishuman(usr))
-		var/mob/M = usr
-		if(!( istype(over_object, /obj/screen) ))
-			return ..()
-		playsound(loc, "rustle", 50, 1, -5)
-		if((!( M.restrained() ) && !( M.stat ) && M.back == src))
-			switch(over_object.name)
-				if(BP_R_HAND)
-					M.u_equip(src)
-					M.put_in_r_hand(src)
-				if(BP_L_HAND)
-					M.u_equip(src)
-					M.put_in_l_hand(src)
-			add_fingerprint(usr)
-			return
-		if(over_object == usr && in_range(src, usr) || usr.contents.Find(src))
-			if(usr.s_active)
-				usr.s_active.close(usr)
-			show_to(usr)
-			return
+	if(!ishuman(usr))
+		return
+
+	var/mob/living/carbon/human/H = usr
+	if(!istype(over_object, /obj/screen))
+		return ..()
+
+	playsound(loc, "rustle", 50, 1, -5)
+	if(!H.restrained() && !H.stat && H.back == src)
+		switch(over_object.name)
+			if(BP_R_HAND)
+				if(H.unEquip(src))
+					H.put_in_r_hand(src)
+			if(BP_L_HAND)
+				if(H.unEquip(src))
+					H.put_in_l_hand(src)
+		add_fingerprint(usr)
+		return
+	if(over_object == H && in_range(src, H) || H.contents.Find(src))
+		if(H.s_active)
+			H.s_active.close(H)
+		show_to(H)
+		return
 	return
 
 /*********
@@ -134,6 +145,7 @@ var/global/photo_count = 0
 	icon_state = "camera"
 	item_state = "electropack"
 	w_class = 2.0
+	randpixel = 5
 	flags = CONDUCT
 	slot_flags = SLOT_BELT
 	matter = list(DEFAULT_WALL_MATERIAL = 2000)
@@ -170,7 +182,7 @@ var/global/photo_count = 0
 			user << "<span class='notice'>[src] still has some film in it!</span>"
 			return
 		user << "<span class='notice'>You insert [I] into [src].</span>"
-		user.drop_item()
+		user.drop_from_inventory(I)
 		qdel(I)
 		pictures_left = pictures_max
 		return
@@ -198,24 +210,26 @@ var/global/photo_count = 0
 	// Sort the atoms into their layers
 	var/list/sorted = sort_atoms_by_layer(atoms)
 	var/center_offset = (size-1)/2 * 32 + 1
-	for(var/i; i <= sorted.len; i++)
-		var/atom/A = sorted[i]
-		if(A)
-			var/icon/img = getFlatIcon(A)//build_composite_icon(A)
+	var/i = 1
+	for(var/item in sorted)
+		if(!(++i % 10))
+			sleep()
+		var/atom/A = item
+		var/icon/img = getFlatIcon(A)//build_composite_icon(A)
 
-			// If what we got back is actually a picture, draw it.
-			if(istype(img, /icon))
-				// Check if we're looking at a mob that's lying down
-				if(istype(A, /mob/living) && A:lying)
-					// If they are, apply that effect to their picture.
-					img.BecomeLying()
-				// Calculate where we are relative to the center of the photo
-				var/xoff = (A.x - center.x) * 32 + center_offset
-				var/yoff = (A.y - center.y) * 32 + center_offset
-				if (istype(A,/atom/movable))
-					xoff+=A:step_x
-					yoff+=A:step_y
-				res.Blend(img, blendMode2iconMode(A.blend_mode),  A.pixel_x + xoff, A.pixel_y + yoff)
+		// If what we got back is actually a picture, draw it.
+		if(istype(img, /icon))
+			// Check if we're looking at a mob that's lying down
+			if(istype(A, /mob/living) && A:lying)
+				// If they are, apply that effect to their picture.
+				img.BecomeLying()
+			// Calculate where we are relative to the center of the photo
+			var/xoff = (A.x - center.x) * 32 + center_offset
+			var/yoff = (A.y - center.y) * 32 + center_offset
+			if (istype(A,/atom/movable))
+				xoff+=A:step_x
+				yoff+=A:step_y
+			res.Blend(img, blendMode2iconMode(A.blend_mode),  A.pixel_x + xoff, A.pixel_y + yoff)
 
 	// Lastly, render any contained effects on top.
 	for(var/turf/the_turf in turfs)
@@ -231,6 +245,7 @@ var/global/photo_count = 0
 	for(var/mob/living/carbon/A in the_turf)
 		if(A.invisibility) continue
 		var/holding = null
+		var/posenow = null
 		if(A.l_hand || A.r_hand)
 			if(A.l_hand) holding = "They are holding \a [A.l_hand]"
 			if(A.r_hand)
@@ -238,15 +253,17 @@ var/global/photo_count = 0
 					holding += " and \a [A.r_hand]"
 				else
 					holding = "They are holding \a [A.r_hand]"
+		if(ishuman(A))
+			if(A.pose) posenow = "They're appears to [A.pose] on this photo."
 
 		if(!mob_detail)
-			mob_detail = "You can see [A] on the photo[A:health < 75 ? " - [A] looks hurt":""].[holding ? " [holding]":"."]. "
+			mob_detail = "You can see [A] on the photo[A:health < 75 ? " - [A] looks hurt":""].[holding ? " [holding]":"."]. [posenow] "
 		else
-			mob_detail += "You can also see [A] on the photo[A:health < 75 ? " - [A] looks hurt":""].[holding ? " [holding]":"."]."
+			mob_detail += "You can also see [A] on the photo[A:health < 75 ? " - [A] looks hurt":""].[holding ? " [holding]":"."] [posenow]."
 	return mob_detail
 
 /obj/item/device/camera/afterattack(atom/target as mob|obj|turf|area, mob/user as mob, flag)
-	if(!on || !pictures_left || ismob(target.loc)) return
+	if(!on || !pictures_left || ismob(target.loc) || !ismob(loc)) return
 	captureimage(target, user, flag)
 
 	playsound(loc, pick('sound/items/polaroid1.ogg', 'sound/items/polaroid2.ogg'), 75, 1, -3)
@@ -307,16 +324,12 @@ var/global/photo_count = 0
 	p.tiny = pc
 	p.img = photoimage
 	p.desc = mobs
-	p.pixel_x = rand(-10, 10)
-	p.pixel_y = rand(-10, 10)
 	p.photo_size = size
 
 	return p
 
 /obj/item/device/camera/proc/printpicture(mob/user, obj/item/weapon/photo/p)
-	p.loc = user.loc
-	if(!user.get_inactive_hand())
-		user.put_in_inactive_hand(p)
+	user.put_in_hands(p)
 
 /obj/item/weapon/photo/proc/copy(var/copy_id = 0)
 	var/obj/item/weapon/photo/p = new/obj/item/weapon/photo()

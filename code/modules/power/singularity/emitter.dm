@@ -42,8 +42,7 @@
 		connect_to_network()
 
 /obj/machinery/power/emitter/Destroy()
-	message_admins("Emitter deleted at ([x],[y],[z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)",0,1)
-	log_game("Emitter deleted at ([x],[y],[z])")
+	log_game("Emitter deleted.", src, 0)
 	investigate_log("<font color='red'>deleted</font> at ([x],[y],[z])","singulo")
 	..()
 
@@ -66,16 +65,14 @@
 			if(src.active==1)
 				src.active = 0
 				user << "You turn off [src]."
-				message_admins("Emitter turned off by [key_name(user, user.client)](<A HREF='?_src_=holder;adminmoreinfo=\ref[user]'>?</A>) in ([x],[y],[z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)",0,1)
-				log_game("Emitter turned off by [user.ckey]([user]) in ([x],[y],[z])")
+				log_game("Emitter turned off by [user.ckey]([user]).", src, 0)
 				investigate_log("turned <font color='red'>off</font> by [user.key]","singulo")
 			else
 				src.active = 1
 				user << "You turn on [src]."
 				src.shot_number = 0
 				src.fire_delay = 100
-				message_admins("Emitter turned on by [key_name(user, user.client)](<A HREF='?_src_=holder;adminmoreinfo=\ref[user]'>?</A>) in ([x],[y],[z] - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[x];Y=[y];Z=[z]'>JMP</a>)",0,1)
-				log_game("Emitter turned on by [user.ckey]([user]) in ([x],[y],[z])")
+				log_game("Emitter turned on by [key_name(user)]", src, 0)
 				investigate_log("turned <font color='green'>on</font> by [user.key]","singulo")
 			update_icon()
 		else
@@ -226,13 +223,12 @@
 		else
 			user << "<span class='warning'>Access denied.</span>"
 		return
+	..()
+	return
 
-
-	if(istype(W, /obj/item/weapon/card/emag) && !emagged)
+/obj/machinery/power/emitter/emag_act(var/remaining_charges, var/mob/user)
+	if(!emagged)
 		locked = 0
 		emagged = 1
 		user.visible_message("[user.name] emags [src].","<span class='warning'>You short out the lock.</span>")
-		return
-
-	..()
-	return
+		return 1

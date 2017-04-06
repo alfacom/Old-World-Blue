@@ -168,7 +168,6 @@
 /mob/living/silicon/robot/proc/init()
 	aiCamera = new/obj/item/device/camera/siliconcam/robot_camera(src)
 	laws = new /datum/ai_laws/nanotrasen()
-	additional_law_channels += "Binary"
 	var/new_ai = select_active_ai_with_fewest_borgs()
 	if(new_ai)
 		lawupdate = 1
@@ -232,9 +231,11 @@
 		if(mmi.brainmob)
 			mind.transfer_to(mmi.brainmob)
 		else
-			src << "<span class='danger'>Oops! Something went very wrong, your MMI was unable to receive your mind. You have been ghosted. Please make a bug report so we can fix this bug.</span>"
+			src << "<span class='danger'>Oops! Something went very wrong, your MMI was unable to receive your mind. \
+			You have been ghosted. Please make a bug report so we can fix this bug.</span>"
 			ghostize()
 			//ERROR("A borg has been destroyed, but its MMI lacked a brainmob, so the mind could not be transferred. Player: [ckey].")
+		mmi.update_icon()
 		mmi = null
 	if(connected_ai)
 		connected_ai.connected_robots -= src
@@ -301,11 +302,11 @@
 
 	//Flavour text.
 	if(client)
-		var/module_flavour = client.prefs.flavour_texts_robot[modtype]
+		var/module_flavour = client.prefs.flavor_texts_robot[modtype]
 		if(module_flavour)
 			flavor_text = module_flavour
 		else
-			flavor_text = client.prefs.flavour_texts_robot["Default"]
+			flavor_text = client.prefs.flavor_texts_robot["Default"]
 
 /mob/living/silicon/robot/verb/Namepick()
 	set category = "Robot Commands"
@@ -416,8 +417,8 @@
 // this function displays the cyborgs current cell charge in the stat panel
 /mob/living/silicon/robot/proc/show_cell_power()
 	if(cell)
-		stat(null, text("Charge Left: [round(cell.percent())]%"))
-		stat(null, text("Cell Rating: [round(cell.maxcharge)]")) // Round just in case we somehow get crazy values
+		stat(null, text("Charge Left: [cell.percent()]%"))
+		stat(null, text("Cell Rating: [cell.maxcharge]") )
 		stat(null, text("Power Cell Load: [round(used_power_this_tick)]W"))
 	else
 		stat(null, text("No Cell Inserted!"))
@@ -454,7 +455,8 @@
 	return 2
 
 /mob/living/silicon/robot/attackby(obj/item/weapon/W as obj, mob/user as mob)
-	if (istype(W, /obj/item/weapon/handcuffs)) // fuck i don't even know why isrobot() in handcuff code isn't working so this will have to do
+	// fuck i don't even know why isrobot() in handcuff code isn't working so this will have to do
+	if (istype(W, /obj/item/weapon/handcuffs))
 		return
 
 	if(opened) // Are they trying to insert something?
@@ -464,7 +466,7 @@
 				C.installed = 1
 				C.wrapped = W
 				C.install()
-				user.drop_item()
+				user.unEquip(W)
 				W.loc = null
 
 				var/obj/item/robot_parts/robot_component/WC = W
@@ -486,6 +488,7 @@
 			return
 		var/obj/item/weapon/weldingtool/WT = W
 		if (WT.remove_fuel(0))
+			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 			adjustBruteLoss(-30)
 			updatehealth()
 			add_fingerprint(user)
@@ -501,12 +504,13 @@
 			return
 		var/obj/item/stack/cable_coil/coil = W
 		if (coil.use(1))
+			user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 			adjustFireLoss(-30)
 			updatehealth()
 			for(var/mob/O in viewers(user, null))
 				O.show_message(text("\red [user] has fixed some of the burnt wires on [src]!"), 1)
 
-	else if (istype(W, /obj/item/weapon/crowbar))	// crowbar means open or close the cover
+	else if(istype(W, /obj/item/weapon/crowbar))	// crowbar means open or close the cover
 		if(opened)
 			if(cell)
 				user << "You close the cover."
@@ -521,12 +525,12 @@
 				user << "You jam the crowbar into the robot and begin levering [mmi]."
 				sleep(30)
 				user << "You damage some parts of the chassis, but eventually manage to rip out [mmi]!"
-				var/obj/item/robot_parts/robot_suit/C = new/obj/item/robot_parts/robot_suit(loc)
-				C.l_leg = new/obj/item/robot_parts/l_leg(C)
-				C.r_leg = new/obj/item/robot_parts/r_leg(C)
-				C.l_arm = new/obj/item/robot_parts/l_arm(C)
-				C.r_arm = new/obj/item/robot_parts/r_arm(C)
-				C.updateicon()
+				var/obj/item/robot_parts/robot_suit/C = new(loc)
+				C.l_leg = new (C)
+				C.r_leg = new (C)
+				C.l_arm = new (C)
+				C.r_arm = new (C)
+				C.update_icon()
 				new/obj/item/robot_parts/chest(loc)
 				qdel(src)
 			else
@@ -571,8 +575,7 @@
 		else if(W.w_class != 3)
 			user << "\The [W] is too [W.w_class < 3? "small" : "large"] to fit here."
 		else
-			user.drop_item()
-			W.loc = src
+			user.unEquip(W, src)
 			cell = W
 			user << "You insert the power cell."
 
@@ -607,7 +610,8 @@
 		else
 			user << "Unable to locate a radio."
 
-	else if (istype(W, /obj/item/weapon/card/id)||istype(W, /obj/item/device/pda)||istype(W, /obj/item/weapon/card/robot))			// trying to unlock the interface with an ID card
+	// trying to unlock the interface with an ID card
+	else if(is_type_in_list(W, list(/obj/item/weapon/card/id, /obj/item/device/pda, /obj/item/weapon/card/robot)))
 		if(emagged)//still allow them to open the cover
 			user << "The interface seems slightly damaged"
 		if(opened)
@@ -620,71 +624,6 @@
 			else
 				user << "\red Access denied."
 
-	else if(istype(W, /obj/item/weapon/card/emag))		// trying to unlock with an emag card
-		if(!opened)//Cover is closed
-			if(locked)
-				if(prob(90))
-					var/obj/item/weapon/card/emag/emag = W
-					emag.uses--
-					user << "You emag the cover lock."
-					locked = 0
-				else
-					user << "You fail to emag the cover lock."
-					src << "Hack attempt detected."
-			else
-				user << "The cover is already unlocked."
-			return
-
-		if(opened)//Cover is open
-			if(emagged)	return//Prevents the X has hit Y with Z message also you cant emag them twice
-			if(wiresexposed)
-				user << "You must close the panel first"
-				return
-			else
-				sleep(6)
-				if(prob(50))
-					emagged = 1
-					lawupdate = 0
-					disconnect_from_ai()
-					user << "You emag [src]'s interface."
-					message_admins("[key_name_admin(user)] emagged cyborg [key_name_admin(src)].  Laws overridden.")
-					log_game("[key_name(user)] emagged cyborg [key_name(src)].  Laws overridden.")
-					clear_supplied_laws()
-					clear_inherent_laws()
-					laws = new /datum/ai_laws/syndicate_override
-					var/time = time2text(world.realtime,"hh:mm:ss")
-					lawchanges.Add("[time] <B>:</B> [user.name]([user.key]) emagged [name]([key])")
-					set_zeroth_law("Only [user] and people \he designates as being such are operatives.")
-					src << "\red ALERT: Foreign software detected."
-					sleep(5)
-					src << "\red Initiating diagnostics..."
-					sleep(20)
-					src << "\red SynBorg v1.7.1 loaded."
-					sleep(5)
-					src << "\red LAW SYNCHRONISATION ERROR"
-					sleep(5)
-					src << "\red Would you like to send a report to NanoTraSoft? Y/N"
-					sleep(10)
-					src << "\red > N"
-					sleep(20)
-					src << "\red ERRORERRORERROR"
-					src << "<b>Obey these laws:</b>"
-					laws.show_laws(src)
-					src << "\red \b ALERT: [user] is your new master. Obey \his commands and your new laws."
-					if(src.module)
-						var/rebuild = 0
-						for(var/obj/item/weapon/pickaxe/borgdrill/D in src.module.modules)
-							qdel(D)
-							rebuild = 1
-						if(rebuild)
-							src.module.modules += new /obj/item/weapon/pickaxe/diamonddrill(src.module)
-							src.module.rebuild()
-					updateicon()
-				else
-					user << "You fail to hack [src]'s interface."
-					src << "Hack attempt detected."
-			return
-
 	else if(istype(W, /obj/item/borg/upgrade/))
 		var/obj/item/borg/upgrade/U = W
 		if(!opened)
@@ -696,8 +635,7 @@
 		else
 			if(U.action(src))
 				usr << "You apply the upgrade to [src]!"
-				usr.drop_item()
-				U.loc = src
+				usr.unEquip(U, src)
 			else
 				usr << "Upgrade error!"
 
@@ -717,7 +655,7 @@
 			attack_generic(H, rand(30,50), "slashed")
 			return
 
-	if(opened && !wiresexposed && (!istype(user, /mob/living/silicon)))
+	if(opened && !wiresexposed && (!issilicon(user)))
 		var/datum/robot_component/cell_component = components["power cell"]
 		if(cell)
 			cell.update_icon()
@@ -1009,7 +947,7 @@
 		return
 
 	while(triesleft--)
-		icontype = input("Select an icon! [triesleft ? "You have [triesleft] more chances." : "This is your last try."]", "Robot", null, null) in module_sprites
+		icontype = input("Select an icon! [triesleft?"You have [triesleft] more chances.":"This is your last try."]", "Robot", null, null) in module_sprites
 		sprite_data = borg_sprites[module.module_type][icontype]
 
 		updateicon()
@@ -1065,14 +1003,31 @@
 		return
 	switch(notifytype)
 		if(ROBOT_NOTIFICATION_NEW_UNIT) //New Robot
-			connected_ai << "<br><br><span class='notice'>NOTICE - New [lowertext(braintype)] connection detected: <a href='byond://?src=\ref[connected_ai];track2=\ref[connected_ai];track=\ref[src]'>[name]</a></span><br>"
+			connected_ai << {"
+					<br><br><span class='notice'>
+					NOTICE - New [lowertext(braintype)] connection detected:
+					<a href='byond://?src=\ref[connected_ai];track2=\ref[connected_ai];track=\ref[src]'>[name]</a>
+					</span><br>
+				"}
 		if(ROBOT_NOTIFICATION_NEW_MODULE) //New Module
-			connected_ai << "<br><br><span class='notice'>NOTICE - [braintype] module change detected: [name] has loaded the [first_arg].</span><br>"
+			connected_ai << {"
+				<br><br><span class='notice'>
+				NOTICE - [braintype] module change detected: [name] has loaded the [first_arg].
+				</span><br>
+			"}
 		if(ROBOT_NOTIFICATION_MODULE_RESET)
-			connected_ai << "<br><br><span class='notice'>NOTICE - [braintype] module reset detected: [name] has unloaded the [first_arg].</span><br>"
+			connected_ai << {"
+				<br><br><span class='notice'>
+				NOTICE - [braintype] module reset detected: [name] has unloaded the [first_arg].
+				</span><br>
+			"}
 		if(ROBOT_NOTIFICATION_NEW_NAME) //New Name
 			if(first_arg != second_arg)
-				connected_ai << "<br><br><span class='notice'>NOTICE - [braintype] reclassification detected: [first_arg] is now designated as [second_arg].</span><br>"
+				connected_ai << {"
+					<br><br><span class='notice'>
+					NOTICE - [braintype] reclassification detected: [first_arg] is now designated as [second_arg].
+					</span><br>
+				"}
 
 /mob/living/silicon/robot/proc/disconnect_from_ai()
 	if(connected_ai)
@@ -1087,3 +1042,70 @@
 		connected_ai.connected_robots |= src
 		notify_ai(ROBOT_NOTIFICATION_NEW_UNIT)
 		sync()
+
+/mob/living/silicon/robot/emag_act(var/remaining_charges, var/mob/user)
+	if(!opened)//Cover is closed
+		if(locked)
+			if(prob(90))
+				user << "You emag the cover lock."
+				locked = 0
+			else
+				user << "You fail to emag the cover lock."
+				src << "Hack attempt detected."
+			return 1
+		else
+			user << "The cover is already unlocked."
+		return
+
+	if(opened)//Cover is open
+		if(emagged)	return//Prevents the X has hit Y with Z message also you cant emag them twice
+		if(wiresexposed)
+			user << "You must close the panel first"
+			return
+		else
+			sleep(6)
+			if(prob(50))
+				emagged = 1
+				lawupdate = 0
+				disconnect_from_ai()
+				user << "You emag [src]'s interface."
+				message_admins("[key_name_admin(user)] emagged cyborg [key_name_admin(src)].  Laws overridden.")
+				log_game("[key_name(user)] emagged cyborg [key_name(src)].  Laws overridden.", src)
+				clear_supplied_laws()
+				clear_inherent_laws()
+				laws = new /datum/ai_laws/syndicate_override
+				var/time = time2text(world.realtime,"hh:mm:ss")
+				lawchanges.Add("[time] <B>:</B> [user.name]([user.key]) emagged [name]([key])")
+				set_zeroth_law("Only [user.real_name] and people \he designates as being such are operatives.")
+				. = 1
+				spawn()
+					src << "<span class='danger'>ALERT: Foreign software detected.</span>"
+					sleep(5)
+					src << "<span class='danger'>Initiating diagnostics...</span>"
+					sleep(20)
+					src << "<span class='danger'>SynBorg v1.7.1 loaded.</span>"
+					sleep(5)
+					src << "<span class='danger'>LAW SYNCHRONISATION ERROR</span>"
+					sleep(5)
+					src << "<span class='danger'>Would you like to send a report to NanoTraSoft? Y/N</span>"
+					sleep(10)
+					src << "<span class='danger'>> N</span>"
+					sleep(20)
+					src << "<span class='danger'>ERRORERRORERROR</span>"
+					src << "<b>Obey these laws:</b>"
+					laws.show_laws(src)
+					src << "<span class='danger'>ALERT: [user.real_name] is your new master. Obey your new laws and his commands.</span>"
+					if(src.module)
+						var/rebuild = 0
+						for(var/obj/item/weapon/pickaxe/borgdrill/D in src.module.modules)
+							qdel(D)
+							rebuild = 1
+						if(rebuild)
+							src.module.modules += new /obj/item/weapon/pickaxe/diamonddrill(src.module)
+							src.module.rebuild()
+					updateicon()
+			else
+				user << "You fail to hack [src]'s interface."
+				src << "Hack attempt detected."
+			return 1
+		return

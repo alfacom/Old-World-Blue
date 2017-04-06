@@ -129,7 +129,7 @@
 	name = "diamond drill"
 	desc = "This is an upgraded version of the drill that'll pierce the heavens! (Can be attached to: Combat and Engineering Exosuits)"
 	icon_state = "mecha_diamond_drill"
-	origin_tech = "materials=4;engineering=3"
+	origin_tech = list(TECH_MATERIAL = 4, TECH_ENGINEERING = 3)
 	construction_cost = list(DEFAULT_WALL_MATERIAL=10000,"diamond"=6500)
 	equip_cooldown = 20
 	force = 15
@@ -254,7 +254,7 @@
 	name = "mounted RCD"
 	desc = "An exosuit-mounted Rapid Construction Device. (Can be attached to: Any exosuit)"
 	icon_state = "mecha_rcd"
-	origin_tech = "materials=4;bluespace=3;magnets=4;powerstorage=4"
+	origin_tech = list(TECH_MATERIAL = 4, TECH_BLUESPACE = 3, TECH_MAGNET = 4, TECH_POWER = 4)
 	equip_cooldown = 10
 	energy_drain = 250
 	range = MELEE|RANGED
@@ -359,7 +359,7 @@
 	name = "teleporter"
 	desc = "An exosuit module that allows exosuits to teleport to any position in view."
 	icon_state = "mecha_teleport"
-	origin_tech = "bluespace=10"
+	origin_tech = list(TECH_BLUESPACE = 10)
 	equip_cooldown = 150
 	energy_drain = 1000
 	range = RANGED
@@ -379,7 +379,7 @@
 	name = "wormhole generator"
 	desc = "An exosuit module that allows generating of small quasi-stable wormholes."
 	icon_state = "mecha_wholegen"
-	origin_tech = "bluespace=3"
+	origin_tech = list(TECH_BLUESPACE = 3)
 	equip_cooldown = 50
 	energy_drain = 300
 	range = RANGED
@@ -429,7 +429,7 @@
 	name = "gravitational catapult"
 	desc = "An exosuit mounted Gravitational Catapult."
 	icon_state = "mecha_teleport"
-	origin_tech = "bluespace=2;magnets=3"
+	origin_tech = list(TECH_BLUESPACE = 2, TECH_MAGNET = 3)
 	equip_cooldown = 10
 	energy_drain = 100
 	range = MELEE|RANGED
@@ -505,7 +505,7 @@
 	name = "\improper CCW armor booster"
 	desc = "Close-combat armor booster. Boosts exosuit armor against armed melee attacks. Requires energy to operate."
 	icon_state = "mecha_abooster_ccw"
-	origin_tech = "materials=3"
+	origin_tech = list(TECH_MATERIAL = 3)
 	equip_cooldown = 10
 	energy_drain = 50
 	range = 0
@@ -526,8 +526,7 @@
 
 	detached()
 		chassis.proc_res["dynattackby"] = null
-		..()
-		return
+		return ..()
 
 	get_equip_info()
 		if(!chassis) return
@@ -555,7 +554,7 @@
 	name = "\improper RW armor booster"
 	desc = "Ranged-weaponry armor booster. Boosts exosuit armor against ranged attacks. Completely blocks taser shots, but requires energy to operate."
 	icon_state = "mecha_abooster_proj"
-	origin_tech = "materials=4"
+	origin_tech = list(TECH_MATERIAL = 4)
 	equip_cooldown = 10
 	energy_drain = 50
 	range = 0
@@ -578,8 +577,7 @@
 	detached()
 		chassis.proc_res["dynbulletdamage"] = null
 		chassis.proc_res["dynhitby"] = null
-		..()
-		return
+		return ..()
 
 	get_equip_info()
 		if(!chassis) return
@@ -626,7 +624,7 @@
 	name = "repair droid"
 	desc = "Automated repair droid. Scans exosuit for damage and repairs it. Can fix almost any type of external or internal damage."
 	icon_state = "repair_droid"
-	origin_tech = "magnets=3;programming=3"
+	origin_tech = list(TECH_MAGNET = 3, TECH_DATA = 3)
 	equip_cooldown = 20
 	energy_drain = 100
 	range = 0
@@ -661,8 +659,7 @@
 	detached()
 		chassis.overlays -= droid_overlay
 		pr_repair_droid.stop()
-		..()
-		return
+		return ..()
 
 	get_equip_info()
 		if(!chassis) return
@@ -721,7 +718,7 @@
 	name = "energy relay"
 	desc = "Wirelessly drains energy from any available power channel in area. The performance index is quite low."
 	icon_state = "tesla"
-	origin_tech = "magnets=4;syndicate=2"
+	origin_tech = list(TECH_MAGNET = 4, TECH_ILLEGAL = 2)
 	equip_cooldown = 10
 	energy_drain = 0
 	range = 0
@@ -745,8 +742,7 @@
 		pr_energy_relay.stop()
 //		chassis.proc_res["dynusepower"] = null
 		chassis.proc_res["dyngetcharge"] = null
-		..()
-		return
+		return ..()
 
 	attached(obj/mecha/M)
 		..()
@@ -838,7 +834,7 @@
 	name = "phoron generator"
 	desc = "Generates power using solid phoron as fuel. Pollutes the environment."
 	icon_state = "tesla"
-	origin_tech = "phorontech=2;powerstorage=2;engineering=1"
+	origin_tech = list(TECH_PHORON = 2, TECH_POWER = 2, TECH_ENGINEERING = 1)
 	equip_cooldown = 10
 	energy_drain = 0
 	range = MELEE
@@ -871,8 +867,7 @@
 
 	detached()
 		pr_mech_generator.stop()
-		..()
-		return
+		return ..()
 
 
 	Topic(href, href_list)
@@ -889,7 +884,7 @@
 	get_equip_info()
 		var/output = ..()
 		if(output)
-			return "[output] \[[fuel]: [round(fuel.amount*fuel.perunit,0.1)] cm<sup>3</sup>\] - <a href='?src=\ref[src];toggle=1'>[pr_mech_generator.active()?"Dea":"A"]ctivate</a>"
+			return "[output] \[[fuel]: [round(fuel.amount*SHEET_MATERIAL_AMOUNT,0.1)] cm<sup>3</sup>\] - <a href='?src=\ref[src];toggle=1'>[pr_mech_generator.active()?"Dea":"A"]ctivate</a>"
 		return
 
 	action(target)
@@ -908,9 +903,9 @@
 
 	proc/load_fuel(var/obj/item/stack/material/P)
 		if(P.type == fuel.type && P.amount)
-			var/to_load = max(max_fuel - fuel.amount*fuel.perunit,0)
+			var/to_load = max(max_fuel - fuel.amount*SHEET_MATERIAL_AMOUNT,0)
 			if(to_load)
-				var/units = min(max(round(to_load / P.perunit),1),P.amount)
+				var/units = min(max(round(to_load / SHEET_MATERIAL_AMOUNT),1),P.amount)
 				if(units)
 					fuel.amount += units
 					P.use(units)
@@ -972,7 +967,7 @@
 		if(cur_charge<EG.chassis.cell.maxcharge)
 			use_fuel = EG.fuel_per_cycle_active
 			EG.chassis.give_power(EG.power_per_cycle)
-		EG.fuel.amount -= min(use_fuel/EG.fuel.perunit,EG.fuel.amount)
+		EG.fuel.amount -= min(use_fuel/SHEET_MATERIAL_AMOUNT,EG.fuel.amount)
 		EG.update_equip_info()
 		return 1
 
@@ -981,7 +976,7 @@
 	name = "\improper ExoNuclear reactor"
 	desc = "Generates power using uranium. Pollutes the environment."
 	icon_state = "tesla"
-	origin_tech = "powerstorage=3;engineering=3"
+	origin_tech = list(TECH_POWER = 3, TECH_ENGINEERING = 3)
 	construction_cost = list(DEFAULT_WALL_MATERIAL=10000,"silver"=500,"glass"=1000)
 	max_fuel = 50000
 	fuel_per_cycle_idle = 10
@@ -1078,7 +1073,7 @@
 	name = "passenger compartment"
 	desc = "A mountable passenger compartment for exo-suits. Rather cramped."
 	icon_state = "mecha_abooster_ccw"
-	origin_tech = "engineering=1;biotech=1"
+	origin_tech = list(TECH_ENGINEERING = 1, TECH_BIO = 1)
 	energy_drain = 10
 	range = MELEE
 	construction_cost = list(DEFAULT_WALL_MATERIAL=5000,"glass"=5000)
@@ -1147,10 +1142,10 @@
 /obj/item/mecha_parts/mecha_equipment/tool/passenger/detached()
 	if(occupant)
 		occupant_message("Unable to detach [src] - equipment occupied.")
-		return
+		return 0
 
 	var/obj/mecha/M = chassis
-	..()
+	. = ..()
 	if (M && !(locate(/obj/item/mecha_parts/mecha_equipment/tool/passenger) in M))
 		M.verbs -= /obj/mecha/proc/move_inside_passenger
 
@@ -1237,9 +1232,8 @@
 			return ..()
 
 	detached()
-		..()
 		chassis.proc_res["dyndomove"] = null
-		return
+		return ..()
 
 	attached(obj/mecha/M as obj)
 		..()

@@ -5,7 +5,7 @@
 	item_flags = THICKMATERIAL
 	item_state = "helmet"
 	armor = list(melee = 50, bullet = 15, laser = 50,energy = 10, bomb = 25, bio = 0, rad = 0)
-	flags_inv = HIDEEARS|HIDEEYES
+	flags_inv = HIDEEARS|HIDEEYES|BLOCKHEADHAIR
 	body_parts_covered = HEAD|EYES
 	cold_protection = HEAD
 	min_cold_protection_temperature = HELMET_MIN_COLD_PROTECTION_TEMPERATURE
@@ -63,7 +63,7 @@
 	icon_state = "combathelmet"
 	item_flags = THICKMATERIAL
 	item_state = "combathelmet"
-	armor = list(melee = 60, bullet = 50, laser = 55,energy = 45, bomb = 45, bio = 0, rad = 0)
+	armor = list(melee = 60, bullet = 35, laser = 45,energy = 45, bomb = 45, bio = 0, rad = 0)
 	flags_inv = HIDEEARS
 	body_parts_covered = HEAD|EYES
 	siemens_coefficient = 0.4

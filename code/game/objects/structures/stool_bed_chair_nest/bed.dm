@@ -17,6 +17,7 @@
 	can_buckle = 1
 	buckle_dir = SOUTH
 	buckle_lying = 1
+	mob_offset_y = 3
 	var/material/material
 	var/material/padding_material
 	var/base_icon = "bed"
@@ -33,6 +34,10 @@
 	if(new_padding_material)
 		padding_material = get_material_by_name(new_padding_material)
 	update_icon()
+
+/obj/structure/bed/attack_robot(mob/user)
+	if(Adjacent(user))
+		attack_hand(user)
 
 /obj/structure/bed/get_material()
 	return material
@@ -177,6 +182,7 @@
 	desc = "For prime comfort during psychiatric evaluations."
 	icon_state = "psychbed"
 	base_icon = "psychbed"
+	mob_offset_y = 5
 
 /obj/structure/bed/psych/New(var/newloc)
 	..(newloc,"wood","leather")
@@ -187,6 +193,7 @@
 /obj/structure/bed/alien
 	name = "resting contraption"
 	desc = "This looks similar to contraptions from earth. Could aliens be stealing our technology?"
+	mob_offset_y = 3
 
 /obj/structure/bed/alien/New(var/newloc)
 	..(newloc,"resin")
@@ -300,24 +307,20 @@
 			qdel(src)
 		return
 
-/obj/structure/bed/sofa/right
+/obj/structure/bed/sofa
 	name = "comfy sofa"
 	desc = "So lovely, uh."
 	icon_state = "sofa_right"
 	base_icon = "sofa_right"
 	buckle_dir = 0
 	buckle_lying = 0
+	mob_offset_y = 0
 	color = null
 
 
 /obj/structure/bed/sofa/left
-	name = "comfy sofa"
-	desc = "So lovely, uh."
 	icon_state = "sofa_left"
 	base_icon = "sofa_left"
-	buckle_lying = 0
-	buckle_dir = 0
-	color = null
 
 /obj/structure/bed/sofa/New(var/newloc)
 	..(newloc,"plastic")

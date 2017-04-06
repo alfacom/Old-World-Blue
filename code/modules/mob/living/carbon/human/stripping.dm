@@ -4,7 +4,7 @@
 		return
 
 	// TODO :  Change to incapacitated() on merge.
-	if(user.stat || user.lying || user.resting || user.buckled || !user.Adjacent(src))
+	if(user.stat || user.lying || user.resting || user.buckled || user.restrained() || !user.Adjacent(src))
 		user << browse(null, text("window=mob[src.name]"))
 		return
 
@@ -14,22 +14,22 @@
 		// Handle things that are part of this interface but not removing/replacing a given item.
 		if("pockets")
 			visible_message("<span class='danger'>\The [user] is trying to empty \the [src]'s pockets!</span>")
-			if(do_after(user,HUMAN_STRIP_DELAY))
+			if(do_mob(user,src,HUMAN_STRIP_DELAY))
 				empty_pockets(user)
 			return
 		if("splints")
 			visible_message("<span class='danger'>\The [user] is trying to remove \the [src]'s splints!</span>")
-			if(do_after(user,HUMAN_STRIP_DELAY))
+			if(do_mob(user,src,HUMAN_STRIP_DELAY))
 				remove_splints(user)
 			return
 		if("sensors")
 			visible_message("<span class='danger'>\The [user] is trying to set \the [src]'s sensors!</span>")
-			if(do_after(user,HUMAN_STRIP_DELAY))
+			if(do_mob(user,src,HUMAN_STRIP_DELAY))
 				toggle_sensors(user)
 			return
 		if("internals")
 			visible_message("<span class='danger'>\The [usr] is trying to set \the [src]'s internals!</span>")
-			if(do_after(user,HUMAN_STRIP_DELAY))
+			if(do_mob(user,src,HUMAN_STRIP_DELAY))
 				toggle_internals(user)
 			return
 		if("tie")
@@ -41,7 +41,7 @@
 				return
 			visible_message("<span class='danger'>\The [usr] is trying to remove \the [src]'s [A.name]!</span>")
 
-			if(!do_after(user,HUMAN_STRIP_DELAY))
+			if(!do_mob(user,src,HUMAN_STRIP_DELAY))
 				return
 
 			if(!A || suit.loc != src || !(A in suit.accessories))
@@ -49,8 +49,11 @@
 
 			if(istype(A, /obj/item/clothing/accessory/badge) || istype(A, /obj/item/clothing/accessory/medal))
 				user.visible_message("<span class='danger'>\The [user] tears off \the [A] from [src]'s [suit.name]!</span>")
-			attack_log += "\[[time_stamp()]\] <font color='orange'>Has had \the [A] removed by [user.name] ([user.ckey])</font>"
-			user.attack_log += "\[[time_stamp()]\] <font color='red'>Attempted to remove [name]'s ([ckey]) [A.name]</font>"
+			add_attack_log(user, src,
+				"Has had \the [A] removed by [key_name(user)]",
+				"Attempted to remove [name]'s ([ckey]) [A.name]",
+				"[key_name(user)] removed [A.name] from [key_name(src)]."
+			)
 			A.on_removed(user)
 			suit.accessories -= A
 			update_inv_w_uniform()
@@ -72,19 +75,24 @@
 	else
 		visible_message("<span class='danger'>\The [user] is trying to put \a [held] on \the [src]!</span>")
 
-	var/turf/T = src.loc
-	if(!do_after(user,HUMAN_STRIP_DELAY) || T!=src.loc)
+	if(!do_mob(user,src,HUMAN_STRIP_DELAY))
 		return
 
 	if(!stripping && user.get_active_hand() != held)
 		return
 
 	if(stripping)
-		admin_attack_log(user, src, "Attempted to remove \a [target_slot]", "Target of an attempt to remove \a [target_slot].", "attempted to remove \a [target_slot] from")
-		unEquip(target_slot)
+		add_attack_log(user, src,
+			"Attempted to remove \a [target_slot]",
+			"Target of an attempt to remove \a [target_slot].",
+			"[key_name(user)] attempted to remove \a [target_slot] from [key_name(src)]"
+		)
+		if(unEquip(target_slot))
+			src.show_inv(user)
 	else if(user.unEquip(held))
-		equip_to_slot_if_possible(held, text2num(slot_to_strip), 0, 1, 1)
-		if(held.loc != src)
+		if(equip_to_slot_if_possible(held, text2num(slot_to_strip), 0, 1, 1))
+			src.show_inv(user)
+		else
 			user.put_in_hands(held)
 
 // Empty out everything in the target's pockets.
@@ -107,8 +115,11 @@
 	if (suit.has_sensor >= 2)
 		user << "<span class='warning'>\The [src]'s suit sensor controls are locked.</span>"
 		return
-	attack_log += text("\[[time_stamp()]\] <font color='orange'>Has had their sensors toggled by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Attempted to toggle [name]'s ([ckey]) sensors</font>")
+	add_attack_log(user, src,
+		"Attempted to toggle [name]'s ([ckey]) sensors",
+		"Has had their sensors toggled by [user.name] ([user.ckey])",
+		"[key_name(user)] toggle [key_name(src)] sensors."
+	)
 	suit.set_sensors(user)
 
 // Remove all splints.

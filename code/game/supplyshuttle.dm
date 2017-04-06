@@ -53,6 +53,19 @@ var/list/mechtoys = list(
 		/mob/living/silicon/robot/drone
 	)
 
+/obj/structure/plasticflaps/attackby(obj/item/P, mob/user)
+	if(istype(P, /obj/item/weapon/wirecutters))
+		playsound(src.loc, 'sound/items/Wirecutter.ogg', 50, 1)
+		user << "<span class='notice'>You start to cut the plastic flaps.</span>"
+		playsound(src.loc, 'sound/items/Ratchet.ogg', 50, 1)
+		if(do_after(user, 10))
+			user << "<span class='notice'>You cut the plastic flaps.</span>"
+			new /obj/item/stack/material/plastic( src.loc, 4)
+			qdel(src)
+		return
+	else
+		return
+
 /obj/structure/plasticflaps/CanPass(atom/A, turf/T)
 	if(istype(A) && A.checkpass(PASSGLASS))
 		return prob(60)
@@ -130,9 +143,10 @@ var/list/mechtoys = list(
 	var/points = 50
 	var/points_per_process = 1
 	var/points_per_slip = 5
-	var/points_per_crate = 1.5
-	var/points_per_platinum = 5 // 5 points per sheet
-	var/points_per_phoron = 5
+	var/material_cost = list(
+		"phoron" = 5,
+		"platinum" = 5,
+	)
 	//control
 	var/ordernum
 	var/list/shoppinglist = list()
@@ -176,8 +190,7 @@ var/list/mechtoys = list(
 		var/area/area_shuttle = shuttle.get_location_area()
 		if(!area_shuttle)	return
 
-		var/phoron_count = 0
-		var/plat_count = 0
+		var/materials = list()
 
 		for(var/atom/movable/MA in area_shuttle)
 			if(MA.anchored)	continue
@@ -186,7 +199,6 @@ var/list/mechtoys = list(
 			if(istype(MA,/obj/structure/closet/crate))
 				var/obj/structure/closet/crate/CR = MA
 				callHook("sell_crate", list(CR, area_shuttle))
-				points += CR.points_per_crate
 				var/find_slip = 1
 
 				for(var/atom in CR)
@@ -202,16 +214,11 @@ var/list/mechtoys = list(
 					// Sell phoron and platinum
 					if(istype(A, /obj/item/stack))
 						var/obj/item/stack/P = A
-						switch(P.get_material_name())
-							if("phoron") phoron_count += P.get_amount()
-							if("platinum") plat_count += P.get_amount()
+						materials[P.get_material_name()] += P.get_amount()
 			qdel(MA)
 
-		if(phoron_count)
-			points += phoron_count * points_per_phoron
-
-		if(plat_count)
-			points += plat_count * points_per_platinum
+		for(var/M in materials)
+			points += materials[M] * material_cost[M]
 
 	//Buyin
 	proc/buy()
@@ -238,6 +245,7 @@ var/list/mechtoys = list(
 			var/i = rand(1,clear_turfs.len)
 			var/turf/pickedloc = clear_turfs[i]
 			clear_turfs.Cut(i,i+1)
+			shoppinglist -= S
 
 			var/datum/supply_order/SO = S
 			var/datum/supply_packs/SP = SO.object

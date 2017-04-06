@@ -9,11 +9,10 @@
 /mob/living/carbon/human/isSynthetic()
 	if(synthetic) return synthetic //Your synthetic-ness is not going away
 	var/obj/item/organ/external/T = organs_by_name[BP_CHEST]
-	if(T && T.status & ORGAN_ROBOT)
+	if(T && T.robotic >= ORGAN_ROBOT)
 //		src.verbs += /mob/living/carbon/human/proc/self_diagnostics
 		var/datum/robolimb/R = all_robolimbs[T.model]
-		synthetic = R
-		return synthetic
+		return R ? R : basic_robolimb
 
 	return 0
 
@@ -23,21 +22,34 @@
 	//Look at their head
 	var/obj/item/organ/external/H = organs_by_name[BP_HEAD]
 	if(!head || !(head && (head.flags_inv & HIDEFACE)))
-		if(H && H.status & ORGAN_ROBOT) //Exactly robotic, not higher as lifelike is higher
+		if(H && H.robotic == ORGAN_ROBOT) //Exactly robotic, not higher as lifelike is higher
 			return 1
 
 	//Look at their torso
 	var/obj/item/organ/external/T = organs_by_name[BP_CHEST]
 	if(!wear_suit || (wear_suit && !(wear_suit.flags_inv & HIDEJUMPSUIT)))
 		if(!w_uniform || (w_uniform && !(w_uniform.body_parts_covered & UPPER_TORSO)))
-			if(T && T.status & ORGAN_ROBOT)
+			if(T && T.robotic == ORGAN_ROBOT)
 				return 1
 
 	return 0
 
-/mob/living/carbon/human/proc/set_body_build(var/prefered = "Default")
-	species.get_body_build(prefered)
-	fix_body_build()
+/mob/living/carbon/human/proc/should_have_organ(var/organ_check)
+
+	var/obj/item/organ/external/affecting
+	if(organ_check in list(O_HEART, O_LUNGS))
+		affecting = organs_by_name[BP_CHEST]
+	else if(organ_check in list(O_LIVER, O_KIDNEYS))
+		affecting = organs_by_name[BP_GROIN]
+
+	if(affecting && (affecting.robotic >= ORGAN_ROBOT)) //LETHALGHOST: check that
+		return 0
+	return (species && species.has_organ[organ_check])
+
+/mob/living/carbon/human/proc/can_feel_pain(var/check_organ)
+	if(isSynthetic())
+		return 0
+	return !(species.flags & NO_PAIN)
 
 /mob/living/carbon/human/proc/fix_body_build()
 	if(body_build && (gender in body_build.genders) && (body_build in species.body_builds))

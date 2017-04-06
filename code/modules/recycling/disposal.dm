@@ -120,19 +120,15 @@
 				for (var/mob/C in viewers(src))
 					C.show_message("\red [GM.name] has been placed in the [src] by [user].", 3)
 				qdel(G)
-				usr.attack_log += text("\[[time_stamp()]\] <font color='red'>Has placed [GM.name] ([GM.ckey]) in disposals.</font>")
-				GM.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been placed in disposals by [usr.name] ([usr.ckey])</font>")
-				msg_admin_attack("[usr] ([usr.ckey]) placed [GM] ([GM.ckey]) in a disposals unit. (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[usr.x];Y=[usr.y];Z=[usr.z]'>JMP</a>)")
+				admin_attack_log(usr, GM,
+					"Has placed [key_name(GM)] in disposals",
+					"Has been placed in disposals by [key_name(usr)]",
+					"placed in a disposals unit"
+				)
 		return
 
-	if(isrobot(user))
+	if(!I || !user.unEquip(I, src))
 		return
-	if(!I)
-		return
-
-	user.drop_item()
-	if(I)
-		I.loc = src
 
 	user << "You place \the [I] into the [src]."
 	for(var/mob/M in viewers(src))
@@ -145,7 +141,7 @@
 // mouse drop another mob or self
 //
 /obj/machinery/disposal/MouseDrop_T(mob/target, mob/user)
-	if (!istype(target) || target.buckled || get_dist(user, src) > 1 || get_dist(user, target) > 1 || user.stat || istype(user, /mob/living/silicon/ai))
+	if (!istype(target) || target.buckled || get_dist(user, src) > 1 || get_dist(user, target) > 1 || user.stat || isAI(user))
 		return
 	if(isanimal(user) && target != user) return //animals cannot put mobs other than themselves into disposal
 	src.add_fingerprint(user)
@@ -169,9 +165,11 @@
 		msg = "[user.name] stuffs [target.name] into the [src]!"
 		user << "You stuff [target.name] into the [src]!"
 
-		user.attack_log += text("\[[time_stamp()]\] <font color='red'>Has placed [target.name] ([target.ckey]) in disposals.</font>")
-		target.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been placed in disposals by [user.name] ([user.ckey])</font>")
-		msg_admin_attack("[user] ([user.ckey]) placed [target] ([target.ckey]) in a disposals unit. (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+		admin_attack_log(user, target,
+			"Has placed [key_name(target)] in disposals.",
+			"Has been placed in disposals by [key_name(user)].",
+			"placed in a disposals unit "
+		)
 	else
 		return
 	if (target.client)
@@ -1184,23 +1182,17 @@
 	var/sortdir = 0
 
 	proc/updatedesc()
-		switch(sortTypes.len)
-			if(0) desc = initial(desc)
-			if(1) desc += "\nIt's filtering objects with the '[sortTypes[1]]' tag."
-			else
-				desc += "\nIt's filtering objects with the '[sortTypes[1]]' tag."
-				var/tmp_desc = ""
-				for(var/location in sortTypes)
-					tmp_desc += ", '[location]'"
-				desc = "\nIt's filtering objects with the [copytext(tmp_desc,2)] tags."
-
+		desc = initial(desc)
+		if(!sortTypes.len)
+			desc += "\nFiltering tags isn't set yet."
+		else
+			desc += "\nIt's filtering objects with next tags: \n- [sortTypes.Join("\n- ")]"
 
 	proc/updatename()
-		switch(sortTypes.len)
-			if(0)
-				name = initial(name)
-			if(1)
-				name = "[initial(name)] ([sortTypes][1])"
+		if(!sortTypes.len)
+			name = initial(name)
+		else
+			name = "[initial(name)] ([sortTypes[1]])"
 
 	proc/updatedir()
 		posdir = dir
@@ -1228,19 +1220,45 @@
 			return
 
 		if(istype(I, /obj/item/device/destTagger))
-			var/obj/item/device/destTagger/O = I
+			openwindow(user)
 
-			if(O.currTag)// Tag set
-				if(O.currTag in sortTypes)
-					sortTypes -= O.currTag
-					playsound(src.loc, 'sound/machines/twobeep.ogg', 100, 1)
-					user << "\blue Remove '[O.currTag]', from sort types."
-				else
-					sortTypes += O.currTag
-					playsound(src.loc, 'sound/machines/twobeep.ogg', 100, 1)
-					user << "\blue Add '[O.currTag]', to sort types."
-				updatename()
-				updatedesc()
+
+	proc/openwindow(mob/user)
+		var/dat = "<tt><center><h1><b>TagMaster 2.3</b></h1></center>"
+
+		dat += "<table style='width:100%; padding:4px;'><tr>"
+		var/i = 0
+		for(var/location in tagger_locations)
+			if(location in sortTypes)
+				dat += "<td><b><a href='?src=\ref[src];toggleTag=[location]'>[location]</a></b></td>"
+			else
+				dat += "<td><a href='?src=\ref[src];toggleTag=[location]'>[location]</a></td>"
+
+			if (++i%4==0)
+				dat += "</tr><tr>"
+
+		dat += "</tr></table></tt>"
+
+		user << browse(dat, "window=PipeTaggs;size=450x350")
+		onclose(user, "PipeTaggs")
+
+	Topic(href, href_list)
+		src.add_fingerprint(usr)
+		if(!Adjacent(usr))
+			return 1
+		if(href_list["toggleTag"])
+			var/currTag = href_list["toggleTag"]
+			if(!istype(usr.get_active_hand(), /obj/item/device/destTagger) || !currTag in tagger_locations)
+				return
+			if(currTag in sortTypes)
+				sortTypes -= currTag
+			else
+				sortTypes |= currTag
+
+			playsound(src.loc, 'sound/machines/twobeep.ogg', 100, 1)
+			updatename()
+			updatedesc()
+		openwindow(usr)
 
 	proc/divert_check(var/checkTag)
 		return checkTag in sortTypes

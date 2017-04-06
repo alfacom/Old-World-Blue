@@ -1,41 +1,19 @@
 proc/random_hair_style(gender, species = "Human")
 	var/h_style = "Bald"
-
-	var/list/valid_hairstyles = list()
-	for(var/hairstyle in hair_styles_list)
-		var/datum/sprite_accessory/S = hair_styles_list[hairstyle]
-		if(gender == MALE && S.gender == FEMALE)
-			continue
-		if(gender == FEMALE && S.gender == MALE)
-			continue
-		if( !(species in S.species_allowed))
-			continue
-		valid_hairstyles[hairstyle] = hair_styles_list[hairstyle]
-
-	if(valid_hairstyles.len)
-		h_style = pick(valid_hairstyles)
-
+	h_style = pick(get_hair_styles_list(species, gender))
 	return h_style
 
 proc/random_facial_hair_style(gender, species = "Human")
 	var/f_style = "Shaved"
+	f_style = pick(get_facial_styles_list(species, gender))
+	return f_style
 
-	var/list/valid_facialhairstyles = list()
-	for(var/facialhairstyle in facial_hair_styles_list)
-		var/datum/sprite_accessory/S = facial_hair_styles_list[facialhairstyle]
-		if(gender == MALE && S.gender == FEMALE)
-			continue
-		if(gender == FEMALE && S.gender == MALE)
-			continue
-		if( !(species in S.species_allowed))
-			continue
+proc/sanitize_name(name, species = "Human")
+	var/datum/species/current_species
+	if(species)
+		current_species = all_species[species]
 
-		valid_facialhairstyles[facialhairstyle] = facial_hair_styles_list[facialhairstyle]
-
-	if(valid_facialhairstyles.len)
-		f_style = pick(valid_facialhairstyles)
-
-		return f_style
+	return current_species ? current_species.sanitize_name(name) : sanitizeName(name)
 
 proc/random_name(gender, species = "Human")
 
@@ -43,7 +21,7 @@ proc/random_name(gender, species = "Human")
 	if(species)
 		current_species = all_species[species]
 
-	if(!current_species || current_species.name == "Human")
+	if(!current_species || current_species.name_language == null)
 		if(gender==FEMALE)
 			return capitalize(pick(first_names_female)) + " " + capitalize(pick(last_names))
 		else
@@ -107,24 +85,6 @@ proc/RoundHealth(health)
 		else
 			return "health-100"
 	return "0"
-
-/*
-Proc for attack log creation, because really why not
-1 argument is the actor
-2 argument is the target of action
-3 is the description of action(like punched, throwed, or any other verb)
-4 should it make adminlog note or not
-5 is the tool with which the action was made(usually item)					5 and 6 are very similar(5 have "by " before it, that it) and are separated just to keep things in a bit more in order
-6 is additional information, anything that needs to be added
-*/
-
-/proc/add_logs(mob/user, mob/target, what_done, var/admin=1, var/object=null, var/addition=null)
-	if(user && ismob(user))
-		user.attack_log += text("\[[time_stamp()]\] <font color='red'>Has [what_done] [target ? "[target.name][(ismob(target) && target.ckey) ? "([target.ckey])" : ""]" : "NON-EXISTANT SUBJECT"][object ? " with [object]" : " "][addition]</font>")
-	if(target && ismob(target))
-		target.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been [what_done] by [user ? "[user.name][(ismob(user) && user.ckey) ? "([user.ckey])" : ""]" : "NON-EXISTANT SUBJECT"][object ? " with [object]" : " "][addition]</font>")
-	if(admin)
-		log_attack("<font color='red'>[user ? "[user.name][(ismob(user) && user.ckey) ? "([user.ckey])" : ""]" : "NON-EXISTANT SUBJECT"] [what_done] [target ? "[target.name][(ismob(target) && target.ckey)? "([target.ckey])" : ""]" : "NON-EXISTANT SUBJECT"][object ? " with [object]" : " "][addition]</font>")
 
 //checks whether this item is a module of the robot it is located in.
 /proc/is_robot_module(var/obj/item/thing)

@@ -10,7 +10,7 @@
 	var/electrified_until = 0			//World time when the door is no longer electrified. -1 if it is permanently electrified until someone fixes it.
 	var/main_power_lost_until = 0	 	//World time when main power is restored.
 	var/backup_power_lost_until = -1	//World time when backup power is restored.
-	var/next_beep_at = 0				//World time when we may next beep due to doors being blocked by mobs
+	var/has_beeped = 0					//If 1, will not beep on failed closing attempt. Resets when door closes.
 	var/spawnPowerRestoreRunning = 0
 	var/welded = null
 	var/locked = 0
@@ -394,12 +394,16 @@ About the new airlock wires panel:
 	if(electrified_until && isAllPowerLoss())
 		electrify(0)
 
+	update_icon()
+
 /obj/machinery/door/airlock/proc/loseBackupPower()
 	backup_power_lost_until = backupPowerCablesCut() ? -1 : world.time + SecondsToTicks(60)
 
 	// Disable electricity if required
 	if(electrified_until && isAllPowerLoss())
 		electrify(0)
+
+	update_icon()
 
 /obj/machinery/door/airlock/proc/regainMainPower()
 	if(!mainPowerCablesCut())
@@ -408,10 +412,14 @@ About the new airlock wires panel:
 		if(!backup_power_lost_until)
 			backup_power_lost_until = -1
 
+	update_icon()
+
 /obj/machinery/door/airlock/proc/regainBackupPower()
 	if(!backupPowerCablesCut())
 		// Restore backup power only if main power is offline, otherwise permanently disable
 		backup_power_lost_until = main_power_lost_until == 0 ? -1 : 0
+
+	update_icon()
 
 /obj/machinery/door/airlock/proc/electrify(var/duration, var/feedback = 0)
 	var/message = ""
@@ -624,7 +632,7 @@ About the new airlock wires panel:
 
 /obj/machinery/door/airlock/attack_hand(mob/user as mob)
 	user.next_move = world.time + 8
-	if(!istype(usr, /mob/living/silicon))
+	if(!issilicon(usr))
 		if(src.isElectrified())
 			if(src.shock(user, 100))
 				return
@@ -637,13 +645,10 @@ About the new airlock wires panel:
 	return
 
 /obj/machinery/door/airlock/CanUseTopic(var/mob/user)
-	if(!user.isSilicon())
-		return STATUS_CLOSE
-
 	if(operating < 0) //emagged
 		user << "<span class='warning'>Unable to interface: Internal error.</span>"
 		return STATUS_CLOSE
-	if(!src.canAIControl())
+	if(issilicon(user) && !src.canAIControl())
 		if(src.canAIHack(user))
 			src.hack(user)
 		else
@@ -716,7 +721,7 @@ About the new airlock wires panel:
 /obj/machinery/door/airlock/attackby(C as obj, mob/user as mob)
 	user.next_move = world.time + 8
 	//world << text("airlock attackby src [] obj [] mob []", src, C, user)
-	if(!istype(usr, /mob/living/silicon))
+	if(!issilicon(usr))
 		if(src.isElectrified())
 			if(src.shock(user, 75))
 				return
@@ -767,7 +772,7 @@ About the new airlock wires panel:
 				if (istype(da, /obj/structure/door_assembly/multi_tile))
 					da.set_dir(src.dir)
 
- 				da.anchored = 1
+				da.anchored = 1
 				if(mineral)
 					da.glass = mineral
 				//else if(glass)
@@ -885,9 +890,6 @@ About the new airlock wires panel:
 /obj/machinery/door/blocks_airlock()
 	return 0
 
-/obj/machinery/mech_sensor/blocks_airlock()
-	return 0
-
 /mob/living/blocks_airlock()
 	return 1
 
@@ -934,9 +936,9 @@ About the new airlock wires panel:
 		for(var/turf/turf in locs)
 			for(var/atom/movable/AM in turf)
 				if(AM.blocks_airlock())
-					if(world.time > next_beep_at)
+					if(!has_beeped)
 						playsound(src.loc, 'sound/machines/buzz-two.ogg', 50, 0)
-						next_beep_at = world.time + SecondsToTicks(10)
+						has_beeped = 1
 					close_door_at = world.time + 6
 					return
 
@@ -946,6 +948,7 @@ About the new airlock wires panel:
 				take_damage(DOOR_CRUSH_DAMAGE)
 
 	use_power(360)	//360 W seems much more appropriate for an actuator moving an industrial door capable of crushing people
+	has_beeped = 0
 	if(arePowerSystemsOn())
 		playsound(src.loc, open_sound_powered, 100, 1)
 	else
@@ -1011,6 +1014,9 @@ About the new airlock wires panel:
 			name = assembly.created_name
 		else
 			name = "[istext(assembly.glass) ? "[assembly.glass] airlock" : assembly.base_name]"
+
+		//get the dir from the assembly
+		set_dir(assembly.dir)
 
 	//wires
 	var/turf/T = get_turf(newloc)

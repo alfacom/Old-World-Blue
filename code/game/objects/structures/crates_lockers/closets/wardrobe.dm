@@ -26,6 +26,12 @@
 
 /obj/structure/closet/wardrobe/red/New()
 	..()
+	for(var/i in 1 to 3)
+		switch(rand(4))
+			if(1) new /obj/item/weapon/storage/backpack/security(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/sec(src)
+			if(3) new /obj/item/weapon/storage/backpack/dufflebag/sec(src)
+			if(4) new /obj/item/weapon/storage/backpack/messenger/sec(src)
 	new /obj/item/clothing/under/rank/security(src)
 	new /obj/item/clothing/under/rank/security(src)
 	new /obj/item/clothing/under/rank/security(src)
@@ -38,14 +44,16 @@
 	new /obj/item/clothing/head/beret/sec(src)
 	new /obj/item/clothing/head/beret/sec(src)
 	new /obj/item/clothing/head/beret/sec(src)
+	new /obj/item/clothing/mask/bandana/red(src)
+	new /obj/item/clothing/mask/bandana/red(src)
+	new /obj/item/clothing/mask/bandana/red(src)
 	new /obj/item/clothing/accessory/armband(src)
 	new /obj/item/clothing/accessory/armband(src)
 	new /obj/item/clothing/accessory/armband(src)
-	new /obj/item/clothing/accessory/holster/armpit(src)
-	new /obj/item/clothing/accessory/holster/armpit(src)
-	new /obj/item/clothing/accessory/holster/armpit(src)
-	new /obj/item/clothing/accessory/holster/waist(src)
-	new /obj/item/clothing/accessory/holster/hip(src)
+	new /obj/item/clothing/accessory/holster/gun/armpit(src)
+	new /obj/item/clothing/accessory/holster/gun/waist(src)
+	new /obj/item/clothing/accessory/holster/gun/waist(src)
+	new /obj/item/clothing/accessory/holster/gun/hip(src)
 	return
 
 /obj/structure/closet/wardrobe/redalt
@@ -55,9 +63,9 @@
 
 /obj/structure/closet/wardrobe/redalt/New()
 	..()
-	new /obj/item/clothing/under/rank/security2(src)
-	new /obj/item/clothing/under/rank/security2(src)
-	new /obj/item/clothing/under/rank/security2(src)
+	new /obj/item/clothing/under/rank/cadet(src)
+	new /obj/item/clothing/under/rank/cadet(src)
+	new /obj/item/clothing/under/rank/cadet(src)
 	new /obj/item/clothing/under/rank/dispatch(src)
 	new /obj/item/clothing/under/rank/dispatch(src)
 	new /obj/item/clothing/head/beret/sec/alt(src)
@@ -68,7 +76,6 @@
 	new /obj/item/clothing/under/rank/security/dnavy(src)
 	new /obj/item/clothing/under/rank/security/dnavy(src)
 	return
-
 
 /obj/structure/closet/wardrobe/pink
 	name = "pink wardrobe"
@@ -105,6 +112,7 @@
 	new /obj/item/clothing/mask/bandana(src)
 	new /obj/item/clothing/mask/bandana(src)
 	new /obj/item/clothing/mask/bandana(src)
+	new /obj/item/weapon/storage/backpack/messenger/black(src)
 	return
 
 
@@ -203,6 +211,9 @@
 	new /obj/item/clothing/under/rank/atmospheric_technician(src)
 	new /obj/item/clothing/under/rank/atmospheric_technician(src)
 	new /obj/item/clothing/under/rank/atmospheric_technician(src)
+	new /obj/item/clothing/under/rank/atmospheric_technician/skirt(src)
+	new /obj/item/clothing/under/rank/atmospheric_technician/skirt(src)
+	new /obj/item/clothing/under/rank/atmospheric_technician/skirt(src)
 	new /obj/item/clothing/shoes/black(src)
 	new /obj/item/clothing/shoes/black(src)
 	new /obj/item/clothing/shoes/black(src)
@@ -224,9 +235,11 @@
 /obj/structure/closet/wardrobe/engineering_yellow/New()
 	..()
 	new /obj/item/clothing/under/rank/engineer(src)
-	new /obj/item/clothing/under/rank/maintenance_tech(src)
-	new /obj/item/clothing/under/rank/engine_tech(src)
-	new /obj/item/clothing/under/rank/electrician(src)
+	new /obj/item/clothing/under/rank/engineer/maintenance_tech(src)
+	new /obj/item/clothing/under/rank/engineer/engine_tech(src)
+	new /obj/item/clothing/under/rank/engineer/electrician(src)
+	new /obj/item/clothing/under/rank/engineer/skirt
+	new /obj/item/clothing/under/rank/engineer/skirt
 	new /obj/item/clothing/shoes/orange(src)
 	new /obj/item/clothing/shoes/orange(src)
 	new /obj/item/clothing/shoes/orange(src)
@@ -299,6 +312,11 @@
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/shoes/white(src)
+	for(var/i in 1 to 2)
+		switch(rand(3))
+			if(1) new /obj/item/weapon/storage/backpack/toxins(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/tox(src)
+			if(3) new /obj/item/weapon/storage/backpack/messenger/tox(src)
 	return
 
 /obj/structure/closet/wardrobe/robotics_black
@@ -307,7 +325,13 @@
 
 /obj/structure/closet/wardrobe/robotics_black/New()
 	..()
+	for(var/i in 1 to 2)
+		switch(rand(3))
+			if(1) new /obj/item/weapon/storage/backpack/toxins(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/tox(src)
+			if(4) new /obj/item/weapon/storage/backpack/messenger/tox(src)
 	new /obj/item/clothing/under/rank/roboticist(src)
+	new /obj/item/clothing/under/rank/roboticist/skirt(src)
 	new /obj/item/clothing/under/rank/biomechanical(src)
 	new /obj/item/clothing/under/rank/mechatronic(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat/science(src)
@@ -316,8 +340,8 @@
 	new /obj/item/clothing/shoes/black(src)
 	new /obj/item/clothing/gloves/black(src)
 	new /obj/item/clothing/gloves/black(src)
-	new /obj/item/device/radio/headset/headset_rob(src)
-	new /obj/item/device/radio/headset/headset_rob(src)
+	new /obj/item/device/radio/headset/rob(src)
+	new /obj/item/device/radio/headset/rob(src)
 	return
 
 
@@ -334,6 +358,12 @@
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat/chemist(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat/chemist(src)
+	for(var/i in 1 to 2)
+		switch(rand(4))
+			if(1) new /obj/item/weapon/storage/backpack/chemistry(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/chem(src)
+			if(3) new /obj/item/weapon/storage/backpack/dufflebag/med(src)
+			if(4) new /obj/item/weapon/storage/backpack/messenger/chem(src)
 	return
 
 
@@ -349,6 +379,12 @@
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat/genetics(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat/genetics(src)
+	for(var/i in 1 to 2)
+		switch(rand(4))
+			if(1) new /obj/item/weapon/storage/backpack/genetics(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/gen(src)
+			if(3) new /obj/item/weapon/storage/backpack/dufflebag/med(src)
+			if(4) new /obj/item/weapon/storage/backpack/messenger/med(src)
 	return
 
 
@@ -366,6 +402,12 @@
 	new /obj/item/clothing/suit/storage/toggle/labcoat/virologist(src)
 	new /obj/item/clothing/mask/surgical(src)
 	new /obj/item/clothing/mask/surgical(src)
+	for(var/i in 1 to 2)
+		switch(rand(4))
+			if(1) new /obj/item/weapon/storage/backpack/virology(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/vir(src)
+			if(3) new /obj/item/weapon/storage/backpack/dufflebag/med(src)
+			if(4) new /obj/item/weapon/storage/backpack/messenger/vir(src)
 	return
 
 
@@ -377,9 +419,9 @@
 	..()
 	new /obj/item/clothing/under/rank/medical(src)
 	new /obj/item/clothing/under/rank/medical(src)
-	new /obj/item/clothing/under/rank/medical/blue(src)
-	new /obj/item/clothing/under/rank/medical/green(src)
-	new /obj/item/clothing/under/rank/medical/purple(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/blue(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/green(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/purple(src)
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/shoes/white(src)
 	new /obj/item/clothing/suit/storage/toggle/labcoat(src)
@@ -440,7 +482,7 @@
 
 /obj/structure/closet/wardrobe/tactical/New()
 	..()
-	new /obj/item/clothing/under/tactical(src)
+	new /obj/item/clothing/under/rank/tactical(src)
 	new /obj/item/clothing/suit/armor/tactical(src)
 	new /obj/item/clothing/head/helmet/tactical(src)
 	new /obj/item/clothing/mask/balaclava/tactical(src)
@@ -451,6 +493,7 @@
 		new /obj/item/clothing/mask/bandana/skull(src)
 	new /obj/item/clothing/shoes/jackboots(src)
 	new /obj/item/clothing/gloves/black(src)
+	new /obj/item/clothing/under/pants/camo(src)
 	return
 
 /obj/structure/closet/wardrobe/ert
@@ -492,4 +535,48 @@
 	new /obj/item/clothing/under/scratch(src)
 	new /obj/item/weapon/storage/backpack/satchel(src)
 	new /obj/item/weapon/storage/backpack/satchel(src)
+	return
+
+/obj/structure/closet/cabinet/captain
+	name = "captaing's wardrobe"
+
+/obj/structure/closet/wardrobe/captain/New()
+	..()
+	for(var/i in 1 to 2)
+		switch(rand(3))
+			if(1) new /obj/item/weapon/storage/backpack/captain(src)
+			if(2) new /obj/item/weapon/storage/backpack/satchel/cap(src)
+			if(3) new /obj/item/weapon/storage/backpack/dufflebag/cap(src)
+	new /obj/item/clothing/suit/captunic(src)
+	new /obj/item/clothing/suit/captunic/capjacket(src)
+	new /obj/item/clothing/under/rank/captain(src)
+	new /obj/item/clothing/shoes/brown(src)
+	new /obj/item/clothing/gloves/captain(src)
+	new /obj/item/clothing/under/dress/dress_cap(src)
+	new /obj/item/clothing/under/captainformal(src)
+	new /obj/item/clothing/head/beret/centcom/captain(src)
+	new /obj/item/clothing/under/gimmick/rank/captain/suit(src)
+	new /obj/item/clothing/glasses/sunglasses(src)
+	return
+
+/obj/structure/closet/wardrobe/ems
+	name = "EMS wardrobe"
+	icon_state = "ems"
+
+/obj/structure/closet/wardrobe/ems/New()
+	..()
+	new /obj/item/clothing/head/soft/emt(src)
+	new /obj/item/clothing/head/soft/emt(src)
+	new /obj/item/clothing/head/soft/emt/emerald(src)
+	new /obj/item/clothing/head/soft/emt/emerald(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/paramedic(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/paramedic(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/black(src)
+	new /obj/item/clothing/under/rank/medical/sleeveless/black(src)
+	new /obj/item/clothing/suit/storage/paramedic(src)
+	new /obj/item/clothing/suit/storage/paramedic(src)
+	new /obj/item/clothing/suit/storage/fr_jacket/emerald(src)
+	new /obj/item/clothing/suit/storage/fr_jacket/emerald(src)
+	new /obj/item/clothing/shoes/jackboots(src)
+	new /obj/item/clothing/shoes/jackboots(src)
 	return

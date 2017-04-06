@@ -43,7 +43,7 @@
 				dat += "<A href='?src=\ref[src];screen=2'>2. Emergency Full Destruct</A><BR>"
 			if(screen == 1)
 				for(var/mob/living/silicon/robot/R in mob_list)
-					if(istype(usr, /mob/living/silicon/ai))
+					if(isAI(usr))
 						if (R.connected_ai != usr)
 							continue
 					if(istype(usr, /mob/living/silicon/robot))
@@ -72,7 +72,7 @@
 						dat += " Slaved to [R.connected_ai.name] |"
 					else
 						dat += " Independent from AI |"
-					if (istype(usr, /mob/living/silicon))
+					if (issilicon(usr))
 						if(issilicon(usr) && is_special_character(usr) && !R.emagged)
 							dat += "<A href='?src=\ref[src];magbot=\ref[R]'>(<i>Hack</i>)</A> "
 					dat += "<A href='?src=\ref[src];stopbot=\ref[R]'>(<i>[R.canmove ? "Lockdown" : "Release"]</i>)</A> "
@@ -112,14 +112,12 @@
 
 		if ("do_killall" in href_list)
 			var/obj/item/weapon/card/id/I = usr.get_active_hand()
-			if (istype(I, /obj/item/device/pda))
-				var/obj/item/device/pda/pda = I
-				I = pda.id
+			if (!istype(I) && I.GetID())
+				I = I.GetID()
 			if (istype(I))
 				if(src.check_access(I))
 					if (!status)
-						message_admins("\blue [key_name_admin(usr)] has initiated the global cyborg killswitch!")
-						log_game("\blue [key_name(usr)] has initiated the global cyborg killswitch!")
+						log_game("\blue [key_name(usr)] has initiated the global cyborg killswitch!", usr) //TODO: replace usr jump with holder.
 						src.status = 1
 						src.start_sequence()
 						src.temp = null
@@ -163,8 +161,7 @@
 								R.ResetSecurityCodes()
 
 							else
-								message_admins("<span class='notice'>[key_name_admin(usr)] detonated [key_name(R.name)]!</span>")
-								log_game("<span class='notice'>[key_name_admin(usr)] detonated [key_name(R.name)]!</span>")
+								log_game("[key_name_admin(usr)] detonated [key_name(R.name)]!", usr)
 								if(R.connected_ai)
 									R.connected_ai << "<br><br><span class='alert'>ALERT - Cyborg kill-switch activated: [R.name]</span><br>"
 								R.self_destruct()
@@ -178,8 +175,7 @@
 					var/choice = input("Are you certain you wish to [R.canmove ? "lock down" : "release"] [R.name]?") in list("Confirm", "Abort")
 					if(choice == "Confirm")
 						if(R && istype(R))
-							message_admins("<span class='notice'>[key_name_admin(usr)] [R.canmove ? "locked down" : "released"] [R.name]!</span>")
-							log_game("[key_name(usr)] [R.canmove ? "locked down" : "released"] [key_name(R.name)]!")
+							log_game("[key_name(usr)] [R.canmove ? "locked down" : "released"] [key_name(R.name)]!", usr)
 							R.canmove = !R.canmove
 							if (R.lockcharge)
 								R.lockcharge = !R.lockcharge
@@ -199,7 +195,7 @@
 					if(choice == "Confirm")
 						if(R && istype(R))
 //							message_admins("\blue [key_name_admin(usr)] emagged [R.name] using robotic console!")
-							log_game("[key_name(usr)] emagged [R.name] using robotic console!")
+							log_game("[key_name(usr)] emagged [R.name] using robotic console!", usr)
 							R.emagged = 1
 							if(R.mind.special_role)
 								R.verbs += /mob/living/silicon/robot/proc/ResetSecurityCodes

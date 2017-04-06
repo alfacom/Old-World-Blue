@@ -156,8 +156,7 @@
 			if(emagged)
 				new /obj/effect/spawner/newbomb/timer/syndicate(src.loc)
 				new /obj/item/clothing/head/collectable/petehat(src.loc)
-				message_admins("[key_name_admin(usr)] has outbombed Cuban Pete and been awarded a bomb.")
-				log_game("[key_name_admin(usr)] has outbombed Cuban Pete and been awarded a bomb.")
+				log_game("[key_name_admin(usr)] has outbombed Cuban Pete and been awarded a bomb.", src)
 				src.New()
 				emagged = 0
 			else if(!contents.len)
@@ -212,8 +211,8 @@
 	return
 
 
-/obj/machinery/computer/arcade/attackby(I as obj, user as mob)
-	if(istype(I, /obj/item/weapon/card/emag) && !emagged)
+/obj/machinery/computer/arcade/battle/emag_act(var/charges, var/mob/user)
+	if(!emagged)
 		temp = "If you die in the game, you die for real!"
 		player_hp = 30
 		player_mp = 10
@@ -229,8 +228,6 @@
 
 
 		src.updateUsrDialog()
-	else
-		..()
 
 
 /obj/machinery/computer/arcade/emp_act(severity)

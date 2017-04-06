@@ -1,8 +1,8 @@
 /mob/living/carbon/human/proc/update_eyes()
 	var/obj/item/organ/internal/eyes/eyes = internal_organs_by_name[O_EYES]
 	if(eyes)
-		eyes.update_colour()
-		regenerate_icons()
+		eyes.sync_to_owner()
+		update_body()
 
 /mob/living/carbon/var/list/internal_organs = list()
 /mob/living/carbon/human/var/list/organs = list()
@@ -145,7 +145,7 @@
 					drop_from_inventory(r_hand)
 
 			var/emote_scream = pick("screams in pain and ", "lets out a sharp cry and ", "cries out and ")
-			emote("me", 1, "[(species.flags & NO_PAIN) ? "" : emote_scream ]drops what they were holding in their [E.name]!")
+			custom_emote(1, "[(species.flags & NO_PAIN) ? "" : emote_scream ]drops what they were holding in their [E.name]!")
 
 		else if(E.is_malfunctioning())
 			switch(E.body_part)
@@ -158,7 +158,7 @@
 						continue
 					drop_from_inventory(r_hand)
 
-			emote("me", 1, "drops what they were holding, their [E.name] malfunctioning!")
+			custom_emote(1, "drops what they were holding, their [E.name] malfunctioning!")
 
 			var/datum/effect/effect/system/spark_spread/spark_system = new /datum/effect/effect/system/spark_spread()
 			spark_system.set_up(5, 0, src)

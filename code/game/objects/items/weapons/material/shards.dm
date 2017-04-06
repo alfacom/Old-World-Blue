@@ -15,6 +15,7 @@
 	default_material = "glass"
 	unbreakable = 1 //It's already broken.
 	drops_debris = 0
+	randpixel = 8
 
 /obj/item/weapon/material/shard/suicide_act(mob/user)
 	viewers(user) << pick("\red <b>[user] is slitting \his wrists with \the [src]! It looks like \he's trying to commit suicide.</b>", \
@@ -27,8 +28,6 @@
 		return
 
 	icon_state = "[material.shard_icon][pick("large", "medium", "small")]"
-	pixel_x = rand(-8, 8)
-	pixel_y = rand(-8, 8)
 	update_icon()
 
 	if(material.shard_type)
@@ -73,7 +72,7 @@
 
 			if( !H.shoes && ( !H.wear_suit || !(H.wear_suit.body_parts_covered & FEET) ) )
 				var/obj/item/organ/external/affecting = H.get_organ(pick(BP_L_FOOT, BP_R_FOOT))
-				if(affecting.status & ORGAN_ROBOT)
+				if(affecting.robotic >= ORGAN_ROBOT)
 					return
 				if(affecting.take_damage(5, 0))
 					H.UpdateDamageIcon()

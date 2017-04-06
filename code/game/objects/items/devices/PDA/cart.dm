@@ -111,8 +111,8 @@
 	access_atmos = 1
 
 /obj/item/weapon/cartridge/signal/initialize()
-    radio = new /obj/item/radio/integrated/signal(src)
-    ..()
+	radio = new /obj/item/radio/integrated/signal(src)
+	..()
 
 /obj/item/weapon/cartridge/signal/Destroy()
 	qdel(radio)
@@ -219,8 +219,7 @@
 				var/mob/user = PDA.fingerprintslast
 				if(istype(PDA.loc,/mob/living))
 					name = PDA.loc
-				log_admin("STATUS: [user] set status screen with [PDA]. Message: [data1] [data2]")
-				message_admins("STATUS: [user] set status screen with [PDA]. Message: [data1] [data2]")
+				log_game("STATUS: [key_name(user)] set status screen with [PDA]. Message: [data1] [data2]", src)
 
 		if("alert")
 			status_signal.data["picture_state"] = data1

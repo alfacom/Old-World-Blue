@@ -63,13 +63,15 @@
 	onclose(user, "autofarm")
 	return
 
-/mob/living/bot/farmbot/Emag(var/mob/user)
-	..()
-	if(user)
-		user << "<span class='notice'>You short out [src]'s plant identifier circuits.</span>"
-	spawn(rand(30, 50))
-		visible_message("<span class='warning'>[src] buzzes oddly.</span>")
-		emagged = 1
+/mob/living/bot/farmbot/emag_act(var/remaining_charges, var/mob/user)
+	. = ..()
+	if(!emagged)
+		if(user)
+			user << "<span class='notice'>You short out [src]'s plant identifier circuits.</span>"
+		spawn(rand(30, 50))
+			visible_message("<span class='warning'>[src] buzzes oddly.</span>")
+			emagged = 1
+		return 1
 
 /mob/living/bot/farmbot/Topic(href, href_list)
 	if(..())
@@ -242,7 +244,7 @@
 	var/turf/Tsec = get_turf(src)
 
 	new /obj/item/weapon/material/minihoe(Tsec)
-	new /obj/item/weapon/reagent_containers/glass/bucket(Tsec)
+	new /obj/item/weapon/reagent_containers/glass/beaker/bucket(Tsec)
 	new /obj/item/device/assembly/prox_sensor(Tsec)
 	new /obj/item/device/analyzer/plant_analyzer(Tsec)
 
@@ -319,7 +321,7 @@
 		user.remove_from_mob(W)
 		qdel(W)
 
-	else if((istype(W, /obj/item/weapon/reagent_containers/glass/bucket)) && (build_step == 1))
+	else if((istype(W, /obj/item/weapon/reagent_containers/glass/beaker/bucket)) && (build_step == 1))
 		build_step++
 		user << "You add a bucket to [src]."
 		name = "farmbot assembly with bucket"

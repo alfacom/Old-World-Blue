@@ -37,41 +37,41 @@
 	IOCapacity = 1000000
 
 
+
+
 // SMES SUBTYPES - THESE ARE MAPPED IN AND CONTAIN DIFFERENT TYPES OF COILS
 
 // These are used on individual outposts as backup should power line be cut, or engineering outpost lost power.
 // 1M Charge, 150K I/O
-/obj/machinery/power/smes/buildable/outpost_substation/New()
-	..(0)
+/obj/machinery/power/smes/buildable/outpost_substation/initialize()
 	component_parts += new /obj/item/weapon/smes_coil/weak(src)
-	recalc_coils()
+	RefreshParts()
 
 // This one is pre-installed on engineering shuttle. Allows rapid charging/discharging for easier transport of power to outpost
 // 11M Charge, 2.5M I/O
-/obj/machinery/power/smes/buildable/power_shuttle/New()
-	..(0)
+/obj/machinery/power/smes/buildable/power_shuttle/initialize()
 	component_parts += new /obj/item/weapon/smes_coil/super_io(src)
 	component_parts += new /obj/item/weapon/smes_coil/super_io(src)
 	component_parts += new /obj/item/weapon/smes_coil(src)
-	recalc_coils()
-
-
-
-
-
+	RefreshParts()
 
 // END SMES SUBTYPES
+
+
+
 
 // SMES itself
 /obj/machinery/power/smes/buildable
 	var/max_coils = 6 			//30M capacity, 1.5MW input/output when fully upgraded /w default coils
 	var/cur_coils = 1 			// Current amount of installed coils
+	var/init_coils = 1		// Amount of coils for map placed SMES
 	var/safeties_enabled = 1 	// If 0 modifications can be done without discharging the SMES, at risk of critical failure.
 	var/failing = 0 			// If 1 critical failure has occured and SMES explosion is imminent.
 	var/datum/wires/smes/wires
 	var/grounding = 1			// Cut to quickly discharge, at cost of "minor" electrical issues in output powernet.
 	var/RCon = 1				// Cut to disable AI and remote control.
 	var/RCon_tag = "NO_TAG"		// RCON tag, change to show it on SMES Remote control console.
+	circuit = /obj/item/weapon/circuitboard/smes
 	charge = 0
 	should_be_mapped = 1
 
@@ -94,7 +94,6 @@
 		charge -= (output_level_max * SMESRATE)
 		if(prob(1)) // Small chance of overload occuring since grounding is disabled.
 			apcs_overload(5,10)
-
 	..()
 
 // Proc: attack_ai()
@@ -112,18 +111,18 @@
 
 // Proc: New()
 // Parameters: None
-// Description: Adds standard components for this SMES, and forces recalculation of properties.
-/obj/machinery/power/smes/buildable/New(var/install_coils = 1)
-	component_parts = list()
-	component_parts += new /obj/item/stack/cable_coil(src,30)
-	component_parts += new /obj/item/weapon/circuitboard/smes(src)
+// Description: Set wires with requed type
+/obj/machinery/power/smes/buildable/New()
+	..()
 	src.wires = new /datum/wires/smes(src)
 
-	// Allows for mapped-in SMESs with larger capacity/IO
-	if(install_coils)
-		for(var/i = 1, i <= cur_coils, i++)
-			component_parts += new /obj/item/weapon/smes_coil(src)
-		recalc_coils()
+// Proc: initialize()
+// Parameters: None
+// Description: Adds standard components for this SMES, and forces recalculation of properties.
+/obj/machinery/power/smes/buildable/initialize()
+	for(var/i = 1 to init_coils)
+		component_parts += new /obj/item/weapon/smes_coil(src)
+	RefreshParts()
 	..()
 
 // Proc: attack_hand()
@@ -134,22 +133,21 @@
 	if(open_hatch)
 		wires.Interact(usr)
 
-// Proc: recalc_coils()
+// Proc: RefreshParts()
 // Parameters: None
 // Description: Updates properties (IO, capacity, etc.) of this SMES by checking internal components.
-/obj/machinery/power/smes/buildable/proc/recalc_coils()
-	if ((cur_coils <= max_coils) && (cur_coils >= 1))
-		capacity = 0
-		input_level_max = 0
-		output_level_max = 0
-		for(var/obj/item/weapon/smes_coil/C in component_parts)
-			capacity += C.ChargeCapacity
-			input_level_max += C.IOCapacity
-			output_level_max += C.IOCapacity
-		charge = between(0, charge, capacity)
-		return 1
-	else
-		return 0
+/obj/machinery/power/smes/buildable/RefreshParts()
+	cur_coils = 0
+	capacity = 0
+	input_level_max = 0
+	output_level_max = 0
+	for(var/obj/item/weapon/smes_coil/C in component_parts)
+		cur_coils ++
+		capacity += C.ChargeCapacity
+		input_level_max += C.IOCapacity
+		output_level_max += C.IOCapacity
+	charge = between(0, charge, capacity)
+	return 1
 
 // Proc: total_system_failure()
 // Parameters: 2 (intensity - how strong the failure is, user - person which caused the failure)
@@ -183,9 +181,7 @@
 		var/obj/item/clothing/gloves/G = h_user.gloves
 		if(G.siemens_coefficient == 0)
 			user_protected = 1
-	log_game("SMES FAILURE: <b>[src.x]X [src.y]Y [src.z]Z</b> User: [usr.ckey], Intensity: [intensity]/100")
-	message_admins("SMES FAILURE: <b>[src.x]X [src.y]Y [src.z]Z</b> User: [usr.ckey], Intensity: [intensity]/100 - <A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>")
-
+	log_game("SMES FAILURE: User: [usr.ckey], Intensity: [intensity]/100", src)
 
 	switch (intensity)
 		if (0 to 15)
@@ -252,8 +248,7 @@
 
 			if (prob(50))
 				// Added admin-notifications so they can stop it when griffed.
-				log_game("SMES explosion imminent.")
-				message_admins("SMES explosion imminent.")
+				log_game("SMES explosion imminent.", src)
 				src.ping("DANGER! Magnetic containment field unstable! Containment field failure imminent!")
 				failing = 1
 				// 30 - 60 seconds and then BAM!
@@ -344,7 +339,7 @@
 					total_system_failure(failure_probability, user)
 					return
 
-				usr << "\red You have disassembled the SMES cell!"
+				usr << "<span class='warning'>You have disassembled the SMES cell!</span>"
 				var/obj/machinery/constructable_frame/machine_frame/M = new /obj/machinery/constructable_frame/machine_frame(src.loc)
 				M.state = 2
 				M.icon_state = "box_1"
@@ -365,11 +360,9 @@
 					return
 
 				usr << "You install the coil into the SMES unit!"
-				user.drop_item()
-				cur_coils ++
+				user.unEquip(W, src)
 				component_parts += W
-				W.loc = src
-				recalc_coils()
+				RefreshParts()
 			else
 				usr << "\red You can't insert more coils to this SMES unit!"
 

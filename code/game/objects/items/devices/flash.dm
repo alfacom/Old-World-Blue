@@ -8,17 +8,20 @@
 	throw_speed = 4
 	throw_range = 10
 	flags = CONDUCT
-	origin_tech = "magnets=2;combat=1"
+	origin_tech = list(TECH_MAGNET = 2, TECH_COMBAT = 1)
 
 	var/times_used = 0 //Number of times it's been used.
 	var/broken = 0     //Is the flash burnt out?
 	var/last_used = 0 //last world.time it was used.
 
 /obj/item/device/flash/proc/clown_check(var/mob/user)
+	//TODO: DNA3 clown_block
+	/*
 	if(user && (CLUMSY in user.mutations) && prob(50))
-		user << "\red \The [src] slips out of your hand."
-		user.drop_item()
+		user << "<span class='warning'>\The [src] slips out of your hand.</span>"
+		user.unEquip(src)
 		return 0
+	*/
 	return 1
 
 /obj/item/device/flash/proc/flash_recharge()
@@ -35,9 +38,14 @@
 /obj/item/device/flash/attack(mob/living/M as mob, mob/user as mob)
 	if(!user || !M)	return	//sanity
 
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been flashed (attempt) with [src.name]  by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to flash [M.name] ([M.ckey])</font>")
-	msg_admin_attack("[user.name] ([user.ckey]) Used the [src.name] to flash [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+	admin_attack_log(user, M,
+		"Used the [src.name] to flash [key_name(M)]",
+		"Has been flashed (attempt) with [src.name]  by [key_name(user)]",
+		"used the [src.name] to flash"
+	)
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	user.do_attack_animation(M)
 
 	if(!clown_check(user))	return
 	if(broken)
@@ -60,6 +68,10 @@
 		else	//can only use it  5 times a minute
 			user << "<span class='warning'>*click* *click*</span>"
 			return
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	user.do_attack_animation(M)
+
 	playsound(src.loc, 'sound/weapons/flash.ogg', 100, 1)
 	var/flashfail = 0
 
@@ -124,6 +136,9 @@
 
 /obj/item/device/flash/attack_self(mob/living/carbon/user as mob, flag = 0, emp = 0)
 	if(!user || !clown_check(user)) 	return
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+
 	if(broken)
 		user.show_message("<span class='warning'>The [src.name] is broken</span>", 2)
 		return
@@ -193,7 +208,7 @@
 	name = "synthetic flash"
 	desc = "When a problem arises, SCIENCE is the solution."
 	icon_state = "sflash"
-	origin_tech = "magnets=2;combat=1"
+	origin_tech = list(TECH_MAGNET = 2, TECH_COMBAT = 1)
 	var/construction_cost = list(DEFAULT_WALL_MATERIAL=750,"glass"=750)
 	var/construction_time=100
 

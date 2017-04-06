@@ -32,25 +32,27 @@
 	if(ismob(user)) shock(user, 70)
 
 /obj/structure/grille/attack_hand(mob/user as mob)
-	user.next_move = world.time + 8
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 	playsound(loc, 'sound/effects/grillehit.ogg', 80, 1)
 	user.do_attack_animation(src)
 
-	var/damage_dealt = 1
+	var/damage_dealt = 2
 	var/attack_message = "kicks"
 	if(ishuman(user))
 		var/mob/living/carbon/human/H = user
 		if(H.can_shred())
 			attack_message = "mangles"
-			damage_dealt = 5
+			damage_dealt = 6
 
 	if(shock(user, 70))
 		return
 
+	//TODO: DNA3 hulk
+	/*
 	if(HULK in user.mutations)
 		damage_dealt += 5
-	else
-		damage_dealt += 1
+	*/
 
 	attack_generic(user,damage_dealt,attack_message)
 
@@ -101,7 +103,6 @@
 	spawn(0) healthcheck() //spawn to make sure we return properly if the grille is deleted
 
 /obj/structure/grille/attackby(obj/item/weapon/W as obj, mob/user as mob)
-	user.next_move = world.time + 8
 	if(iswirecutter(W))
 		if(!shock(user, 100))
 			playsound(loc, 'sound/items/Wirecutter.ogg', 100, 1)
@@ -159,6 +160,7 @@
 //window placing end
 
 	else if(!(W.flags & CONDUCT) || !shock(user, 70))
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		user.do_attack_animation(src)
 		playsound(loc, 'sound/effects/grillehit.ogg', 80, 1)
 		switch(W.damtype)

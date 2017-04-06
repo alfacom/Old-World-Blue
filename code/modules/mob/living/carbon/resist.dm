@@ -1,4 +1,3 @@
-
 /mob/living/carbon/process_resist()
 
 	//drop && roll
@@ -27,10 +26,12 @@
 		spawn() escape_legcuffs()
 
 /mob/living/carbon/proc/escape_handcuffs()
-	if(!(last_special <= world.time)) return
+	self_attack_log(src, "try remove handcuffs")
+	//if(!(last_special <= world.time)) return
 
-	next_move = world.time + 100
-	last_special = world.time + 100
+	//This line represent a significant buff to grabs...
+	// We don't have to check the click cooldown because /mob/living/verb/resist() has done it for us, we can simply set the delay
+	setClickCooldown(100)
 
 	if(can_break_cuffs()) //Don't want to do a lot of logic gating here.
 		break_handcuffs()
@@ -47,7 +48,7 @@
 		displaytime = breakouttime / 600 //Minutes
 
 	visible_message(
-		"<span class='danger'>[src] attempts to remove \the [HC]!</span>",
+		"<span class='danger'>\The [src] attempts to remove \the [HC]!</span>",
 		"<span class='warning'>You attempt to remove \the [HC]. (This will take around [displaytime] minutes and you need to stand still)</span>"
 		)
 
@@ -55,16 +56,17 @@
 		if(!handcuffed || buckled)
 			return
 		visible_message(
-			"<span class='danger'>[src] manages to remove \the [handcuffed]!</span>",
+			"<span class='danger'>\The [src] manages to remove \the [handcuffed]!</span>",
 			"<span class='notice'>You successfully remove \the [handcuffed].</span>"
 			)
+		self_attack_log(src, "remove handcuffs", 1)
 		drop_from_inventory(handcuffed)
 
 /mob/living/carbon/proc/escape_legcuffs()
-	if(!(last_special <= world.time)) return
+	if(!canClick())
+		return
 
-	next_move = world.time + 100
-	last_special = world.time + 100
+	setClickCooldown(100)
 
 	if(can_break_cuffs()) //Don't want to do a lot of logic gating here.
 		break_legcuffs()
@@ -98,8 +100,11 @@
 		update_inv_legcuffed()
 
 /mob/living/carbon/proc/can_break_cuffs()
+	//TODO: DNA3 hulk
+	/*
 	if(HULK in mutations)
 		return 1
+	*/
 
 /mob/living/carbon/proc/break_handcuffs()
 	visible_message(
@@ -110,6 +115,8 @@
 	if(do_after(src, 50))
 		if(!handcuffed || buckled)
 			return
+
+		self_attack_log(src, "break self handcuffs", 1)
 
 		visible_message(
 			"<span class='danger'>[src] manages to break \the [handcuffed]!</span>",
@@ -149,14 +156,12 @@
 	return ..()
 
 /mob/living/carbon/escape_buckle()
+	setClickCooldown(100)
 	if(!buckled) return
-	if(!(last_special <= world.time)) return
 
 	if(!restrained())
 		..()
 	else
-		next_move = world.time + 100
-		last_special = world.time + 100
 		visible_message(
 			"<span class='danger'>[usr] attempts to unbuckle themself!</span>",
 			"<span class='warning'>You attempt to unbuckle yourself. (This will take around 2 minutes and you need to stand still)</span>"

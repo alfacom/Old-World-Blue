@@ -12,7 +12,7 @@
 	name = "grab"
 	icon = 'icons/mob/screen1.dmi'
 	icon_state = "reinforce"
-	flags = 0
+	flags = NOBLUDGEON
 	var/obj/screen/grab/hud = null
 	var/mob/living/affecting = null
 	var/mob/living/carbon/human/assailant = null
@@ -36,8 +36,7 @@
 	assailant = user
 	affecting = victim
 
-	if(affecting.anchored || !assailant.Adjacent(victim))
-		qdel(src)
+	if(!confirm())
 		return
 
 	affecting.grabbed_by += src
@@ -59,7 +58,7 @@
 
 //Used by throw code to hand over the mob, instead of throwing the grab. The grab is then deleted by the throw code.
 /obj/item/weapon/grab/proc/throw_held()
-	if(affecting)
+	if(confirm())
 		if(affecting.buckled)
 			return null
 		if(state >= GRAB_AGGRESSIVE)
@@ -80,9 +79,7 @@
 	if(gcDestroyed) // GC is trying to delete us, we'll kill our processing so we can cleanly GC
 		return PROCESS_KILL
 
-	confirm()
-	if(!assailant)
-		qdel(src) // Same here, except we're trying to delete ourselves.
+	if(!confirm())
 		return PROCESS_KILL
 
 	if(assailant.client)
@@ -119,8 +116,8 @@
 			hud.icon_state = "!reinforce"
 
 	if(state >= GRAB_AGGRESSIVE)
-		affecting.drop_l_hand()
-		affecting.drop_r_hand()
+		affecting.drop_active_hand()
+		affecting.drop_inactive_hand()
 
 		if(iscarbon(affecting))
 			handle_eye_mouth_covering(affecting, assailant, assailant.zone_sel.selecting)
@@ -211,11 +208,11 @@
 			animate(affecting, pixel_x =-shift, pixel_y = 0, 5, 1, LINEAR_EASING)
 
 /obj/item/weapon/grab/proc/s_click(obj/screen/S)
-	if(!affecting)
+	if(!confirm())
 		return
 	if(state == GRAB_UPGRADING)
 		return
-	if(assailant.next_move > world.time)
+	if(!assailant.canClick())
 		return
 	if(world.time < (last_action + UPGRADE_COOLDOWN))
 		return
@@ -237,6 +234,7 @@
 		state = GRAB_AGGRESSIVE
 		icon_state = "grabbed1"
 		hud.icon_state = "reinforce1"
+
 	else if(state < GRAB_NECK)
 		if(isslime(affecting))
 			assailant << "<span class='notice'>You squeeze [affecting], but nothing interesting happens.</span>"
@@ -246,23 +244,28 @@
 		state = GRAB_NECK
 		icon_state = "grabbed+1"
 		assailant.set_dir(get_dir(assailant, affecting))
-		affecting.attack_log += "\[[time_stamp()]\] <font color='orange'>Has had their neck grabbed by [assailant.name] ([assailant.ckey])</font>"
-		assailant.attack_log += "\[[time_stamp()]\] <font color='red'>Grabbed the neck of [affecting.name] ([affecting.ckey])</font>"
-		msg_admin_attack("[key_name(assailant)] grabbed the neck of [key_name(affecting)]")
+		admin_attack_log(assailant, affecting,
+			"Grabbed the neck of [affecting.name] ([affecting.ckey])",
+			"Has had their neck grabbed by [assailant.name] ([assailant.ckey])",
+			"grabbed the neck of"
+		)
 		hud.icon_state = "kill"
 		hud.name = "kill"
 		affecting.Stun(10) //10 ticks of ensured grab
+
 	else if(state < GRAB_UPGRADING)
 		assailant.visible_message("<span class='danger'>[assailant] starts to tighten \his grip on [affecting]'s neck!</span>")
 		hud.icon_state = "kill1"
 
 		state = GRAB_KILL
 		assailant.visible_message("<span class='danger'>[assailant] has tightened \his grip on [affecting]'s neck!</span>")
-		affecting.attack_log += "\[[time_stamp()]\] <font color='orange'>Has been strangled (kill intent) by [assailant.name] ([assailant.ckey])</font>"
-		assailant.attack_log += "\[[time_stamp()]\] <font color='red'>Strangled (kill intent) [affecting.name] ([affecting.ckey])</font>"
-		msg_admin_attack("[key_name(assailant)] strangled (kill intent) [key_name(affecting)]")
+		admin_attack_log(assailant, affecting,
+			"Strangled (kill intent) [affecting.name] ([affecting.ckey])",
+			"Has been strangled (kill intent) by [assailant.name] ([assailant.ckey])",
+			"strangled (kill intent)"
+		)
 
-		assailant.next_move = world.time + 10
+		affecting.setClickCooldown(10)
 		affecting.losebreath += 1
 		affecting.set_dir(WEST)
 	adjust_position()
@@ -273,12 +276,15 @@
 		qdel(src)
 		return 0
 
-	if(affecting)
-		if(!isturf(assailant.loc) || ( !isturf(affecting.loc) || assailant.loc != affecting.loc && get_dist(assailant, affecting) > 1) )
+	else
+		if( !isturf(assailant.loc) || !isturf(affecting.loc) || (get_dist(assailant, affecting) > 1) )
 			qdel(src)
 			return 0
 
 	return 1
+
+/obj/item/weapon/grab/do_surgery()
+	return 0
 
 /obj/item/weapon/grab/attack(mob/M, mob/living/user)
 	if(!affecting)

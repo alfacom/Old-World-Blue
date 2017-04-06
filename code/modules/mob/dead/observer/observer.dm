@@ -133,6 +133,47 @@ var/global/list/image/ghost_sightless_images = list() //this is a list of images
 		updateallghostimages()
 	..()
 
+/mob/observer/dead/verb/abandon_mob()
+	set name = "Respawn"
+	set category = "OOC"
+
+	if (!config.abandon_allowed)
+		usr << "<span class='notice'>Respawn is disabled.</span>"
+		return
+	if (stat != DEAD || !ticker)
+		usr << "<span class='notice'><B>You must be dead to use this!</B></span>"
+		return
+	if (ticker.mode.deny_respawn) //BS12 EDIT
+		usr << "<span class='notice'>Respawn is disabled for this roundtype.</span>"
+		return
+	else if(!MayRespawn(1))
+		return
+
+	log_game("[usr.name]/[usr.key] used abandon mob.", src, 0)
+
+	usr << "\blue <B>Make sure to play a different character, and please roleplay correctly!</B>"
+
+	if(!client)
+		log_game("[usr.key] AM failed due to disconnect.", src, 0)
+		return
+	client.screen.Cut()
+	if(!client)
+		log_game("[usr.key] AM failed due to disconnect.", src, 0)
+		return
+
+	announce_ghost_joinleave(client, 0)
+
+	var/mob/new_player/M = new /mob/new_player()
+	if(!client)
+		log_game("[usr.key] AM failed due to disconnect.", src, 0)
+		qdel(M)
+		return
+
+	M.key = key
+	if(M.mind)
+		M.mind.reset()
+	return
+
 /mob/observer/dead/Topic(href, href_list)
 	if (href_list["track"])
 		var/mob/target = locate(href_list["track"]) in mob_list
@@ -195,14 +236,12 @@ Works together with spawning an observer, noted above.
 		ghost.can_reenter_corpse = can_reenter_corpse
 		ghost.timeofdeath = src.timeofdeath //BS12 EDIT
 		ghost.key = key
-/* WIP
 		if(istype(loc, /obj/structure/morgue))
 			var/obj/structure/morgue/M = loc
 			M.update()
 		else if(istype(loc, /obj/structure/closet/body_bag))
 			var/obj/structure/closet/body_bag/B = loc
 			B.update()
-*/
 		if(ghost.client)
 			ghost.client.time_died_as_mouse = ghost.timeofdeath
 		if(ghost.client && !ghost.client.holder && !config.antag_hud_allowed)		// For new ghosts we remove the verb from even showing up if it's not allowed.
@@ -233,9 +272,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 			return
 		if(!istype(src, /mob/living/simple_animal))
 			resting = 1
-		var/turf/location = get_turf(src)
-		message_admins("[key_name_admin(usr)] has ghosted. (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[location.x];Y=[location.y];Z=[location.z]'>JMP</a>)")
-		log_game("[key_name_admin(usr)] has ghosted.")
+		log_game("[key_name_admin(usr)] has ghosted.", src)
 		var/mob/observer/dead/ghost = ghostize(0)	//0 parameter is so we can never re-enter our body, "Charlie, you can never come baaaack~" :3
 		ghost.timeofdeath = world.time // Because the living mob won't have a time of death and we want the respawn timer to work properly.
 		announce_ghost_joinleave(ghost)
@@ -273,14 +310,12 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 	mind.current.ajourn=0
 	mind.current.key = key
 	mind.current.teleop = null
-/*  WIP
 	if(istype(mind.current.loc, /obj/structure/morgue))
 		var/obj/structure/morgue/M = mind.current.loc
 		M.update(1)
 	else if(istype(mind.current.loc, /obj/structure/closet/body_bag))
 		var/obj/structure/closet/body_bag/B = mind.current.loc
 		B.update(1)
-*/
 	if(!admin_ghosted)
 		announce_ghost_joinleave(mind, 0, "They now occupy their body again.")
 	return 1
@@ -526,19 +561,12 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 		src << "<span class='warning'>You can't play as mouse (banned).</span>"
 		return
 
-	if(!MayRespawn(1))
+	if(!MayRespawn(1, config.respawn_time_mouse))
 		return
 
 	var/turf/T = get_turf(src)
 	if(!T || (T.z in config.admin_levels))
 		src << "<span class='warning'>You may not spawn as a mouse on this Z-level.</span>"
-		return
-
-	var/timedifference = world.time - client.time_died_as_mouse
-	if(client.time_died_as_mouse && timedifference <= config.respawn_time_mouse * 600)
-		var/timedifference_text
-		timedifference_text = time2text(config.respawn_time_mouse * 600 - timedifference,"mm:ss")
-		src << "<span class='warning'>You may only spawn again as a mouse more than [config.respawn_time_mouse] minutes after your death. You have [timedifference_text] left.</span>"
 		return
 
 	var/response = alert(src, "Are you -sure- you want to become a mouse?","Are you sure you want to squeek?","Squeek!","Nope!")
@@ -777,7 +805,7 @@ This is the proc mobs get to turn into a ghost. Forked from ghostize due to comp
 		if (ghostimage)
 			client.images -= ghostimage //remove ourself
 
-mob/observer/dead/MayRespawn(var/feedback = 0)
+/mob/observer/dead/MayRespawn(var/feedback = 0, var/delay = config.respawn_time)
 	if(!client)
 		return 0
 	if(mind && mind.current && mind.current.stat != DEAD && can_reenter_corpse)
@@ -788,6 +816,39 @@ mob/observer/dead/MayRespawn(var/feedback = 0)
 		if(feedback)
 			src << "<span class='warning'>antagHUD restrictions prevent you from respawning.</span>"
 		return 0
+
+	var/is_admin = check_rights(0, 0)
+
+	if(!is_admin)
+		if(has_enabled_antagHUD == 1 && config.antag_hud_restricted)
+			usr << "\blue <B>Upon using the antagHUD you forfeighted the ability to join the round.</B>"
+			return 0
+
+	var/deathtime = world.time - src.timeofdeath
+	if(feedback)
+		var/deathtimeminutes = round(deathtime / 600)
+		var/pluralcheck = "minute"
+		if(deathtimeminutes == 0)
+			pluralcheck = ""
+		else if(deathtimeminutes == 1)
+			pluralcheck = " [deathtimeminutes] minute and"
+		else if(deathtimeminutes > 1)
+			pluralcheck = " [deathtimeminutes] minutes and"
+		var/deathtimeseconds = round((deathtime - deathtimeminutes * 600) / 10,1)
+		usr << "You have been dead for[pluralcheck] [deathtimeseconds] seconds."
+
+	if (deathtime < delay*600)
+		if(is_admin)
+			if(alert("Normal players must wait at least [delay] minutes to respawn! Continue?","Warning", "Respawn", "Cancel") == "Cancel")
+				return 0
+		else
+			if(feedback)
+				usr << "You must wait [delay] minutes to respawn!"
+			return 0
+
+	if(feedback)
+		usr << "You can respawn now, enjoy your new life!"
+
 	return 1
 
 //Culted Ghosts

@@ -2,8 +2,10 @@
 	name = "item"
 	icon = 'icons/obj/items.dmi'
 	w_class = 3.0
+	mouse_drag_pointer = MOUSE_ACTIVE_POINTER
 
 	var/tmp/image/blood_overlay = null //this saves our blood splatter overlay, which will be processed not to go over the edges of the sprite
+	var/randpixel = 0
 	var/tmp/abstract = 0
 	var/r_speed = 1.0
 	var/health = null
@@ -17,7 +19,7 @@
 //	causeerrorheresoifixthis
 	var/obj/item/master = null
 	var/list/origin_tech = null	//Used by R&D to determine what research bonuses it grants.
-	var/list/attack_verb = list() //Used in attackby() to say how something was attacked "[x] has been [z.attack_verb] by [y] with [z]"
+	var/list/attack_verb = null //Used in attackby() to say how something was attacked "[x] has been [z.attack_verb] by [y] with [z]"
 	var/force = 0
 
 	var/heat_protection = 0 //flags which determine which body parts are protected from heat. Use the HEAD, UPPER_TORSO, LOWER_TORSO, etc. flags. See setup.dm
@@ -49,13 +51,14 @@
 
 	var/icon_override = null  //Used to override hardcoded clothing dmis in human clothing proc.
 
+	var/wear_state = ""   // If set used instead icon_state for on-mob clothing overlays.
 	var/item_state = null // Used to specify the item state for the on-mob overlays.
 	var/item_state_slots = null //overrides the default item_state for particular slots.
 
-	// Used to specify the icon file to be used when the item is worn. If not set the default icon for that slot will be used.
-	// If icon_override or sprite_sheets are set they will take precendence over this, assuming they apply to the slot in question.
-	// Only slot_l_hand/slot_r_hand are implemented at the moment. Others to be implemented as needed.
-	var/tmp/list/item_icons = null
+	// Specify the icon file to be used when the item is holding.
+	// If not set the default icon for that slot will be used.
+	// If icon_override or sprite_sheets are set they will take precendence over this.
+	var/tmp/sprite_group = null
 
 
 	/* Species-specific sprite sheets for inventory sprites
@@ -63,7 +66,15 @@
 	*/
 	var/tmp/list/sprite_sheets_obj = null
 
+/obj/item/New()
+	..()
+	if(randpixel && (!pixel_x && !pixel_y)) //hopefully this will prevent us from messing with mapper-set pixel_x/y
+		pixel_x = rand(-randpixel, randpixel)
+		pixel_y = rand(-randpixel, randpixel)
+
 /obj/item/Destroy()
+	qdel(hidden_uplink)
+	hidden_uplink = null
 	if(ismob(loc))
 		var/mob/m = loc
 		m.drop_from_inventory(src)
@@ -218,8 +229,9 @@
 
 // apparently called whenever an item is removed from a slot, container, or anything else.
 /obj/item/proc/dropped(mob/user as mob)
-	..()
 	if(zoom) zoom() //binoculars, scope, etc
+	return
+
 
 // called just as an item is picked up (loc is not yet changed)
 /obj/item/proc/pickup(mob/user)
@@ -281,7 +293,7 @@ var/list/global/slot_flags_enumeration = list(
 		if(H.species.hud && H.species.hud.equip_slots)
 			mob_equip = H.species.hud.equip_slots
 
-		if(H.species && !(slot in mob_equip))
+		if(!(slot in mob_equip))
 			return 0
 
 	//First check if the item can be equipped to the desired slot.
@@ -302,10 +314,7 @@ var/list/global/slot_flags_enumeration = list(
 	//Lastly, check special rules for the desired slot.
 	switch(slot)
 		if(slot_l_ear, slot_r_ear)
-			var/slot_other_ear = (slot == slot_l_ear)? slot_r_ear : slot_l_ear
 			if( (w_class > 1) && !(slot_flags & SLOT_EARS) )
-				return 0
-			if( (slot_flags & SLOT_TWOEARS) && H.get_equipped_item(slot_other_ear) )
 				return 0
 		if(slot_wear_id)
 			if(!H.w_uniform && (slot_w_uniform in mob_equip))
@@ -339,13 +348,10 @@ var/list/global/slot_flags_enumeration = list(
 			if(!istype(src, /obj/item/weapon/legcuffs))
 				return 0
 		if(slot_in_backpack) //used entirely for equipping spawned mobs or at round start
-			var/allow = 0
-			if(H.back && istype(H.back, /obj/item/weapon/storage/backpack))
-				var/obj/item/weapon/storage/backpack/B = H.back
-				if(B.contents.len < B.storage_slots && w_class <= B.max_w_class)
-					allow = 1
-			if(!allow)
-				return 0
+			if(H.back && istype(H.back, /obj/item/weapon/storage))
+				var/obj/item/weapon/storage/B = H.back
+				if(!B.can_be_inserted(src, disable_warning))
+					return 0
 		if(slot_tie)
 			if(!H.w_uniform && (slot_w_uniform in mob_equip))
 				if(!disable_warning)
@@ -405,7 +411,7 @@ var/list/global/slot_flags_enumeration = list(
 	attack_self(usr)
 
 
-/obj/item/proc/IsShield()
+/obj/item/proc/handle_shield(mob/user, var/damage, atom/damage_source = null, mob/attacker = null, var/attack_text = "the attack")
 	return 0
 
 /obj/item/proc/get_loc_turf()
@@ -428,9 +434,14 @@ var/list/global/slot_flags_enumeration = list(
 		user << "<span class='warning'>You cannot locate any eyes on [M]!</span>"
 		return
 
-	user.attack_log += "\[[time_stamp()]\]<font color='red'> Attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>"
-	M.attack_log += "\[[time_stamp()]\]<font color='orange'> Attacked by [user.name] ([user.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>"
-	msg_admin_attack("[user.name] ([user.ckey]) attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)") //BS12 EDIT ALG
+	admin_attack_log(user, M,
+		"Attacked [key_name(M)] with [src.name] (INTENT: [uppertext(user.a_intent)])",
+		"Attacked by [key_name(user)] with [src.name] (INTENT: [uppertext(user.a_intent)])",
+		"used [src.name] to eyestub"
+	)
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	user.do_attack_animation(M)
 
 	src.add_fingerprint(user)
 	//if((CLUMSY in user.mutations) && prob(50))
@@ -463,9 +474,9 @@ var/list/global/slot_flags_enumeration = list(
 				if(eyes.robotic <= 1) //robot eyes bleeding might be a bit silly
 					M << "<span class='danger'>Your eyes start to bleed profusely!</span>"
 			if(prob(50))
-				if(M.stat != 2)
+				if(!M.stat)
 					M << "<span class='warning'>You drop what you're holding and clutch at your eyes!</span>"
-					M.drop_item()
+					M.drop_active_hand()
 				M.eye_blurry += 10
 				M.Paralyse(1)
 				M.Weaken(4)
@@ -611,4 +622,3 @@ modules/mob/living/carbon/human/life.dm if you die, you will be zoomed out.
 
 /obj/item/proc/pwr_drain()
 	return 0 // Process Kill
-

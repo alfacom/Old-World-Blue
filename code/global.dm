@@ -38,39 +38,6 @@ var/list/paper_blacklist = list(
 	"onmousedown", "onmouseup", "onmousemove", "onmouseout", "onmouseover",
 )
 
-// The way blocks are handled badly needs a rewrite, this is horrible.
-// Too much of a project to handle at the moment, TODO for later.
-var/BLINDBLOCK    = 0
-var/DEAFBLOCK     = 0
-var/HULKBLOCK     = 0
-var/TELEBLOCK     = 0
-var/FIREBLOCK     = 0
-var/XRAYBLOCK     = 0
-var/CLUMSYBLOCK   = 0
-var/FAKEBLOCK     = 0
-var/COUGHBLOCK    = 0
-var/GLASSESBLOCK  = 0
-var/EPILEPSYBLOCK = 0
-var/TWITCHBLOCK   = 0
-var/NERVOUSBLOCK  = 0
-var/MONKEYBLOCK   = 27
-
-var/BLOCKADD = 0
-var/DIFFMUT  = 0
-
-var/HEADACHEBLOCK      = 0
-var/NOBREATHBLOCK      = 0
-var/REMOTEVIEWBLOCK    = 0
-var/REGENERATEBLOCK    = 0
-var/INCREASERUNBLOCK   = 0
-var/REMOTETALKBLOCK    = 0
-var/MORPHBLOCK         = 0
-var/BLENDBLOCK         = 0
-var/HALLUCINATIONBLOCK = 0
-var/NOPRINTSBLOCK      = 0
-var/SHOCKIMMUNITYBLOCK = 0
-var/SMALLSIZEBLOCK     = 0
-
 var/skipupdate = 0
 
 var/eventchance = 10 // Percent chance per 5 minutes.
@@ -94,24 +61,21 @@ var/shuttle_frozen = 0
 var/shuttle_left   = 0
 var/shuttlecoming  = 0
 
-var/list/jobMax        = list()
 var/list/bombers       = list()
-var/list/admin_log     = list()
 var/list/lastsignalers = list() // Keeps last 100 signals here in format: "[src] used \ref[src] @ location [src.loc]: [freq]/[code]"
 var/list/lawchanges    = list() // Stores who uploaded laws to which silicon-based lifeform, and what the law was.
 var/list/reg_dna       = list()
 //var/list/traitobj    = list()
 
-var/CELLRATE = 0.002 // Multiplier for watts per tick <> cell storage (e.g., 0.02 means if there is a load of 1000 watts, 20 units will be taken from a cell per second)
-                     // It's a conversion constant. power_used*CELLRATE = charge_provided, or charge_used/CELLRATE = power_provided
-var/CHARGELEVEL = 0.0005 // Cap for how fast cells charge, as a percentage-per-tick (0.01 means cellcharge is capped to 1% per second)
+// Multiplier for watts per tick <> cell storage
+//(e.g., 0.02 means if there is a load of 1000 watts, 20 units will be taken from a cell per second)
+// It's a conversion constant. power_used*CELLRATE = charge_provided, or charge_used/CELLRATE = power_provided
+var/CELLRATE = 0.002
 
-var/shuttle_z        = 2  // Default.
-var/airtunnel_start  = 68 // Default.
-var/airtunnel_stop   = 68 // Default.
-var/airtunnel_bottom = 72 // Default.
 
-var/list/monkeystart     = list()
+// Cap for how fast cells charge, as a percentage-per-tick (0.01 means cellcharge is capped to 1% per second)
+var/CHARGELEVEL = 0.0005
+
 var/list/wizardstart     = list()
 var/list/newplayer_start = list()
 
@@ -147,24 +111,15 @@ var/datum/station_state/start_state = null
 var/datum/configuration/config      = null
 var/datum/sun/sun                   = null
 
-var/list/combatlog = list()
-var/list/IClog     = list()
-var/list/OOClog    = list()
-var/list/adminlog  = list()
-
 var/list/powernets = list()
 
 var/Debug  = 0 // Global debug switch.
 var/Debug2 = 0
-var/datum/debug/debugobj
-
-var/datum/moduletypes/mods = new()
 
 var/wavesecret    = 0
 var/gravity_is_on = 1
 
 var/join_motd = null
-var/forceblob = 0
 
 var/datum/nanomanager/nanomanager		= new() // NanoManager, the manager for Nano UIs.
 var/datum/event_manager/event_manager	= new() // Event Manager, the manager for events.
@@ -207,9 +162,6 @@ var/DBConnection/dbcon_old = new() // /tg/station database (Old database) -- see
 
 // Reference list for disposal sort junctions. Filled up by sorting junction's New()
 /var/list/tagger_locations = list()
-
-// Added for Xenoarchaeology, might be useful for other stuff.
-var/global/list/alphabet_uppercase = list("A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z")
 
 // Chemistry lists.
 var/list/tachycardics  = list("coffee", "inaprovaline", "hyperzine", "nitroglycerin", "thirteenloko", "nicotine") // Increase heart rate.

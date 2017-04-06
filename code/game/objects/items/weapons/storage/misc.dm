@@ -22,7 +22,7 @@
 
 /obj/item/weapon/storage/box/donut/New()
 	..()
-	for(var/i=1; i <= startswith; i++)
+	for(var/i=1 to startswith)
 		new /obj/item/weapon/reagent_containers/food/snacks/donut/normal(src)
 	update_icon()
 	return
@@ -38,23 +38,3 @@
 
 /obj/item/weapon/storage/box/donut/empty
 	startswith = 0
-
-/obj/item/weapon/storage/box/underwear
-	icon = 'icons/obj/food.dmi'
-	icon_state = "underwear"
-	name = "underwear box"
-	can_hold = list(/obj/item/clothing/hidden)
-	storage_slots = 6
-
-/obj/item/weapon/storage/box/underwear/New()
-	var/tmp_type
-	for(var/i in 1 to 3)
-		tmp_type = pick(subtypesof(/obj/item/clothing/hidden/underwear))
-		new tmp_type(src)
-	for(var/i in 1 to 3)
-		tmp_type = pick(subtypesof(/obj/item/clothing/hidden/undershirt))
-		new tmp_type(src)
-	for(var/i in 1 to 3)
-		tmp_type = pick(subtypesof(/obj/item/clothing/hidden/socks))
-		new tmp_type(src)
-

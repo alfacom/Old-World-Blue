@@ -23,15 +23,18 @@
 	src.verbs -= /obj/item/weapon/reagent_containers/verb/set_APTFT
 
 /obj/item/weapon/reagent_containers/spray/afterattack(atom/A as mob|obj, mob/user as mob, proximity)
-	if(istype(A, /obj/item/weapon/storage) || istype(A, /obj/structure/table) || istype(A, /obj/structure/closet) || istype(A, /obj/item/weapon/reagent_containers) || istype(A, /obj/structure/sink) || istype(A, /obj/structure/janitorialcart))
+	if(proximity)
+		if(standard_dispenser_refill(user, A))
+			return
+
+	if(loc != user)
+		return ..()
+
+	if(istype(A, /obj/item/weapon/reagent_containers) || istype(A, /obj/structure/sink))
 		return ..()
 
 	if(istype(A, /spell))
 		return
-
-	if(proximity)
-		if(standard_dispenser_refill(user, A))
-			return
 
 	if(reagents.total_volume < amount_per_transfer_from_this)
 		user << "<span class='notice'>\The [src] is empty!</span>"
@@ -39,20 +42,18 @@
 
 	Spray_at(A, user, proximity)
 
-	playsound(src.loc, 'sound/effects/spray2.ogg', 50, 1, -6)
+	user.setClickCooldown(4)
 
 	if(reagents.has_reagent("sacid"))
-		message_admins("[key_name_admin(user)] fired sulphuric acid from \a [src].")
-		log_game("[key_name(user)] fired sulphuric acid from \a [src].")
+		log_game("[key_name(user)] fired sulphuric acid from \a [src].", src)
 	if(reagents.has_reagent("pacid"))
-		message_admins("[key_name_admin(user)] fired Polyacid from \a [src].")
-		log_game("[key_name(user)] fired Polyacid from \a [src].")
+		log_game("[key_name(user)] fired Polyacid from \a [src].", src)
 	if(reagents.has_reagent("lube"))
-		message_admins("[key_name_admin(user)] fired Space lube from \a [src].")
-		log_game("[key_name(user)] fired Space lube from \a [src].")
+		log_game("[key_name(user)] fired Space lube from \a [src].", src)
 	return
 
 /obj/item/weapon/reagent_containers/spray/proc/Spray_at(atom/A as mob|obj, mob/user as mob, proximity)
+	playsound(src.loc, 'sound/effects/spray2.ogg', 50, 1, -6)
 	if (A.density && proximity)
 		A.visible_message("[usr] sprays [A] with [src].")
 		reagents.splash(A, amount_per_transfer_from_this)
@@ -160,7 +161,7 @@
 	w_class = 3.0
 	possible_transfer_amounts = null
 	volume = 600
-	origin_tech = "combat=3;materials=3;engineering=3"
+	origin_tech = list(TECH_COMBAT = 3, TECH_MATERIAL = 3, TECH_ENGINEERING = 3)
 	center_of_mass = list("x"=17, "y"=11)
 
 /obj/item/weapon/reagent_containers/spray/chemsprayer/Spray_at(atom/A as mob|obj)

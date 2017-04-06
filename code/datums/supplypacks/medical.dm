@@ -51,7 +51,7 @@
 	contains = list(
 		/obj/item/weapon/cautery,
 		/obj/item/weapon/surgicaldrill,
-		/obj/item/clothing/mask/breath/toggleable/medical,
+		/obj/item/clothing/mask/breath/medical,
 		/obj/item/weapon/tank/anesthetic,
 		/obj/item/weapon/FixOVein,
 		/obj/item/weapon/hemostat,
@@ -69,7 +69,7 @@
 /datum/supply_packs/med/sterile
 	name = "Sterile equipment crate"
 	contains = list(
-		/obj/item/clothing/under/rank/medical/green = 2,
+		/obj/item/clothing/under/rank/medical/sleeveless/green = 2,
 		/obj/item/clothing/head/surgery/green = 2,
 		/obj/item/weapon/storage/box/masks,
 		/obj/item/weapon/storage/box/gloves,

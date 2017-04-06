@@ -12,15 +12,15 @@
 	//Species-specific stuff.
 	species_restricted = list("exclude","Unathi","Tajara","Skrell","Diona","Vox", "Xenomorph")
 	sprite_sheets_refit = list(
-		"Unathi" = 'icons/mob/species/unathi/helmet.dmi',
-		"Tajara" = 'icons/mob/species/tajaran/helmet.dmi',
-		"Skrell" = 'icons/mob/species/skrell/helmet.dmi',
-		)
+		"Unathi" = 'icons/inv_slots/hats/mob_unathi.dmi',
+		"Tajara" = 'icons/inv_slots/hats/mob_tajaran.dmi',
+		"Skrell" = 'icons/inv_slots/hats/mob_skrell.dmi',
+	)
 	sprite_sheets_obj = list(
-		"Unathi" = 'icons/obj/clothing/species/unathi/hats.dmi',
-		"Tajara" = 'icons/obj/clothing/species/tajaran/hats.dmi',
-		"Skrell" = 'icons/obj/clothing/species/skrell/hats.dmi',
-		)
+		"Unathi" = 'icons/inv_slots/hats/icon_unathi.dmi',
+		"Tajara" = 'icons/inv_slots/hats/icon_tajaran.dmi',
+		"Skrell" = 'icons/inv_slots/hats/icon_skrell.dmi',
+	)
 
 	light_overlay = "helmet_light"
 
@@ -37,15 +37,15 @@
 
 	species_restricted = list("exclude","Unathi","Tajara","Diona","Vox", "Xenomorph")
 	sprite_sheets_refit = list(
-		"Unathi" = 'icons/mob/species/unathi/suit.dmi',
-		"Tajara" = 'icons/mob/species/tajaran/suit.dmi',
-		"Skrell" = 'icons/mob/species/skrell/suit.dmi',
-		)
+		"Unathi" = 'icons/inv_slots/suits/mob_unathi.dmi',
+		"Tajara" = 'icons/inv_slots/suits/mob_tajaran.dmi',
+		"Skrell" = 'icons/inv_slots/suits/mob_skrell.dmi',
+	)
 	sprite_sheets_obj = list(
-		"Unathi" = 'icons/obj/clothing/species/unathi/suits.dmi',
-		"Tajara" = 'icons/obj/clothing/species/tajaran/suits.dmi',
-		"Skrell" = 'icons/obj/clothing/species/skrell/suits.dmi',
-		)
+		"Unathi" = 'icons/inv_slots/suits/icon_unathi.dmi',
+		"Tajara" = 'icons/inv_slots/suits/icon_tajaran.dmi',
+		"Skrell" = 'icons/inv_slots/suits/icon_skrell.dmi',
+	)
 
 	//Breach thresholds, should ideally be inherited by most (if not all) voidsuits.
 	//With 0.2 resiliance, will reach 10 breach damage after 3 laser carbine blasts or 8 smg hits.
@@ -113,7 +113,7 @@
 		if(istype(H))
 			if(helmet && H.head == helmet)
 				H.drop_from_inventory(helmet)
-				helmet.loc = src
+				helmet.forceMove(src)
 
 	if(boots)
 		boots.canremove = 1
@@ -121,16 +121,16 @@
 		if(istype(H))
 			if(boots && H.shoes == boots)
 				H.drop_from_inventory(boots)
-				boots.loc = src
+				boots.forceMove(src)
 
 	if(tank)
 		tank.canremove = 1
-		tank.loc = src
+		tank.forceMove(src)
 
 /obj/item/clothing/suit/space/void/verb/toggle_helmet()
 
 	set name = "Toggle Helmet"
-	set category = "Object"
+	set category = "Voidsuit"
 	set src in usr
 
 	if(!istype(src.loc,/mob/living)) return
@@ -149,7 +149,7 @@
 		H << "<span class='notice'>You retract your suit helmet.</span>"
 		helmet.canremove = 1
 		H.drop_from_inventory(helmet)
-		helmet.loc = src
+		helmet.forceMove(src)
 	else
 		if(H.head)
 			H << "<span class='danger'>You cannot deploy your helmet while wearing \the [H.head].</span>"
@@ -160,10 +160,42 @@
 			H << "<span class='info'>You deploy your suit helmet, sealing you off from the world.</span>"
 	helmet.update_light(H)
 
+
+
+
+/obj/item/clothing/suit/space/void/verb/toggle_boots()
+
+	set name = "Toggle Magboots"
+	set category = "Voidsuit"
+	set src in usr
+
+	if(!istype(src.loc,/mob/living)) return
+
+	if(!boots)
+		usr << "There is no magboots installed."
+		return
+
+	var/mob/living/carbon/human/H = usr
+
+	if(!istype(H)) return
+	if(H.stat) return
+	if(H.wear_suit != src) return
+
+	if(H.shoes == boots)
+		H << "<span class='notice'>You retract your suit helmet.</span>"
+		boots.canremove = 1
+		H.drop_from_inventory(boots)
+		boots.loc = src
+	else
+		if(H.equip_to_slot_if_possible(boots, slot_shoes))
+			boots.pickup(H)
+			boots.canremove = 0
+			H << "<span class='info'>You deploy your suit magboots</span>"
+
 /obj/item/clothing/suit/space/void/verb/eject_tank()
 
 	set name = "Eject Voidsuit Tank"
-	set category = "Object"
+	set category = "Voidsuit"
 	set src in usr
 
 	if(!istype(src.loc,/mob/living)) return
@@ -201,15 +233,15 @@
 
 			if(choice == tank)	//No, a switch doesn't work here. Sorry. ~Techhead
 				user << "You pop \the [tank] out of \the [src]'s storage compartment."
-				tank.loc = get_turf(src)
+				tank.forceMove(get_turf(src))
 				src.tank = null
 			else if(choice == helmet)
 				user << "You detatch \the [helmet] from \the [src]'s helmet mount."
-				helmet.loc = get_turf(src)
+				helmet.forceMove(get_turf(src))
 				src.helmet = null
 			else if(choice == boots)
 				user << "You detatch \the [boots] from \the [src]'s boot mounts."
-				boots.loc = get_turf(src)
+				boots.forceMove(get_turf(src))
 				src.boots = null
 		else
 			user << "\The [src] does not have anything installed."
@@ -219,8 +251,7 @@
 			user << "\The [src] already has a helmet installed."
 		else
 			user << "You attach \the [W] to \the [src]'s helmet mount."
-			user.drop_item()
-			W.loc = src
+			user.drop_from_inventory(W, src)
 			src.helmet = W
 		return
 	else if(istype(W,/obj/item/clothing/shoes/magboots))
@@ -228,8 +259,7 @@
 			user << "\The [src] already has magboots installed."
 		else
 			user << "You attach \the [W] to \the [src]'s boot mounts."
-			user.drop_item()
-			W.loc = src
+			user.drop_from_inventory(W, src)
 			boots = W
 		return
 	else if(istype(W,/obj/item/weapon/tank))
@@ -239,8 +269,7 @@
 			user << "\The [W] cannot be inserted into \the [src]'s storage compartment."
 		else
 			user << "You insert \the [W] into \the [src]'s storage compartment."
-			user.drop_item()
-			W.loc = src
+			user.drop_from_inventory(W, src)
 			tank = W
 		return
 

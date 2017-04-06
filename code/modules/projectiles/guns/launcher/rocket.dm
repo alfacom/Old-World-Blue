@@ -9,7 +9,7 @@
 	force = 5.0
 	flags =  CONDUCT
 	slot_flags = 0
-	origin_tech = "combat=8;materials=5"
+	origin_tech = list(TECH_COMBAT = 8, TECH_MATERIAL = 5)
 	fire_sound = 'sound/effects/bang.ogg'
 
 	release_force = 15
@@ -25,8 +25,7 @@
 /obj/item/weapon/gun/launcher/rocket/attackby(obj/item/I as obj, mob/user as mob)
 	if(istype(I, /obj/item/ammo_casing/rocket))
 		if(rockets.len < max_rockets)
-			user.drop_item()
-			I.loc = src
+			user.drop_from_inventory(I, src)
 			rockets += I
 			user << "\blue You put the rocket in [src]."
 			user << "\blue [rockets.len] / [max_rockets] rockets."
@@ -43,6 +42,5 @@
 	return null
 
 /obj/item/weapon/gun/launcher/rocket/handle_post_fire(mob/user, atom/target)
-	message_admins("[key_name_admin(user)] fired a rocket from a rocket launcher ([src.name]) at [target].")
-	log_game("[key_name_admin(user)] used a rocket launcher ([src.name]) at [target].")
+	log_game("[key_name_admin(user)] used a rocket launcher ([src.name]) at [target].", target)
 	..()

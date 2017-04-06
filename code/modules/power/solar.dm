@@ -269,7 +269,7 @@ var/list/solars_list = list()
 	if(!tracker)
 		if(istype(W, /obj/item/weapon/tracker_electronics))
 			tracker = 1
-			user.drop_item()
+			user.drop_from_inventory(W)
 			qdel(W)
 			user.visible_message("<span class='notice'>[user] inserts the electronics into the solar assembly.</span>")
 			return 1
@@ -365,11 +365,11 @@ var/list/solars_list = list()
 
 /obj/machinery/power/solar_control/update_icon()
 	if(stat & BROKEN)
-		icon_state = "broken"
+		icon_state = "solarb"
 		overlays.Cut()
 		return
 	if(stat & NOPOWER)
-		icon_state = "c_unpowered"
+		icon_state = "solar0"
 		overlays.Cut()
 		return
 	icon_state = "solar"

@@ -1,7 +1,7 @@
 /****************************************************
 				BLOOD SYSTEM
 ****************************************************/
-//Blood levels. These are percentages based on the species blood_volume far.
+//Blood levels. These are percentages based on the species blood_volume var.
 var/const/BLOOD_VOLUME_SAFE =    85
 var/const/BLOOD_VOLUME_OKAY =    75
 var/const/BLOOD_VOLUME_BAD =     60
@@ -19,7 +19,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	vessel = new/datum/reagents(species.blood_volume)
 	vessel.my_atom = src
 
-	if(species && species.flags & NO_BLOOD) //We want the var for safety but we can do without the actual blood.
+	if(!should_have_organ(O_HEART)) //We want the var for safety but we can do without the actual blood.
 		return
 
 	vessel.add_reagent("blood",species.blood_volume)
@@ -28,10 +28,23 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 
 //Resets blood data
 /mob/living/carbon/human/proc/fixblood()
+	if(!vessel)
+		make_blood()
+	else
+		if(vessel.total_volume < species.blood_volume)
+			vessel.maximum_volume = species.blood_volume
+			vessel.add_reagent("blood", species.blood_volume - vessel.total_volume)
+		else if(vessel.total_volume > species.blood_volume)
+			vessel.remove_reagent("blood", vessel.total_volume - species.blood_volume)
+			vessel.maximum_volume = species.blood_volume
+
 	for(var/datum/reagent/blood/B in vessel.reagent_list)
 		if(B.id == "blood")
-			B.data = list(	"donor"=src,"viruses"=null,"species"=species.name,"blood_DNA"=dna.unique_enzymes,"blood_colour"= get_blood_colour(),"blood_type"=dna.b_type,	\
-							"resistances"=null,"trace_chem"=null, "virus2" = null, "antibodies" = list())
+			B.data = list(
+				"donor"=src,"species"=species.name,"blood_DNA"=dna.unique_enzymes,
+				"blood_colour"= get_blood_colour(),"blood_type"=dna.b_type,
+				"trace_chem"=null, "virus2" = null, "antibodies" = list()
+			)
 			B.color = B.data["blood_colour"]
 
 // Takes care blood loss and regeneration
@@ -39,7 +52,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	if(in_stasis)
 		return
 
-	if(species && species.flags & NO_BLOOD)
+	if(!should_have_organ(O_HEART))
 		return
 
 	if(stat != DEAD && bodytemperature >= 170)	//Dead or cryosleep people do not pump the blood.
@@ -63,7 +76,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 
 		// Damaged heart virtually reduces the blood volume, as the blood isn't
 		// being pumped properly anymore.
-		if(species && species.has_organ[O_HEART])
+		if(species && should_have_organ(O_HEART))
 			var/obj/item/organ/internal/heart/heart = internal_organs_by_name[O_HEART]
 
 			if(!heart)
@@ -127,7 +140,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 		//Bleeding out
 		var/blood_max = 0
 		for(var/obj/item/organ/external/temp in organs)
-			if(!(temp.status & ORGAN_BLEEDING) || temp.status & ORGAN_ROBOT)
+			if(!(temp.status & ORGAN_BLEEDING) || temp.robotic >= ORGAN_ROBOT)
 				continue
 			for(var/datum/wound/W in temp.wounds) if(W.bleeding())
 				blood_max += W.damage / 40
@@ -141,13 +154,13 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 		blood_splatter(src,src)
 
 /mob/living/carbon/human/proc/remove_blood(var/amt)
-	if(species && species.flags & NO_BLOOD) //TODO: Make drips come from the reagents instead.
+	if(!should_have_organ(O_HEART)) //TODO: Make drips come from the reagents instead.
 		return 0
 
 	if(!amt)
 		return 0
 
-	vessel.remove_reagent("blood",amt)
+	return	vessel.remove_reagent("blood",amt)
 
 /****************************************************
 				BLOOD TRANSFERS
@@ -168,11 +181,6 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 	B.data["virus2"] |= virus_copylist(src.virus2)
 	B.data["antibodies"] = src.antibodies
 	B.data["blood_DNA"] = copytext(src.dna.unique_enzymes,1,0)
-	if(src.resistances && src.resistances.len)
-		if(B.data["resistances"])
-			B.data["resistances"] |= src.resistances.Copy()
-		else
-			B.data["resistances"] = src.resistances.Copy()
 	B.data["blood_type"] = copytext(src.dna.b_type,1,0)
 
 	// Putting this here due to return shenanigans.
@@ -191,7 +199,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 //For humans, blood does not appear from blue, it comes from vessels.
 /mob/living/carbon/human/take_blood(obj/item/weapon/reagent_containers/container, var/amount)
 
-	if(species && species.flags & NO_BLOOD)
+	if(!should_have_organ(O_HEART))
 		return null
 
 	if(vessel.get_reagent_amount("blood") < amount)
@@ -219,7 +227,7 @@ var/const/BLOOD_VOLUME_SURVIVE = 40
 //Transfers blood from reagents to vessel, respecting blood types compatability.
 /mob/living/carbon/human/inject_blood(var/datum/reagent/blood/injected, var/amount)
 
-	if(species && species.flags & NO_BLOOD)
+	if(!should_have_organ(O_HEART))
 		reagents.add_reagent("blood", amount, injected.data)
 		reagents.update_total()
 		return

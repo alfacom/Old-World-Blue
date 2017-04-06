@@ -34,7 +34,7 @@
 	desc = "A rack of hollow darts."
 	icon_state = "darts"
 	item_state = "rcdammo"
-	origin_tech = "materials=2"
+	origin_tech = list(TECH_MATERIAL = 2)
 	mag_type = MAGAZINE
 	caliber = "dart"
 	ammo_type = /obj/item/ammo_casing/chemdart
@@ -109,11 +109,11 @@
 			user << "\blue [src] already has [max_beakers] beakers in it - another one isn't going to fit!"
 			return
 		var/obj/item/weapon/reagent_containers/glass/beaker/B = I
-		user.drop_item()
-		B.loc = src
-		beakers += B
-		user << "\blue You slot [B] into [src]."
-		src.updateUsrDialog()
+		if(user.unEquip(B))
+			B.loc = src
+			beakers += B
+			user << "\blue You slot [B] into [src]."
+			src.updateUsrDialog()
 		return 1
 	..()
 

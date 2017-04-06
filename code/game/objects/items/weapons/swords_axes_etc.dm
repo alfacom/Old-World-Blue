@@ -25,6 +25,8 @@
 	force = 10
 
 /obj/item/weapon/melee/classic_baton/attack(mob/M as mob, mob/living/user as mob)
+	//TODO: DNA3 clown_block
+/*
 	if ((CLUMSY in user.mutations) && prob(50))
 		user << "\red You club yourself over the head."
 		user.Weaken(3 * force)
@@ -34,17 +36,12 @@
 		else
 			user.take_organ_damage(2*force)
 		return
-/*this is already called in ..()
-	src.add_fingerprint(user)
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-
-	log_attack("<font color='red'>[user.name] ([user.ckey]) attacked [M.name] ([M.ckey]) with [src.name] (INTENT: [uppertext(user.a_intent)])</font>")
 */
 	if (user.a_intent == I_HURT)
 		if(!..()) return
 		//playsound(src.loc, "swing_hit", 50, 1, -1)
-		if (M.stuttering < 8 && (!(HULK in M.mutations))  /*&& (!istype(H:wear_suit, /obj/item/clothing/suit/judgerobe))*/)
+
+		if (M.stuttering < 8)
 			M.stuttering = 8
 		M.Stun(8)
 		M.Weaken(8)
@@ -54,9 +51,11 @@
 		playsound(src.loc, 'sound/weapons/Genhit.ogg', 50, 1, -1)
 		M.Stun(5)
 		M.Weaken(5)
-		M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-		user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-		msg_admin_attack("[key_name(user)] attacked [key_name(user)] with [src.name] (INTENT: [uppertext(user.a_intent)])")
+		admin_attack_log(user, M,
+			"Used the [src.name] to attack [key_name(M)]",
+			"Has been attacked with [src.name] by [key_name(user)]",
+			"used [src.name] to attack"
+		)
 		src.add_fingerprint(user)
 
 		for(var/mob/O in viewers(M))
@@ -118,6 +117,8 @@
 
 /obj/item/weapon/melee/telebaton/attack(mob/target as mob, mob/living/user as mob)
 	if(on)
+		//TODO: DNA3 clown_block
+/*
 		if ((CLUMSY in user.mutations) && prob(50))
 			user << "\red You club yourself over the head."
 			user.Weaken(3 * force)
@@ -127,6 +128,7 @@
 			else
 				user.take_organ_damage(2*force)
 			return
+*/
 		if(..())
 			//playsound(src.loc, "swing_hit", 50, 1, -1)
 			return

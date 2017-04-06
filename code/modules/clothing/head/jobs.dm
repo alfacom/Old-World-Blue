@@ -66,10 +66,18 @@
 	icon_state = "secelitetop"
 	item_state = "secelitetop"
 
-/obj/item/clothing/head/warden
+
+
+
+/obj/item/clothing/head/helmet/warden
 	name = "warden's hat"
 	desc = "It's a special helmet issued to the Warden of a securiy force. Protects the head from impacts."
+	armor = list(melee = 60, bullet = 40, laser = 60, energy = 15, bomb = 25, bio = 0, rad = 0)
 	icon_state = "policehelm"
+
+/obj/item/clothing/head/helmet/warden/alt
+	icon_state = "warden"
+	desc = "A Collectable Police Officer's Hat. This hat emphasizes that you are THE LAW."
 
 /obj/item/clothing/head/helmet/warden/drill
 	name = "warden's drill hat"

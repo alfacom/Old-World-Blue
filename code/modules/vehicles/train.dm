@@ -54,8 +54,8 @@
 			M.apply_damages(22 / move_delay)	// and do damage according to how fast the train is going
 			if(ishuman(load))
 				var/mob/living/carbon/human/D = load
-				D << "\red You hit [M]!"
-				msg_admin_attack("[D.name] ([D.ckey]) hit [M.name] ([M.ckey]) with [src]. (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>)")
+				D << SPAN_WARN("You hit [M]!")
+				log_attack("hit [key_name(M)] with [src].")
 
 
 //-------------------------------------------

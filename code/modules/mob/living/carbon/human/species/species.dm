@@ -10,8 +10,8 @@
 	var/blurb = "A completely nondescript species."      // A brief lore summary for use in the chargen screen.
 
 	// Icon/appearance vars.
-	var/icobase = 'icons/mob/human_races/r_human.dmi'    // Normal icon set.
-	var/deform = 'icons/mob/human_races/r_def_human.dmi' // Mutated icon set.
+	var/icobase = 'icons/mob/human_races/human.dmi'    // Normal icon set.
+	var/deform = 'icons/mob/human_races/human_def.dmi' // Mutated icon set.
 
 	// Damage overlay and masks.
 	var/damage_overlays = 'icons/mob/human_races/masks/dam_human.dmi'
@@ -34,6 +34,7 @@
 	var/blood_volume = 560                               // Initial blood volume.
 	var/hunger_factor = 0.05                             // Multiplier for hunger.
 	var/taste_sensitivity = TASTE_NORMAL
+	var/list/emotes                                      // Special emotes for that species.
 
 	var/min_age = 17
 	var/max_age = 70
@@ -44,6 +45,7 @@
 	var/secondary_langs = list()             // The names of secondary languages that are available to this species.
 	var/list/speech_sounds                   // A list of sounds to potentially play when speaking.
 	var/list/speech_chance                   // The likelihood of a speech sound playing.
+	var/name_language = "Galactic Common"    // The language to use when determining names for this species, or null to use the first name/last name generator
 
 	// Combat vars.
 	var/total_health = 100					// Point at which the mob will enter crit.
@@ -129,7 +131,7 @@
 	var/vision_organ              // If set, this organ is required for vision. Defaults to "eyes" if the species has them.
 
 	var/list/has_limbs = list(
-		BP_CHEST  = new /datum/organ_description,
+		BP_CHEST  = new /datum/organ_description/chest,
 		BP_GROIN  = new /datum/organ_description/groin,
 		BP_HEAD   = new /datum/organ_description/head,
 		BP_L_ARM  = new /datum/organ_description/arm/left,
@@ -160,6 +162,8 @@
 	//Species Abilities
 	var/tmp/evolution_points = 0 //How many points race have for abilities
 
+	var/ability_datum = null
+
 /datum/species/New()
 	//If the species has eyes, they are the default vision organ
 	if(!vision_organ && has_organ[O_EYES])
@@ -170,11 +174,21 @@
 			inherent_verbs = list()
 		inherent_verbs |= /mob/living/carbon/human/proc/regurgitate
 
+	if(emotes && emotes.len)
+		var/list/emote_paths = emotes.Copy()
+		emotes.Cut()
+		for(var/T in emote_paths)
+			var/datum/emote/E = new T
+			emotes[E.key] = E
+
 /datum/species/proc/get_station_variant()
 	return name
 
 /datum/species/proc/get_bodytype()
 	return name
+
+/datum/species/proc/sanitize_name(var/name)
+	return sanitizeName(name)
 
 /datum/species/proc/get_environment_discomfort(var/mob/living/carbon/human/H, var/msg_type)
 
@@ -197,42 +211,15 @@
 			if(covered)
 				H << "<span class='danger'>[pick(heat_discomfort_strings)]</span>"
 
-/datum/species/proc/get_random_name(var/gender)
-	var/datum/language/species_language = all_languages[language]
-	if(!species_language)
-		species_language = all_languages[default_language]
-	if(!species_language)
-		return "unknown"
-	return species_language.get_random_name(gender)
+/datum/species/proc/equip_survival_gear(var/mob/living/carbon/human/H, var/datum/job/J)
+	var/gear = /obj/item/weapon/storage/box/survival
+	if(J && J.adv_survival_gear)
+		gear = /obj/item/weapon/storage/box/engineer
 
-/datum/species/proc/equip_survival_gear(var/mob/living/carbon/human/H, var/custom_survival_gear = /obj/item/weapon/storage/box/survival)
 	if(H.back && istype(H.back,/obj/item/weapon/storage))
-		H.equip_to_slot_or_del(new custom_survival_gear(H.back), slot_in_backpack)
+		H.equip_to_slot_or_del(new gear(H.back), slot_in_backpack)
 	else
-		H.equip_to_slot_or_del(new custom_survival_gear(H), slot_r_hand)
-
-
-/datum/species/proc/create_organs(var/mob/living/carbon/human/H,) //Handles creation of mob organs.
-
-	for(var/obj/item/organ/organ in (H.organs|H.internal_organs))
-		qdel(organ)
-
-	if(H.organs.len)                  H.organs.Cut()
-	if(H.internal_organs.len)         H.internal_organs.Cut()
-	if(H.organs_by_name.len)          H.organs_by_name.Cut()
-	if(H.internal_organs_by_name.len) H.internal_organs_by_name.Cut()
-
-	var/organ_type = null
-
-	for(var/limb_type in has_limbs)
-		var/datum/organ_description/OD = has_limbs[limb_type]
-		organ_type = OD.default_type
-		new organ_type(H, OD)
-
-	for(var/organ in has_organ)
-		organ_type = has_organ[organ]
-		new organ_type(H)
-
+		H.equip_to_slot_or_del(new gear(H), slot_r_hand)
 
 /datum/species/proc/hug(var/mob/living/carbon/human/H,var/mob/living/target)
 
@@ -243,8 +230,10 @@
 		if(FEMALE)
 			t_him = "her"
 
-	H.visible_message("<span class='notice'>[H] hugs [target] to make [t_him] feel better!</span>", \
-					"<span class='notice'>You hug [target] to make [t_him] feel better!</span>")
+	H.visible_message(
+		"<span class='notice'>[H] hugs [target] to make [t_him] feel better!</span>",
+		"<span class='notice'>You hug [target] to make [t_him] feel better!</span>"
+	)
 
 /datum/species/proc/remove_inherent_verbs(var/mob/living/carbon/human/H)
 	if(inherent_verbs)
@@ -256,6 +245,9 @@
 	if(inherent_verbs)
 		for(var/verb_path in inherent_verbs)
 			H.verbs |= verb_path
+	return
+
+/datum/species/proc/organs_spawned(var/mob/living/carbon/human/H)
 	return
 
 /datum/species/proc/handle_post_spawn(var/mob/living/carbon/human/H) //Handles anything not already covered by basic species assignment.

@@ -124,11 +124,7 @@
 
 	attack_self(mob/user as mob)
 		if (src.wrapped) //sometimes items can disappear. For example, bombs. --rastaf0
-			wrapped.loc = user.loc
-			if(ishuman(user))
-				user.put_in_hands(wrapped)
-			else
-				wrapped.loc = get_turf(src)
+			user.put_in_hands(wrapped)
 
 		qdel(src)
 		return
@@ -216,13 +212,22 @@
 				user << "<span class='notice'>It has a note attached which reads, \"[examtext]\"</span>"
 		return
 
+/obj/item/weapon/c_tube
+	name = "cardboard tube"
+	desc = "A tube... of cardboard."
+	icon = 'icons/obj/items.dmi'
+	icon_state = "c_tube"
+	throwforce = 1
+	w_class = 2.0
+	throw_speed = 4
+	throw_range = 5
+
 /obj/item/weapon/packageWrap
 	name = "package wrapper"
 	icon = 'icons/obj/items.dmi'
 	icon_state = "deliveryPaper"
 	w_class = 3.0
 	var/amount = 25.0
-
 
 	afterattack(var/obj/target as obj, mob/user as mob, proximity)
 		if(!proximity) return
@@ -338,10 +343,11 @@
 		var/dat = "<tt><center><h1><b>TagMaster 2.3</b></h1></center>"
 
 		dat += "<table style='width:100%; padding:4px;'><tr>"
-		for(var/i = 1, i <= tagger_locations.len, i++)
-			dat += "<td><a href='?src=\ref[src];nextTag=[tagger_locations[i]]'>[tagger_locations[i]]</a></td>"
+		var/i = 0
+		for(var/location in tagger_locations)
+			dat += "<td><a href='?src=\ref[src];nextTag=[location]'>[location]</a></td>"
 
-			if (i%4==0)
+			if (++i%4==0)
 				dat += "</tr><tr>"
 
 		dat += "</tr></table><br>Current Selection: [currTag ? currTag : "None"]</tt>"

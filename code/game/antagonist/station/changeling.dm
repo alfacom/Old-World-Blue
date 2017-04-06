@@ -13,8 +13,7 @@
 
 /datum/antagonist/changeling/can_become_antag(var/datum/mind/player, var/ignore_role)
 	if(player.current && ishuman(player.current))
-		var/datum/species/S = player.current:species
-		if(S.flags & (NO_SCAN|IS_SYNTHETIC)) return 0
+		if(player.current.isSynthetic()) return 0
 	return ..()
 
 /datum/antagonist/changeling/get_special_objective_text(var/datum/mind/player)

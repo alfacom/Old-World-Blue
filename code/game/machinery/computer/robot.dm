@@ -39,7 +39,7 @@
 			for(var/mob/living/silicon/robot/R in mob_list)
 				if(istype(R, /mob/living/silicon/robot/drone))
 					continue //There's a specific console for drones.
-				if(istype(user, /mob/living/silicon/ai))
+				if(isAI(user))
 					if (R.connected_ai != user)
 						continue
 				if(istype(user, /mob/living/silicon/robot))
@@ -68,7 +68,7 @@
 					dat += " Slaved to [R.connected_ai.name] |"
 				else
 					dat += " Independent from AI |"
-				if (istype(user, /mob/living/silicon))
+				if (issilicon(user))
 					if((user.mind.special_role && user.mind.original == user) && !R.emagged)
 						dat += "<A href='?src=\ref[src];magbot=\ref[R]'>(<font color=blue><i>Hack</i></font>)</A> "
 				dat += "<A href='?src=\ref[src];stopbot=\ref[R]'>(<font color=green><i>[R.canmove ? "Lockdown" : "Release"]</i></font>)</A> "
@@ -100,7 +100,7 @@
 /obj/machinery/computer/robotics/Topic(href, href_list)
 	if(..())
 		return 1
-	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (istype(usr, /mob/living/silicon)))
+	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (issilicon(usr)))
 		usr.set_machine(src)
 
 		if (href_list["eject"])
@@ -116,8 +116,7 @@
 			if (istype(I))
 				if(src.check_access(I))
 					if (!status)
-						message_admins("\blue [key_name_admin(usr)] has initiated the global cyborg killswitch!")
-						log_game("\blue [key_name(usr)] has initiated the global cyborg killswitch!")
+						log_game("[key_name(usr)] has initiated the global cyborg killswitch!", src)
 						src.status = 1
 						src.start_sequence()
 						src.temp = null
@@ -161,8 +160,7 @@
 								R.ResetSecurityCodes()
 
 							else
-								message_admins("\blue [key_name_admin(usr)] detonated [R.name]!")
-								log_game("\blue [key_name_admin(usr)] detonated [R.name]!")
+								log_game("[key_name_admin(usr)] detonated [R.name]!",src)
 								R.self_destruct()
 			else
 				usr << "\red Access Denied."
@@ -174,8 +172,7 @@
 					var/choice = input("Are you certain you wish to [R.canmove ? "lock down" : "release"] [R.name]?") in list("Confirm", "Abort")
 					if(choice == "Confirm")
 						if(R && istype(R))
-							message_admins("\blue [key_name_admin(usr)] [R.canmove ? "locked down" : "released"] [R.name]!")
-							log_game("[key_name(usr)] [R.canmove ? "locked down" : "released"] [R.name]!")
+							log_game("[key_name(usr)] [R.canmove ? "locked down" : "released"] [R.name]!", src)
 							R.canmove = !R.canmove
 							if (R.lockcharge)
 							//	R.cell.charge = R.lockcharge
@@ -194,13 +191,13 @@
 				var/mob/living/silicon/robot/R = locate(href_list["magbot"])
 
 				// whatever weirdness this is supposed to be, but that is how the href gets added, so here it is again
-				if(istype(R) && istype(usr, /mob/living/silicon) && usr.mind.special_role && (usr.mind.original == usr) && !R.emagged)
+				if(istype(R) && issilicon(usr) && usr.mind.special_role && (usr.mind.original == usr) && !R.emagged)
 
 					var/choice = input("Are you certain you wish to hack [R.name]?") in list("Confirm", "Abort")
 					if(choice == "Confirm")
 						if(R && istype(R))
 //							message_admins("\blue [key_name_admin(usr)] emagged [R.name] using robotic console!")
-							log_game("[key_name(usr)] emagged [R.name] using robotic console!")
+							log_game("[key_name(usr)] emagged [R.name] using robotic console!", src)
 							R.emagged = 1
 							if(R.mind.special_role)
 								R.verbs += /mob/living/silicon/robot/proc/ResetSecurityCodes

@@ -28,10 +28,7 @@
 			return
 		else
 			var/obj/item/I = pick(contents)
-			if(ishuman(user))
-				user.put_in_hands(I)
-			else
-				I.loc = get_turf(src)
+			user.put_in_hands(I)
 			user << "<span class='notice'>You find \an [I] in the cistern.</span>"
 			w_items -= I.w_class
 			return
@@ -94,8 +91,7 @@
 		if(w_items + I.w_class > 5)
 			user << "<span class='notice'>The cistern is full.</span>"
 			return
-		user.drop_item()
-		I.loc = src
+		user.drop_from_inventory(I, src)
 		w_items += I.w_class
 		user << "You carefully place \the [I] into the cistern."
 		return

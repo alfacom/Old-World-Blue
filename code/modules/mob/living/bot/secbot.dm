@@ -123,6 +123,20 @@
 			declare_arrests = !declare_arrests
 	attack_hand(usr)
 
+/mob/living/bot/secbot/emag_act(var/remaining_uses, var/mob/user)
+	. = ..()
+	if(!emagged)
+		if(user)
+			user << "<span class='notice'>\The [src] buzzes and beeps.</span>"
+		emagged = 1
+/*
+		patrol_speed = 3
+		target_speed = 4
+*/
+		return 1
+	else
+		user << "<span class='notice'>\The [src] is already corrupt.</span>"
+
 /mob/living/bot/secbot/attackby(var/obj/item/O, var/mob/user)
 	var/curhealth = health
 	..()
@@ -488,7 +502,7 @@
 
 	if(S.secured)
 		qdel(S)
-		var/obj/item/weapon/secbot_assembly/A = new /obj/item/weapon/secbot_assembly
+		var/obj/item/weapon/secbot_assembly/A = new
 		user.put_in_hands(A)
 		user << "You add the signaler to the helmet."
 		user.drop_from_inventory(src)
@@ -515,7 +529,7 @@
 			user << "You weld a hole in \the [src]."
 
 	else if(isprox(O) && (build_step == 1))
-		user.drop_item()
+		user.drop_from_inventory(O)
 		build_step = 2
 		user << "You add \the [O] to [src]."
 		overlays += image('icons/obj/aibots.dmi', "hs_eye")
@@ -523,7 +537,7 @@
 		qdel(O)
 
 	else if((istype(O, /obj/item/robot_parts/l_arm) || istype(O, /obj/item/robot_parts/r_arm)) && build_step == 2)
-		user.drop_item()
+		user.drop_from_inventory(O)
 		build_step = 3
 		user << "You add \the [O] to [src]."
 		name = "helmet/signaler/prox sensor/robot arm assembly"
@@ -531,12 +545,12 @@
 		qdel(O)
 
 	else if(istype(O, /obj/item/weapon/melee/baton) && build_step == 3)
-		user.drop_item()
-		user << "You complete the Securitron! Beep boop."
-		var/mob/living/bot/secbot/S = new /mob/living/bot/secbot(get_turf(src))
-		S.name = created_name
-		qdel(O)
-		qdel(src)
+		if(user.unEquip(O)) // Mounted weapons can't be dropped
+			user << "You complete the Securitron! Beep boop."
+			var/mob/living/bot/secbot/S = new /mob/living/bot/secbot(get_turf(src))
+			S.name = created_name
+			qdel(O)
+			qdel(src)
 
 	else if(istype(O, /obj/item/weapon/pen))
 		var/t = sanitizeSafe(input(user, "Enter new robot name", name, created_name), MAX_NAME_LEN)

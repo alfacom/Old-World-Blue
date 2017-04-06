@@ -25,6 +25,12 @@ var/bomb_set
 	                      // 3 is sealant open, 4 is unwrenched, 5 is removed from bolts.
 	use_power = 0
 
+/obj/item/weapon/disk/nuclear
+	name = "nuclear authentication disk"
+	desc = "Better keep this safe."
+	icon_state = "nucleardisk"
+	item_state = "card-id"
+	w_class = 2.0
 
 
 /obj/machinery/nuclearbomb/New()
@@ -88,8 +94,7 @@ var/bomb_set
 
 	if (src.extended)
 		if (istype(O, /obj/item/weapon/disk/nuclear))
-			usr.drop_item()
-			O.loc = src
+			usr.drop_from_inventory(O, src)
 			src.auth = O
 			src.add_fingerprint(user)
 			return
@@ -170,9 +175,6 @@ var/bomb_set
 			usr << "\red You don't have the dexterity to do this!"
 			return 1
 
-		if (!ishuman(user))
-			usr << "\red You don't have the dexterity to do this!"
-			return 1
 		user.set_machine(src)
 		var/dat = text("<TT><B>Nuclear Fission Explosive</B><BR>\nAuth. Disk: <A href='?src=\ref[];auth=1'>[]</A><HR>", src, (src.auth ? "++++++++++" : "----------"))
 		if (src.auth)
@@ -292,8 +294,7 @@ obj/machinery/nuclearbomb/proc/nukehack_win(mob/user as mob)
 			else
 				var/obj/item/I = usr.get_active_hand()
 				if (istype(I, /obj/item/weapon/disk/nuclear))
-					usr.drop_item()
-					I.loc = src
+					usr.drop_from_inventory(I, src)
 					src.auth = I
 		if (src.auth)
 			if (href_list["type"])
@@ -422,6 +423,5 @@ obj/machinery/nuclearbomb/proc/nukehack_win(mob/user as mob)
 /obj/item/weapon/disk/nuclear/Destroy()
 	if(blobstart.len > 0)
 		var/obj/D = new /obj/item/weapon/disk/nuclear(pick(blobstart))
-		message_admins("[src] has been destroyed. Spawning [D] at ([D.x], [D.y], [D.z]).")
-		log_game("[src] has been destroyed. Spawning [D] at ([D.x], [D.y], [D.z]).")
+		log_game("[src] has been destroyed. Spawning [D].", D)
 	..()

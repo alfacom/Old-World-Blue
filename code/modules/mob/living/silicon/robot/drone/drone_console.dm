@@ -51,7 +51,7 @@
 		usr << "<span class='danger'>Access denied.</span>"
 		return
 
-	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (istype(usr, /mob/living/silicon)))
+	if ((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (issilicon(usr)))
 		usr.set_machine(src)
 
 	if (href_list["setarea"])
@@ -86,8 +86,7 @@
 
 		if(D.stat != 2)
 			usr << "<span class='danger'>You issue a kill command for the unfortunate drone.</span>"
-			message_admins("[key_name_admin(usr)] issued kill order for drone [key_name_admin(D)] from control console.")
-			log_game("[key_name(usr)] issued kill order for [key_name(src)] from control console.")
+			log_game("[key_name(usr)] issued kill order for [key_name(src)] from control console.", src)
 			D.shut_down()
 
 	else if (href_list["search_fab"])

@@ -10,6 +10,9 @@
 		return (!mover.density || !density || lying)
 	return
 
+/mob/proc/setMoveCooldown(var/timeout)
+	if(client)
+		client.move_delay = max(world.time + timeout, client.move_delay)
 
 /client/North()
 	..()
@@ -47,15 +50,7 @@
 
 
 /client/Northwest()
-	if(iscarbon(usr))
-		var/mob/living/carbon/C = usr
-		if(!C.get_active_hand())
-			usr << "\red You have nothing to drop in your hand."
-			return
-		drop_item()
-	else
-		usr << "\red This mob type cannot drop items."
-	return
+	mob.drop_active_hand()
 
 //This gets called when you press the delete button.
 /client/verb/delete_key_pressed()
@@ -97,7 +92,7 @@
 /client/verb/drop_item()
 	set hidden = 1
 	if(!isrobot(mob) && mob.stat == CONSCIOUS && isturf(mob.loc))
-		return mob.drop_item()
+		return mob.drop_active_hand()
 	return
 
 

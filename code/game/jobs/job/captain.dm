@@ -13,8 +13,6 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 	selection_color = "#ccccff"
 	idtype = /obj/item/weapon/card/id/gold
 	req_admin_notify = 1
-	access = list() 			//See get_access()
-	minimal_access = list() 	//See get_access()
 	minimal_player_age = 30
 	economic_modifier = 20
 
@@ -29,14 +27,9 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 	ear = /obj/item/device/radio/headset/heads/captain
 	glasses = /obj/item/clothing/glasses/sunglasses
 
-	backpack = /obj/item/weapon/storage/backpack/captain
-	satchel = /obj/item/weapon/storage/backpack/satchel_cap
-
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/captain,\
-		/obj/item/weapon/storage/backpack/satchel_cap,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
+	backpack  = /obj/item/weapon/storage/backpack/captain
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/cap
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag/cap
 
 	put_in_backpack = list(
 		/obj/item/weapon/storage/box/ids \
@@ -47,6 +40,8 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 		if(H.age>49)
 			var/obj/item/clothing/under/U = H.w_uniform
 			if(istype(U)) U.accessories += new /obj/item/clothing/accessory/medal/gold/captain(U)
+			var/sound/announce_sound = (ticker.current_state <= GAME_STATE_SETTING_UP)? null : sound('sound/misc/boatswain.ogg', volume=20)
+			captain_announcement.Announce("All hands, Captain [H.real_name] on deck!", new_sound=announce_sound)
 		return 1
 
 	get_access()
@@ -74,29 +69,22 @@ var/datum/announcement/minor/captain_announcement = new(do_newscast = 1)
 	ideal_character_age = 50
 
 	implanted = 1
-	uniform = /obj/item/clothing/under/rank/head_of_personnel
+	uniform = /obj/item/clothing/under/rank/hop
 	shoes = /obj/item/clothing/shoes/brown
 	pda = /obj/item/device/pda/heads/hop
 	ear = /obj/item/device/radio/headset/heads/hop
 
 
 	put_in_backpack = list(
-		/obj/item/weapon/storage/box/ids \
-		)
-
-	access = list(
-		access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
-		access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
-		access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
-		access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
-		access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
-		access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway
+		/obj/item/weapon/storage/box/ids
 	)
+
 	minimal_access = list(
-		access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers,
-		access_medical, access_engine, access_change_ids, access_ai_upload, access_eva, access_heads,
-		access_all_personal_lockers, access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue,
-		access_crematorium, access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics, access_lawyer,
-		access_theatre, access_chapel_office, access_library, access_research, access_mining, access_heads_vault, access_mining_station,
-		access_clown, access_mime, access_hop, access_RC_announce, access_keycard_auth, access_gateway
+		access_security, access_sec_doors, access_brig, access_court, access_forensics_lockers, access_medical,
+		access_engine, access_change_ids, access_ai_upload, access_eva, access_heads, access_all_personal_lockers,
+		access_maint_tunnels, access_bar, access_janitor, access_construction, access_morgue, access_crematorium,
+		access_kitchen, access_cargo, access_cargo_bot, access_mailsorting, access_qm, access_hydroponics,
+		access_lawyer, access_theatre, access_chapel_office, access_library, access_research, access_mining,
+		access_heads_vault, access_mining_station, access_clown, access_mime, access_hop, access_RC_announce,
+		access_keycard_auth, access_gateway
 	)

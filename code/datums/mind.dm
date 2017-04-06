@@ -37,6 +37,8 @@
 	var/active = 0
 
 	var/memory
+	var/list/known_connections //list of known (RNG) relations between people
+	var/gen_relations_info
 
 	var/assigned_role
 	var/special_role
@@ -54,9 +56,6 @@
 	var/datum/changeling/changeling		//changeling holder
 
 	var/rev_cooldown = 0
-
-	// the world.time since the mob has been brigged, or -1 if not at all
-	var/brigged_since = -1
 
 	//put this here for easier tracking ingame
 	var/datum/money_account/initial_account
@@ -146,7 +145,7 @@
 		var/datum/antagonist/antag = all_antag_types[href_list["add_antagonist"]]
 		if(antag)
 			if(antag.add_antagonist(src, 1, 1, 0, 1, 1)) // Ignore equipment and role type for this.
-				log_admin("[key_name_admin(usr)] made [key_name(src)] into a [antag.role_text].")
+				log_admin("[key_name_admin(usr)] made [key_name(src)] into a [antag.role_text].", current)
 			else
 				usr << "<span class='warning'>[src] could not be made into a [antag.role_text]!</span>"
 
@@ -318,11 +317,11 @@
 							qdel(I)
 							break
 				H << "<span class='notice'><font size =3><B>Your loyalty implant has been deactivated.</B></font></span>"
-				log_admin("[key_name_admin(usr)] has de-loyalty implanted [current].")
+				log_admin("[key_name_admin(usr)] has de-loyalty implanted [current].", current)
 			if("add")
 				H << "<span class='danger'><font size =3>You somehow have become the recepient of a loyalty transplant, and it just activated!</font></span>"
 				H.implant_loyalty(H, override = TRUE)
-				log_admin("[key_name_admin(usr)] has loyalty implanted [current].")
+				log_admin("[key_name_admin(usr)] has loyalty implanted [current].", current)
 			else
 	else if (href_list["silicon"])
 		BITSET(current.hud_updateflag, SPECIALROLE_HUD)
@@ -343,10 +342,10 @@
 					else if(R.module_state_3 == R.module.emag)
 						R.module_state_3 = null
 						R.contents -= R.module.emag
-					log_admin("[key_name_admin(usr)] has unemag'ed [R].")
+					log_admin("[key_name_admin(usr)] has unemag'ed [R].", R)
 
 			if("unemagcyborgs")
-				if (istype(current, /mob/living/silicon/ai))
+				if (isAI(current))
 					var/mob/living/silicon/ai/ai = current
 					for (var/mob/living/silicon/robot/R in ai.connected_robots)
 						R.emagged = 0
@@ -362,7 +361,7 @@
 							else if(R.module_state_3 == R.module.emag)
 								R.module_state_3 = null
 								R.contents -= R.module.emag
-					log_admin("[key_name_admin(usr)] has unemag'ed [ai]'s Cyborgs.")
+					log_admin("[key_name_admin(usr)] has unemag'ed [ai]'s Cyborgs.", ai)
 
 	else if (href_list["common"])
 		switch(href_list["common"])
@@ -403,34 +402,6 @@
 	if(H)
 		qdel(H)
 
-
-// check whether this mind's mob has been brigged for the given duration
-// have to call this periodically for the duration to work properly
-/datum/mind/proc/is_brigged(duration)
-	var/turf/T = current.loc
-	if(!istype(T))
-		brigged_since = -1
-		return 0
-	var/is_currently_brigged = 0
-	if(istype(T.loc,/area/security/brig))
-		is_currently_brigged = 1
-		for(var/obj/item/weapon/card/id/card in current)
-			is_currently_brigged = 0
-			break // if they still have ID they're not brigged
-		for(var/obj/item/device/pda/P in current)
-			if(P.id)
-				is_currently_brigged = 0
-				break // if they still have ID they're not brigged
-
-	if(!is_currently_brigged)
-		brigged_since = -1
-		return 0
-
-	if(brigged_since == -1)
-		brigged_since = world.time
-
-	return (duration <= world.time - brigged_since)
-
 /datum/mind/proc/reset()
 	assigned_role =   null
 	special_role =    null
@@ -443,7 +414,6 @@
 	special_verbs =   list()
 	has_been_rev =    0
 	rev_cooldown =    0
-	brigged_since =   -1
 
 //Antagonist role check
 /mob/living/proc/check_special_role(role)

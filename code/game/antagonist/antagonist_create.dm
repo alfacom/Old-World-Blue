@@ -78,8 +78,7 @@
 			P.info = "The nuclear authorization code is: <b>[code]</b>"
 			P.name = "nuclear bomb code"
 			if(leader && leader.current)
-				if(get_turf(P) == get_turf(leader.current) && !(leader.current.l_hand && leader.current.r_hand))
-					leader.current.put_in_hands(P)
+				leader.current.put_in_hands(P)
 
 		if(!code_owner && leader)
 			code_owner = leader
@@ -107,11 +106,6 @@
 
 	show_objectives(player)
 
-	// Clown clumsiness check, I guess downstream might use it.
-	if (player.current.mind)
-		if (player.current.mind.assigned_role == "Clown")
-			player.current << "You have evolved beyond your clownish nature, allowing you to wield weapons without harming yourself."
-			player.current.mutations.Remove(CLUMSY)
 	return 1
 
 /datum/antagonist/proc/set_antag_name(var/mob/living/player)

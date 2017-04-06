@@ -10,13 +10,12 @@
 	var/bloodiness
 
 /obj/structure/bed/chair/wheelchair/update_icon()
+	overlays.Cut()
+	overlays += image(icon, "w_overlay", FLY_LAYER)
 	return
 
 /obj/structure/bed/chair/wheelchair/set_dir()
 	..()
-	overlays = null
-	var/image/O = image(icon = 'icons/obj/objects.dmi', icon_state = "w_overlay", layer = FLY_LAYER, dir = src.dir)
-	overlays += O
 	if(buckled_mob)
 		buckled_mob.set_dir(dir)
 
@@ -171,9 +170,11 @@
 		if(pulling)
 			occupant.visible_message("<span class='danger'>[pulling] has thrusted \the [name] into \the [A], throwing \the [occupant] out of it!</span>")
 
-			pulling.attack_log += "\[[time_stamp()]\]<font color='red'> Crashed [occupant.name]'s ([occupant.ckey]) [name] into \a [A]</font>"
-			occupant.attack_log += "\[[time_stamp()]\]<font color='orange'> Thrusted into \a [A] by [pulling.name] ([pulling.ckey]) with \the [name]</font>"
-			msg_admin_attack("[pulling.name] ([pulling.ckey]) has thrusted [occupant.name]'s ([occupant.ckey]) [name] into \a [A] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[pulling.x];Y=[pulling.y];Z=[pulling.z]'>JMP</a>)")
+			admin_attack_log(pulling, occupant,
+				"Crashed [key_name(occupant)]'s [name] into \a [A]",
+				"Thrusted into \a [A] by [key_name(pulling)] with \the [name]",
+				"has thrusted [name] into \a [A]. Occupied with"
+			)
 		else
 			occupant.visible_message("<span class='danger'>[occupant] crashed into \the [A]!</span>")
 

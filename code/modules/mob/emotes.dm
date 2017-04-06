@@ -1,27 +1,35 @@
-#define EMOTE_VISIBLE  1
-#define EMOTE_HEARABLE 2
+#define EMOTE_HUMAN		0x1
+#define EMOTE_ROBOT		0x2
 
 // Emotes
-var/global/list/emotes_list = list()
+var/global/list/human_emotes_list = list()
+var/global/list/robot_emotes_list = list()
 
 /hook/startup/proc/populate_emotes()
 	var/paths = typesof(/datum/emote)
 	. = length(paths)
 	for(var/T in paths)
 		var/datum/emote/E = new T
-		if(!E.key)
+		if(!E.key || !E.autolist)
 			del(E)
 			continue
-		emotes_list[E.key] = E
+		if(E.autolist & EMOTE_HUMAN)
+			human_emotes_list[E.key] = E
+		if(E.autolist & EMOTE_ROBOT)
+			robot_emotes_list[E.key] = E
 
 
 /datum/emote
 	var/key = ""
 	var/message = ""
 	var/r_message =  ""
-	var/m_type = EMOTE_VISIBLE
+	var/m_type = MESSAGE_VISIBLE
+	var/autolist = EMOTE_HUMAN
 
-/datum/emote/proc/act(var/mob/living/carbon/human/H)
+/datum/emote/special
+	autolist = null
+
+/datum/emote/proc/act(var/mob/living/H)
 	var/russified = H.client && (H.client.prefs.toggles & RUS_AUTOEMOTES)
 	if(russified)
 		return H.custom_emote(m_type, r_message)
@@ -33,7 +41,7 @@ var/global/list/emotes_list = list()
 	var/r_target_message = ""
 	var/range = null
 
-	proc/get_target(var/mob/living/carbon/human/H)
+	proc/get_target(var/mob/living/H)
 		var/list/targets = list()
 		for(var/mob/living/L in view(H, range ? range : world.view))
 			targets += L
@@ -41,7 +49,7 @@ var/global/list/emotes_list = list()
 
 	act(var/mob/living/carbon/human/H)
 		var/russified = H.client && (H.client.prefs.toggles & RUS_AUTOEMOTES)
-		var/mob/living/carbon/human/target = get_target(H)
+		var/mob/living/target = get_target(H)
 		if(!target || target==H)
 			if(message)
 				return ..()
@@ -61,7 +69,7 @@ var/global/list/emotes_list = list()
 	range = 1
 	var/ask_msg = ""
 
-	act(var/mob/living/carbon/human/H)
+	act(var/mob/living/H)
 		var/russified = H.client && (H.client.prefs.toggles & RUS_AUTOEMOTES)
 		var/mob/living/carbon/human/target = get_target(H)
 		if(!target || target==H)
@@ -82,7 +90,7 @@ var/global/list/emotes_list = list()
 	key = "airguitar"
 	message = "is strumming the air and headbanging like a safari chimp."
 	r_message = "играет на воображаемой гитаре и тр&#255;сЄт головой в такт."
-	act(var/mob/living/carbon/human/H)
+	act(var/mob/living/H)
 		if(!H.restrained())
 			return ..()
 		return null
@@ -106,19 +114,20 @@ var/global/list/emotes_list = list()
 	key = "choke"
 	message = "chokes!"
 	r_message = "задыхаетс&#255;!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/chuckle
 	key = "chuckle"
 	message = "chuckles."
 	r_message = "посмеиваетс&#255;."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/clap
 	key = "clap"
 	message = "claps."
 	r_message = "хлопает в ладоши."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 	act(var/mob/living/carbon/human/H)
 		if (!H.restrained())
 			return ..()
@@ -127,14 +136,14 @@ var/global/list/emotes_list = list()
 	key = "clear"
 	message = "clears /his throat"
 	r_message = "прочищает свое горло."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/collapse
 	key = "collapse"
 	message = "collapses!"
 	r_message = "падает!"
-	m_type = EMOTE_HEARABLE
-	act(var/mob/living/carbon/human/H)
+	m_type = MESSAGE_HEARABLE
+	act(var/mob/living/H)
 		H.Paralyse(2)
 		return ..()
 
@@ -142,19 +151,20 @@ var/global/list/emotes_list = list()
 	key = "cough"
 	message = "coughs!"
 	r_message = "кашл&#255;ет!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/cry
 	key = "cry"
 	message = "cries."
 	r_message = "плачет."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/deathgasp
 	key = "deathgasp"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 	act(var/mob/living/carbon/human/H)
-		return H.custom_emote(EMOTE_VISIBLE, H.get_death_message())
+		if(!istype(H)) return
+		return H.custom_emote(MESSAGE_VISIBLE, H.get_death_message())
 
 /datum/emote/drool
 	key = "drool"
@@ -170,7 +180,7 @@ var/global/list/emotes_list = list()
 	key = "faint"
 	message = "faints."
 	r_message = "падает в обморок."
-	act(var/mob/living/carbon/human/H)
+	act(var/mob/living/H)
 		if(!H.sleeping)
 			. = ..()
 			H.sleeping += 10 //Short-short nap
@@ -179,8 +189,9 @@ var/global/list/emotes_list = list()
 	key= "flap"
 	message = "flaps wings."
 	r_message = "хлопает крыль&#255;ми."
-	m_type = EMOTE_HEARABLE
-	act(var/mob/living/carbon/human/H)
+	m_type = MESSAGE_HEARABLE
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
+	act(var/mob/living/H)
 		if (!H.restrained())
 			return ..()
 
@@ -188,8 +199,9 @@ var/global/list/emotes_list = list()
 	key = "flap_a"
 	message = "flaps wings ANGRILY!"
 	r_message = "”√–ќ∆јёў≈ хлопает крыль&#255;ми!"
-	m_type = EMOTE_HEARABLE
-	act(var/mob/living/carbon/human/H)
+	m_type = MESSAGE_HEARABLE
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
+	act(var/mob/living/H)
 		if (!H.restrained())
 			return ..()
 
@@ -202,13 +214,13 @@ var/global/list/emotes_list = list()
 	key = "gasp"
 	message = "gasps!"
 	r_message = "пытаетс&#255; вдохнуть!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/giggle
 	key = "giggle"
 	message = "giggles."
 	r_message = "хихикает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/grin
 	key = "grin"
@@ -219,48 +231,49 @@ var/global/list/emotes_list = list()
 	key = "groan"
 	message = "groans!"
 	r_message = "отчаено стонет!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/grumble
 	key = "grumble"
 	message = "grumbles!"
 	r_message = "ворчит!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/hem
 	key = "hem"
 	message = "hems"
 	r_message = "хмыкает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/hum
 	key = "hum"
 	message = "hums."
 	r_message = "напевает себе под нос."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/laugh
 	key = "laugh"
 	message = "laughs."
 	r_message = "смеЄтс&#255;."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/moan
 	key = "moan"
 	message = "moans!"
 	r_message = "стонет!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/mumble
 	key = "mumble"
 	message = "mumbles!"
 	r_message = "бормочет что-то невн&#255;тное."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/nod
 	key = "nod"
 	message = "nods."
 	r_message = "кивает."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 /datum/emote/pale
 	key = "pale"
@@ -271,7 +284,7 @@ var/global/list/emotes_list = list()
 	key = "raise"
 	message = "raises a hand."
 	r_message = "поднимает руку вверх."
-	act(var/mob/living/carbon/human/H)
+	act(var/mob/living/H)
 		if (!H.restrained())
 			return ..()
 
@@ -279,7 +292,7 @@ var/global/list/emotes_list = list()
 	key = "scream"
 	message = "screams!"
 	r_message = "кричит!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/shake
 	key = "shake"
@@ -300,7 +313,7 @@ var/global/list/emotes_list = list()
 	key = "sigh"
 	message = "sighs."
 	r_message = "вздыхает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/smile
 	key = "smile"
@@ -311,19 +324,19 @@ var/global/list/emotes_list = list()
 	key = "sneeze"
 	message = "sneezes."
 	r_message = "чихает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/sniff
 	key = "sniff"
 	message = "sniffs."
 	r_message = "шмыгает носом."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/snore
 	key = "snore"
 	message = "snores."
 	r_message = "сопит."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/tremble
 	key = "tremble"
@@ -334,11 +347,13 @@ var/global/list/emotes_list = list()
 	key = "twitch"
 	message = "twitches violently."
 	r_message = "резко дергаетс&#255;."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 /datum/emote/twitch_s
 	key = "twitch_s"
 	message = "twitches."
 	r_message = "дергаетс&#255;."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 /datum/emote/wave
 	key = "wave"
@@ -349,13 +364,13 @@ var/global/list/emotes_list = list()
 	key = "whimper"
 	message = "whimpers."
 	r_message = "всхлипывает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/whistle
 	key = "whistle"
 	message = "whistles!"
 	r_message = "свистит!"
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 
 /datum/emote/wink
 	key = "wink"
@@ -366,7 +381,7 @@ var/global/list/emotes_list = list()
 	key = "yawn"
 	message = "yawns."
 	r_message = "зевает."
-	m_type = EMOTE_HEARABLE
+	m_type = MESSAGE_HEARABLE
 	act(var/mob/living/carbon/human/H)
 		if (!istype(H.wear_mask, /obj/item/clothing/mask/muzzle))
 			return ..()
@@ -379,8 +394,8 @@ var/global/list/emotes_list = list()
 	r_message = "отправл&#255;ет воздушный поцелуй."
 	target_message = "blowing a kiss to @target."
 	r_target_message = "отправл&#255;ет воздушный поцелуй @target."
-	act(var/mob/living/carbon/human/H)
-		if(!H.handcuffed)
+	act(var/mob/living/H)
+		if(!H.restrained())
 			return ..()
 
 /datum/emote/select/bow
@@ -389,7 +404,8 @@ var/global/list/emotes_list = list()
 	r_message = "клан&#255;етс&#255;."
 	target_message = "bows to @target."
 	r_target_message = "клан&#255;етс&#255; @target."
-	act(var/mob/living/carbon/human/H)
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
+	act(var/mob/living/H)
 		if(!H.buckled)
 			return ..()
 
@@ -399,6 +415,7 @@ var/global/list/emotes_list = list()
 	r_message = "злобно смотрит."
 	target_message = "glares at @target."
 	r_target_message = "смотрит на @target со злобой."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 /datum/emote/select/look
 	key = "look"
@@ -406,6 +423,7 @@ var/global/list/emotes_list = list()
 	r_message = "осматриваетс&#255;."
 	target_message = "looks at @target."
 	r_target_message = "смотрит на†@target."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 /datum/emote/select/salute
 	key = "salute"
@@ -413,6 +431,7 @@ var/global/list/emotes_list = list()
 	r_message = "отдает честь."
 	target_message = "salutes to @target."
 	r_target_message = "отдает честь @target."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 	act(var/mob/living/carbon/human/H)
 		if(!H.handcuffed)
 			return ..()
@@ -423,6 +442,7 @@ var/global/list/emotes_list = list()
 	r_message = "внимательно смотрит на происход&#255;щее."
 	target_message = "stares at @target."
 	r_target_message = "п&#255;литс&#255; на @target."
+	autolist = EMOTE_HUMAN | EMOTE_ROBOT
 
 ////SELECT LOCAL////
 
@@ -440,7 +460,7 @@ var/global/list/emotes_list = list()
 	r_message = "не найд&#255; никого р&#255;дом с собой, делает  брофист сам с собой.  ∆алкое зрелище."
 	target_message = "gives daps to @target."
 	r_target_message = "делает брофист с @target."
-	act(var/mob/living/carbon/human/H)
+	act(var/mob/living/H)
 		if(!H.restrained())
 			..()
 
@@ -477,9 +497,10 @@ var/global/list/emotes_list = list()
 
 /datum/emote/signal
 	key = "signal"
-	m_type = EMOTE_VISIBLE
+	m_type = MESSAGE_VISIBLE
 
 	act(var/mob/living/carbon/human/H)
+		if(!istype(H)) return
 		var/russified = H.client && (H.client.prefs.toggles & RUS_AUTOEMOTES)
 		var/t1 = input("How many fingers will you raise?", "Ammount", 2) as num
 		if (isnum(t1))
@@ -507,5 +528,86 @@ var/global/list/emotes_list = list()
 					else
 						return H.custom_emote(m_type, "raises [t1] fingers.")
 
-#undef EMOTE_VISIBLE
-#undef EMOTE_HEARABLE
+//// Pure silicon emotes ////
+
+/datum/emote/deathgasp_robot
+	key = "deathgasp"
+	message = "shudders violently for a moment, then becomes motionless, its eyes slowly darkening."
+	r_message = "резко вздрагивает, после чего застывает без движени&#255;, его глаза плавно гаснут."
+	m_type = MESSAGE_HEARABLE
+	autolist = EMOTE_ROBOT
+
+/datum/emote/select/beep
+	key = "beep"
+	message = "beeps."
+	r_message = "гудит."
+	target_message = "beeps at @target."
+	r_target_message = "гудит на @target."
+	autolist = EMOTE_ROBOT
+	act(var/mob/living/H)
+		if(..())
+			playsound(H.loc, 'sound/machines/twobeep.ogg', 50, 0)
+
+/datum/emote/select/buzz
+	key = "buzz"
+	message = "buzzes."
+	r_message = "жужжит."
+	target_message = "buzzes at @target."
+	r_target_message = "жужжит на @target."
+	autolist = EMOTE_ROBOT
+	act(var/mob/living/H)
+		if(..())
+			playsound(H.loc, 'sound/machines/buzz-sigh.ogg', 50, 0)
+
+/datum/emote/select/ping
+	key = "ping"
+	message = "pings."
+	r_message = "жужжит."
+	target_message = "pings at @target."
+	r_target_message = "жужжит на @target."
+	autolist = EMOTE_ROBOT
+	act(var/mob/living/H)
+		if(..())
+			playsound(H.loc, 'sound/machines/ping.ogg', 50, 0)
+
+
+/// Species tail emote ///
+
+/datum/emote/tail
+	autolist = null
+
+/datum/emote/tail/swish
+	key = "swish"
+	m_type = MESSAGE_VISIBLE
+	act(var/mob/living/carbon/human/H)
+		H.animate_tail_once()
+
+/datum/emote/tail/wag
+	key = "wag"
+	act(var/mob/living/carbon/human/H)
+		H.animate_tail_start()
+
+/datum/emote/tail/wag/sway
+	key = "sway"
+
+
+/datum/emote/tail/qwag
+	key = "qwag"
+	act(var/mob/living/carbon/human/H)
+		H.animate_tail_fast()
+
+/datum/emote/tail/qwag/fastsway
+	key = "fastsway"
+
+
+/datum/emote/tail/swag
+	key = "swag"
+	act(var/mob/living/carbon/human/H)
+		H.animate_tail_stop()
+
+/datum/emote/tail/swag/stopsway
+	key = "stopsway"
+
+
+#undef EMOTE_HUMAN
+#undef EMOTE_ROBOT

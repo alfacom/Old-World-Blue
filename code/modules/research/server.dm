@@ -2,6 +2,7 @@
 	name = "R&D Server"
 	icon = 'icons/obj/machines/research.dmi'
 	icon_state = "server"
+	circuit = /obj/item/weapon/circuitboard/rdserver
 	var/datum/research/files
 	var/health = 100
 	var/list/id_with_upload = list()		//List of R&D consoles with upload to server access.
@@ -16,13 +17,7 @@
 
 /obj/machinery/r_n_d/server/New()
 	..()
-	component_parts = list()
-	component_parts += new /obj/item/weapon/circuitboard/rdserver(src)
-	component_parts += new /obj/item/weapon/stock_parts/scanning_module(src)
-	component_parts += new /obj/item/stack/cable_coil(src)
-	component_parts += new /obj/item/stack/cable_coil(src)
-	RefreshParts()
-	initialize();
+	initialize()
 
 /obj/machinery/r_n_d/server/Destroy()
 	griefProtection()
@@ -320,13 +315,13 @@
 	onclose(user, "server_control")
 	return
 
-/obj/machinery/computer/rdservercontrol/attackby(var/obj/item/weapon/D as obj, var/mob/user as mob)
-	if(istype(D, /obj/item/weapon/card/emag) && !emagged)
+/obj/machinery/computer/rdservercontrol/emag_act(var/remaining_charges, var/mob/user)
+	if(!emagged)
 		playsound(src.loc, 'sound/effects/sparks4.ogg', 75, 1)
 		emagged = 1
 		user << "<span class='notice'>You you disable the security protocols.</span>"
 		src.updateUsrDialog()
-	return ..()
+		return 1
 
 /obj/machinery/r_n_d/server/robotics
 	name = "Robotics R&D Server"

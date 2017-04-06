@@ -20,7 +20,8 @@ mob/living/carbon/proc/pain(var/partname, var/amount, var/force, var/burning = 0
 		if(src:paralysis)
 			src:paralysis = max(0, src:paralysis-round(amount/10))
 	if(amount > 50 && prob(amount / 5))
-		src:drop_item()
+		src << "<span class='danger'>It's hurt so much! You drop what you're holding!</span>"
+		drop_active_hand()
 	var/msg
 	if(burning)
 		switch(amount)
@@ -76,13 +77,13 @@ mob/living/carbon/human/proc/handle_pain()
 
 	if(species.flags & NO_PAIN) return
 
-	if(stat >= 2) return
+	if(stat >= DEAD) return
 	if(analgesic > 70)
 		return
 	var/maxdam = 0
 	var/obj/item/organ/external/damaged_organ = null
 	for(var/obj/item/organ/external/E in organs)
-		if(E.status & (ORGAN_DEAD|ORGAN_ROBOT)) continue
+		if(!E.can_feel_pain()) continue
 		var/dam = E.get_damage()
 		// make the choice of the organ depend on damage,
 		// but also sometimes use one of the less damaged ones
@@ -94,7 +95,7 @@ mob/living/carbon/human/proc/handle_pain()
 
 	// Damage to internal organs hurts a lot.
 	for(var/obj/item/organ/internal/I in internal_organs)
-		if(I.status & (ORGAN_DEAD|ORGAN_ROBOT)) continue
+		if(!I.can_feel_pain()) continue
 		if(I.damage > 2) if(prob(2))
 			var/obj/item/organ/external/parent = get_organ(I.parent_organ)
 			src.custom_pain("You feel a sharp pain in your [parent.name]", 1)

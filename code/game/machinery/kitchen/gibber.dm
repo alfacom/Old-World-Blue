@@ -6,7 +6,7 @@
 	icon_state = "grinder"
 	density = 1
 	anchored = 1
-	req_access = list(access_kitchen,access_morgue)
+	req_access = list(access_kitchen)
 
 	var/operating = 0 //Is it on?
 	var/dirty = 0 // Does it need cleaning?
@@ -84,30 +84,30 @@
 	. = ..()
 	usr << "The safety guard is [emagged ? "<span class='danger'>disabled</span>" : "enabled"]."
 
+/obj/machinery/gibber/emag_act(var/remaining_charges, var/mob/user)
+	emagged = !emagged
+	user << "<span class='danger'>You [emagged ? "disable" : "enable"] the gibber safety guard.</span>"
+	return 1
+
 /obj/machinery/gibber/attackby(var/obj/item/W, var/mob/user)
-
-	if(istype(W,/obj/item/weapon/card))
-		if(!allowed(user) && !istype(W,/obj/item/weapon/card/emag))
-			user << "<span class='danger'>Access denied.</span>"
-			return
-		emagged = !emagged
-		user << "<span class='danger'>You [emagged ? "disable" : "enable"] the gibber safety guard.</span>"
-		return
-
 	var/obj/item/weapon/grab/G = W
 
-	if(!istype(G))
-		return ..()
+	if(istype(G))
+		if(get_dist(src,G.affecting)>=2)
+			return
 
-	if(get_dist(src,G.affecting)>=2)
-		return
+		if(G.state < 2)
+			user << "<span class='danger'>You need a better grip to do that!</span>"
+			return
 
-	if(G.state < 2)
-		user << "<span class='danger'>You need a better grip to do that!</span>"
-		return
-
-	move_into_gibber(user,G.affecting)
-	// Grab() process should clean up the grab item, no need to del it.
+		move_into_gibber(user,G.affecting)
+		// Grab() process should clean up the grab item, no need to del it.
+	else if(W.GetID())
+		if(allowed(usr))
+			emagged = !emagged
+			usr << "The safety guard is [emagged ? "<span class='danger'>disabled</span>" : "enabled"]."
+	else
+		..()
 
 /obj/machinery/gibber/MouseDrop_T(mob/target, mob/user)
 	if(user.stat || user.restrained())
@@ -180,7 +180,7 @@
 		visible_message("<span class='danger'>You hear a loud metallic grinding sound.</span>")
 		return
 	use_power(1000)
-	visible_message("<span class='danger'>You hear a loud squelchy grinding sound.</span>")
+	visible_message("<span class='danger'>You hear a loud [occupant.isSynthetic() ? "metallic" : "squelchy"] grinding sound.</span>")
 	src.operating = 1
 	update_icon()
 
@@ -199,7 +199,7 @@
 	else if(ishuman(src.occupant))
 		var/mob/living/carbon/human/H = occupant
 		slab_name = src.occupant.real_name
-		slab_type = H.species.meat_type
+		slab_type = H.isSynthetic() ? /obj/item/stack/material/steel : H.species.meat_type
 
 	// Small mobs don't give as much nutrition.
 	if(src.occupant.small)
@@ -214,9 +214,11 @@
 		if(src.occupant.reagents)
 			src.occupant.reagents.trans_to_obj(new_meat, round(occupant.reagents.total_volume/slab_count,1))
 
-	src.occupant.attack_log += "\[[time_stamp()]\] Was gibbed by <b>[user]/[user.ckey]</b>" //One shall not simply gib a mob unnoticed!
-	user.attack_log += "\[[time_stamp()]\] Gibbed <b>[src.occupant]/[src.occupant.ckey]</b>"
-	msg_admin_attack("[user.name] ([user.ckey]) gibbed [src.occupant] ([src.occupant.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+	admin_attack_log(user, occupant,
+		"Gibbed <b>[key_name(src.occupant)]</b>",
+		"Was gibbed by <b>[key_name(user)]</b>",
+		"gibbed"
+	)
 
 	src.occupant.ghostize()
 

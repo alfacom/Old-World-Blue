@@ -520,8 +520,7 @@
 		if(seed)
 			user << "<span class='danger'>[src] is already occupied!</span>"
 		else
-			user.drop_item()
-			qdel(O)
+			user.drop_from_inventory(O)
 
 			var/obj/machinery/apiary/A = new(src.loc)
 			A.icon = src.icon
@@ -529,6 +528,7 @@
 			A.hydrotray_type = src.type
 			qdel(src)
 	else if(O.force && seed)
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		user.visible_message("<span class='danger'>\The [seed.display_name] has been attacked by [user] with \the [O]!</span>")
 		if(!dead)
 			health -= O.force

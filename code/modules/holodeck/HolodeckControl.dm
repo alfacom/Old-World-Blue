@@ -95,7 +95,7 @@
 /obj/machinery/computer/HolodeckControl/Topic(href, href_list)
 	if(..())
 		return 1
-	if((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (istype(usr, /mob/living/silicon)))
+	if((usr.contents.Find(src) || (in_range(src, usr) && istype(src.loc, /turf))) || (issilicon(usr)))
 		usr.set_machine(src)
 
 		if(href_list["program"])
@@ -113,11 +113,9 @@
 			safety_disabled = !safety_disabled
 			update_projections()
 			if(safety_disabled)
-				message_admins("[key_name_admin(usr)] overrode the holodeck's safeties")
-				log_game("[key_name(usr)] overrided the holodeck's safeties")
+				log_game("[key_name(usr)] overrided the holodeck's safeties", src)
 			else
-				message_admins("[key_name_admin(usr)] restored the holodeck's safeties")
-				log_game("[key_name(usr)] restored the holodeck's safeties")
+				log_game("[key_name(usr)] restored the holodeck's safeties", src)
 
 		else if(href_list["gravity"])
 			toggleGravity(linkedholodeck)
@@ -126,20 +124,18 @@
 	src.updateUsrDialog()
 	return
 
-/obj/machinery/computer/HolodeckControl/attackby(var/obj/item/weapon/D as obj, var/mob/user as mob)
-	if(istype(D, /obj/item/weapon/card/emag))
-		playsound(src.loc, 'sound/effects/sparks4.ogg', 75, 1)
-		last_to_emag = user //emag again to change the owner
-		if (!emagged)
-			emagged = 1
-			safety_disabled = 1
-			update_projections()
-			user << "<span class='notice'>You vastly increase projector power and override the safety and security protocols.</span>"
-			user << "Warning.  Automatic shutoff and derezing protocols have been corrupted.  Please call Nanotrasen maintenance and do not use the simulator."
-			log_game("[key_name(usr)] emagged the Holodeck Control Computer")
-		src.updateUsrDialog()
-	else
-		..()
+/obj/machinery/computer/HolodeckControl/emag_act(var/remaining_charges, var/mob/user as mob)
+	playsound(src.loc, 'sound/effects/sparks4.ogg', 75, 1)
+	last_to_emag = user //emag again to change the owner
+	if (!emagged)
+		emagged = 1
+		safety_disabled = 1
+		update_projections()
+		user << "<span class='notice'>You vastly increase projector power and override the safety and security protocols.</span>"
+		user << "Warning.  Automatic shutoff and derezing protocols have been corrupted.  Please call Nanotrasen maintenance and do not use the simulator."
+		log_game("[key_name(usr)] emagged the Holodeck Control Computer", src)
+		return 1
+	return
 
 /obj/machinery/computer/HolodeckControl/proc/update_projections()
 	if (safety_disabled)

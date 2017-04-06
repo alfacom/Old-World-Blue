@@ -6,10 +6,17 @@
 /datum/supply_packs/supply
 	group = "Supplies"
 
+/datum/supply_packs/supply/lightbulbs
+	name = "Replacement lights"
+	contains = list(/obj/item/weapon/storage/box/lights/mixed = 3)
+	cost = 10
+	containertype = /obj/structure/closet/crate
+	containername = "Replacement lights"
+
 /datum/supply_packs/supply/food
 	name = "Kitchen supply crate"
 	contains = list(
-		/obj/item/weapon/reagent_containers/food/condiment/flour = 6,
+		/obj/item/weapon/reagent_containers/condiment/flour = 6,
 		/obj/item/weapon/reagent_containers/glass/drinks/milk = 3,
 		/obj/item/weapon/reagent_containers/glass/drinks/soymilk = 2,
 		/obj/item/weapon/storage/fancy/egg_box = 2,
@@ -30,9 +37,7 @@
 /datum/supply_packs/supply/janitor
 	name = "Janitorial supplies"
 	contains = list(
-		/obj/item/weapon/reagent_containers/glass/bucket,
-		/obj/item/weapon/reagent_containers/glass/bucket,
-		/obj/item/weapon/reagent_containers/glass/bucket,
+		/obj/item/weapon/reagent_containers/glass/beaker/bucket = 3,
 		/obj/item/weapon/mop,
 		/obj/item/weapon/caution = 4,
 		/obj/item/weapon/storage/bag/trash,
@@ -50,7 +55,7 @@
 	name = "Empty boxes"
 	contains = list(/obj/item/weapon/storage/box = 10)
 	cost = 10
-	containertype = "/obj/structure/closet/crate"
+	containertype = /obj/structure/closet/crate
 	containername = "Empty box crate"
 
 /datum/supply_packs/supply/bureaucracy

@@ -24,15 +24,19 @@
 /proc/randmutb(var/mob/living/M)
 	if(!M) return
 	M.dna.check_integrity()
+/*
 	var/block = pick(GLASSESBLOCK,COUGHBLOCK,FAKEBLOCK,NERVOUSBLOCK,CLUMSYBLOCK,TWITCHBLOCK,HEADACHEBLOCK,BLINDBLOCK,DEAFBLOCK,HALLUCINATIONBLOCK)
 	M.dna.SetSEState(block, 1)
+*/
 
 // Give Random Good Mutation to M
 /proc/randmutg(var/mob/living/M)
 	if(!M) return
 	M.dna.check_integrity()
+/*
 	var/block = pick(HULKBLOCK,XRAYBLOCK,FIREBLOCK,TELEBLOCK,NOBREATHBLOCK,REMOTEVIEWBLOCK,REGENERATEBLOCK,INCREASERUNBLOCK,REMOTETALKBLOCK,MORPHBLOCK,BLENDBLOCK,NOPRINTSBLOCK,SHOCKIMMUNITYBLOCK,SMALLSIZEBLOCK)
 	M.dna.SetSEState(block, 1)
+*/
 
 // Random Appearance Mutation
 /proc/randmuti(var/mob/living/M)
@@ -56,7 +60,6 @@
 			if(prob(prob))
 				M.dna.SetSEValue(i,rand(1,4095),1)
 		M.dna.UpdateSE()
-		domutcheck(M, null)
 	return
 
 // I haven't yet figured out what the fuck this is supposed to do.
@@ -133,21 +136,29 @@
 		src.dna.UpdateUI()
 	dna.check_integrity()
 	var/mob/living/carbon/human/H = src
-	H.hair_color = rgb (dna.GetUIValueRange(DNA_UI_HAIR_R,    255),\
-						dna.GetUIValueRange(DNA_UI_HAIR_G,    255),\
-						dna.GetUIValueRange(DNA_UI_HAIR_B,    255) )
+	H.hair_color = rgb(
+		dna.GetUIValueRange(DNA_UI_HAIR_R, 255),
+		dna.GetUIValueRange(DNA_UI_HAIR_G, 255),
+		dna.GetUIValueRange(DNA_UI_HAIR_B, 255)
+	)
 
-	H.facial_color =rgb(dna.GetUIValueRange(DNA_UI_BEARD_R,   255),\
-						dna.GetUIValueRange(DNA_UI_BEARD_G,   255),\
-						dna.GetUIValueRange(DNA_UI_BEARD_B,   255) )
+	H.facial_color =rgb(
+		dna.GetUIValueRange(DNA_UI_BEARD_R,255),
+		dna.GetUIValueRange(DNA_UI_BEARD_G,255),
+		dna.GetUIValueRange(DNA_UI_BEARD_B,255)
+	)
 
-	H.skin_color = rgb (dna.GetUIValueRange(DNA_UI_SKIN_R,    255),\
-						dna.GetUIValueRange(DNA_UI_SKIN_G,    255),\
-						dna.GetUIValueRange(DNA_UI_SKIN_B,    255) )
+	H.skin_color = rgb(
+		dna.GetUIValueRange(DNA_UI_SKIN_R, 255),
+		dna.GetUIValueRange(DNA_UI_SKIN_G, 255),
+		dna.GetUIValueRange(DNA_UI_SKIN_B, 255)
+	)
 
-	H.eyes_color = rgb (dna.GetUIValueRange(DNA_UI_EYES_R,    255),\
-						dna.GetUIValueRange(DNA_UI_EYES_G,    255),\
-						dna.GetUIValueRange(DNA_UI_EYES_B,    255) )
+	H.eyes_color = rgb(
+		dna.GetUIValueRange(DNA_UI_EYES_R, 255),
+		dna.GetUIValueRange(DNA_UI_EYES_G, 255),
+		dna.GetUIValueRange(DNA_UI_EYES_B, 255)
+	)
 	H.update_eyes()
 
 	H.s_tone   = 35 - dna.GetUIValueRange(DNA_UI_SKIN_TONE, 220) // Value can be negative.
@@ -157,8 +168,11 @@
 			H.gender = FEMALE
 		else
 			H.gender = MALE
+
 	H.body_build = H.species.get_body_build(H.gender, dna.body_build)
 	H.fix_body_build()
+
+	H.age = age
 
 	//Hair
 	var/hair = dna.GetUIValueRange(DNA_UI_HAIR_STYLE,hair_styles_list.len)

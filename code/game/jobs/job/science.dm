@@ -5,19 +5,14 @@
 	supervisors = "the research director"
 	selection_color = "#ffeeff"
 
-	ear = /obj/item/device/radio/headset/headset_sci
+	ear = /obj/item/device/radio/headset/sci
 	shoes = /obj/item/clothing/shoes/white
 	suit = /obj/item/clothing/suit/storage/toggle/labcoat/science
 
-	backpack = /obj/item/weapon/storage/backpack/toxins
-	satchel = /obj/item/weapon/storage/backpack/satchel_tox
-	duffle = /obj/item/weapon/storage/backpack/duffle
+	backpack  = /obj/item/weapon/storage/backpack/toxins
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/tox
+	messenger = /obj/item/weapon/storage/backpack/messenger/tox
 
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/toxins,\
-		/obj/item/weapon/storage/backpack/satchel_tox,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
 
 /datum/job/science/rd
 	title = "Research Director"
@@ -30,14 +25,10 @@
 	idtype = /obj/item/weapon/card/id/silver
 	req_admin_notify = 1
 	economic_modifier = 15
-	access = list(access_rd, access_heads, access_tox, access_genetics, access_morgue,
-			            access_tox_storage, access_teleporter, access_sec_doors,
-			            access_research, access_robotics, access_xenobiology, access_ai_upload, access_tech_storage,
-			            access_RC_announce, access_keycard_auth, access_tcomsat, access_gateway, access_xenoarch)
-	minimal_access = list(access_rd, access_heads, access_tox, access_genetics, access_morgue,
-			            access_tox_storage, access_teleporter, access_sec_doors,
-			            access_research, access_robotics, access_xenobiology, access_ai_upload, access_tech_storage,
-			            access_RC_announce, access_keycard_auth, access_tcomsat, access_gateway, access_xenoarch)
+	minimal_access = list(
+		access_rd, access_heads, access_RC_announce, access_keycard_auth, access_teleporter, access_tcomsat,
+		access_research, access_sec_doors, access_ai_upload, access_gateway, access_tech_storage, access_xenoarch,
+		access_tox, access_tox_storage, access_robotics, access_genetics, access_morgue, access_xenobiology)
 
 	minimum_character_age = 30
 	minimal_player_age = 30
@@ -51,14 +42,13 @@
 	hand = /obj/item/weapon/clipboard
 
 
-
 /datum/job/science/scientist
 	title = "Scientist"
 	flag = SCIENTIST
 	total_positions = 5
 	spawn_positions = 3
 	economic_modifier = 7
-	access = list(access_robotics, access_tox, access_tox_storage, access_research, access_xenobiology, access_xenoarch)
+	addcional_access = list(access_robotics, access_xenobiology)
 	minimal_access = list(access_tox, access_tox_storage, access_research, access_xenoarch)
 	alt_titles = list("Xenoarcheologist", "Anomalist", "Phoron Researcher")
 
@@ -83,14 +73,13 @@
 		return ..()
 
 
-
 /datum/job/science/xenobiologist
 	title = "Xenobiologist"
 	flag = XENOBIOLOGIST
 	total_positions = 3
 	spawn_positions = 2
 	economic_modifier = 7
-	access = list(access_robotics, access_tox, access_tox_storage, access_research, access_xenobiology, access_hydroponics)
+	addcional_access = list(access_robotics, access_tox, access_tox_storage)
 	minimal_access = list(access_research, access_xenobiology, access_hydroponics, access_tox_storage)
 	alt_titles = list("Xenobotanist")
 
@@ -101,7 +90,6 @@
 	pda = /obj/item/device/pda/science
 
 
-
 /datum/job/science/roboticist
 	title = "Roboticist"
 	flag = ROBOTICIST
@@ -110,9 +98,7 @@
 	supervisors = "research director"
 	economic_modifier = 5
 	//As a job that handles so many corpses, it makes sense for them to have morgue access.
-	access = list(
-		access_robotics, access_tox, access_tox_storage, access_tech_storage, access_morgue, access_research
-	)
+	addcional_access = list(access_tox, access_tox_storage)
 	minimal_access = list(access_robotics, access_tech_storage, access_morgue, access_research)
 	alt_titles = list("Biomechanical Engineer","Mechatronic Engineer")
 
@@ -120,20 +106,15 @@
 	minimum_character_age = 23
 
 	uniform = /obj/item/clothing/under/rank/roboticist
-	ear = /obj/item/device/radio/headset/headset_rob
+	ear = /obj/item/device/radio/headset/rob
 	pda = /obj/item/device/pda/roboticist
 	hand = /obj/item/weapon/storage/toolbox/mechanical
 	shoes = /obj/item/clothing/shoes/black
 
-	backpack = /obj/item/weapon/storage/backpack
-	satchel = /obj/item/weapon/storage/backpack/satchel_norm
-	duffle = /obj/item/weapon/storage/backpack/duffle
-
-	backpacks = list(
-		/obj/item/weapon/storage/backpack,\
-		/obj/item/weapon/storage/backpack/satchel_norm,\
-		/obj/item/weapon/storage/backpack/satchel
-	)
+	backpack  = /obj/item/weapon/storage/backpack
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/norm
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag
+	messenger = /obj/item/weapon/storage/backpack/messenger/black
 
 	equip(var/mob/living/carbon/human/H)
 		if(!H)	return 0

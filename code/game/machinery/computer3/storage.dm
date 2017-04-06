@@ -125,9 +125,8 @@
 				usr << "There's already a disk in [src]!"
 				return
 
+			usr.drop_from_inventory(O, src)
 			usr << "You insert [O] into [src]."
-			usr.drop_item()
-			O.loc = src
 			inserted = O
 			writeprotect = inserted.writeprotect
 
@@ -163,6 +162,7 @@
 	//parent_type = /obj/item/part/computer/storage // todon't: do this
 	name = "Data Disk"
 	desc = "A device that can be inserted and removed into computers easily as a form of portable data storage. This one stores 1 Megabyte"
+	randpixel = 5
 	var/list/files
 	var/list/spawn_files = list()
 	var/writeprotect = 0
@@ -173,8 +173,6 @@
 	New()
 		..()
 		icon_state = "datadisk[rand(0,6)]"
-		src.pixel_x = rand(-5, 5)
-		src.pixel_y = rand(-5, 5)
 		files = list()
 		if(istype(spawn_files))
 			for(var/typekey in spawn_files)

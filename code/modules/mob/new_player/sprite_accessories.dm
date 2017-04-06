@@ -17,6 +17,32 @@
 	conversion in savefile.dm
 */
 
+/proc/get_hair_styles_list(var/species, var/gender)
+	var/list/species_list = hair_styles_by_species[species]
+	if(!species_list || !species_list.len)
+		return list("Bald")
+
+	var/list/valid_hairstyles = list()
+	for(var/style in species_list)
+		var/datum/sprite_accessory/S = hair_styles_list[style]
+		if(S.gender != NEUTER && S.gender != gender)
+			continue
+		valid_hairstyles += style
+	return valid_hairstyles
+
+/proc/get_facial_styles_list(var/species, var/gender)
+	var/list/species_list = facial_hair_styles_by_species[species]
+	if(!species_list || !species_list.len)
+		return list("Shaved")
+
+	var/list/valid_hairstyles = list()
+	for(var/style in species_list)
+		var/datum/sprite_accessory/S = facial_hair_styles_list[style]
+		if(S.gender != NEUTER && S.gender != gender)
+			continue
+		valid_hairstyles += style
+	return valid_hairstyles
+
 /datum/sprite_accessory
 
 	var/icon			// the icon file the accessory is located in
@@ -47,6 +73,13 @@
 
 	icon = 'icons/mob/hair.dmi'	  // default icon for all hairs
 
+	bald
+		name = "Bald"
+		icon_state = "bald"
+		gender = MALE
+		species_allowed = list("Human","Unathi")
+
+
 	afro
 		name = "Afro"
 		icon_state = "afro"
@@ -64,12 +97,6 @@
 		name = "Asymmetrical Bob"
 		icon_state = "asymmbob"
 		gender = FEMALE
-
-	bald
-		name = "Bald"
-		icon_state = "bald"
-		gender = MALE
-		species_allowed = list("Human","Unathi")
 
 	balding
 		name = "Balding Hair"
@@ -97,6 +124,14 @@
 		name = "Beehive 2"
 		icon_state = "beehive2"
 		gender = FEMALE
+
+	birdnest
+		name = "Birdnest"
+		icon_state = "birdnest"
+
+	birdnest2
+		name = "Birdnest 2"
+		icon_state = "birdnest2"
 
 	blackswordsman
 		name = "Mercenary"
@@ -128,6 +163,22 @@
 		name = "Long Braid"
 		icon_state = "hbraid"
 		gender = FEMALE
+
+	buisness
+		name = "Buisness Hair"
+		icon_state = "business"
+
+	buisness2
+		name = "Buisness Hair 2"
+		icon_state = "business2"
+
+	buisness3
+		name = "Buisness Hair 3"
+		icon_state = "business3"
+
+	buisness4
+		name = "Buisness Hair 4"
+		icon_state = "business4"
 
 	bun
 		name = "Bun"
@@ -535,6 +586,10 @@
 		name = "Side Ponytail 2"
 		icon_state = "ponytailf"
 
+	sideswept
+		name = "Side Swipe"
+		icon_state = "sideswipe"
+
 	skinhead
 		name = "Skinhead"
 		icon_state = "skinhead"
@@ -709,6 +764,11 @@
 		gender = NEUTER
 		species_allowed = list("Human","Unathi","Tajara","Skrell","Vox","Machine")
 
+		New()
+			..()
+			species_allowed = list()
+			for(var/S in all_species)
+				species_allowed += S
 
 	abe
 		name = "Abraham Lincoln Beard"
@@ -730,6 +790,10 @@
 		name = "Elvis Sideburns"
 		icon_state = "elvis"
 		species_allowed = list("Human","Unathi")
+
+	fiveoclock
+		name = "Five o Clock Shadow"
+		icon_state = "fiveoclock"
 
 	fullbeard
 		name = "Full Beard"
@@ -893,6 +957,11 @@
 		wife
 			name = "Tajara Housewife"
 			icon_state = "wife"
+			gender = FEMALE
+
+		shorttail
+			name = "Tajara Short Tail"
+			icon_state = "shorttail"
 			gender = FEMALE
 
 	unathi

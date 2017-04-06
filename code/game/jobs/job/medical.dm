@@ -7,18 +7,14 @@
 
 	uniform = /obj/item/clothing/under/rank/medical
 	shoes = /obj/item/clothing/shoes/white
-	ear = /obj/item/device/radio/headset/headset_med
+	ear = /obj/item/device/radio/headset/med
 	pda = /obj/item/device/pda/medical
 
-	backpack = /obj/item/weapon/storage/backpack/medic
-	satchel = /obj/item/weapon/storage/backpack/satchel_med
-	duffle = /obj/item/weapon/storage/backpack/duffle/med
+	backpack  = /obj/item/weapon/storage/backpack/medic
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/med
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag/med
+	messenger = /obj/item/weapon/storage/backpack/messenger/med
 
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/medic,\
-		/obj/item/weapon/storage/backpack/satchel_med,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
 
 /datum/job/medical/cmo
 	title = "Chief Medical Officer"
@@ -31,12 +27,11 @@
 	idtype = /obj/item/weapon/card/id/silver
 	req_admin_notify = 1
 	economic_modifier = 10
-	access = list(access_medical, access_medical_equip, access_morgue, access_genetics, access_heads,
-			access_chemistry, access_virology, access_cmo, access_surgery, access_RC_announce,
-			access_keycard_auth, access_sec_doors, access_psychiatrist, access_eva, access_external_airlocks, access_maint_tunnels)
-	minimal_access = list(access_medical, access_medical_equip, access_morgue, access_genetics, access_heads,
-			access_chemistry, access_virology, access_cmo, access_surgery, access_RC_announce,
-			access_keycard_auth, access_sec_doors, access_psychiatrist, access_eva, access_external_airlocks, access_maint_tunnels)
+	minimal_access = list(
+		access_heads, access_RC_announce, access_keycard_auth, access_sec_doors, access_eva,
+		access_cmo,  access_medical, access_medical_equip, access_morgue, access_genetics,
+		access_chemistry, access_virology, access_surgery,  access_psychiatrist,
+		access_external_airlocks, access_maint_tunnels)
 
 	minimum_character_age = 27
 	minimal_player_age = 30
@@ -50,14 +45,17 @@
 	ear = /obj/item/device/radio/headset/heads/cmo
 	hand = /obj/item/weapon/storage/firstaid/adv
 
+
 /datum/job/medical/doctor
 	title = "Medical Doctor"
 	flag = DOCTOR
 	total_positions = 5
 	spawn_positions = 3
 	economic_modifier = 7
-	access = list(access_medical, access_medical_equip, access_morgue, access_surgery, access_chemistry, access_virology, access_genetics)
-	minimal_access = list(access_medical, access_medical_equip, access_morgue, access_surgery, access_virology, access_genetics)
+	addcional_access = list(access_chemistry)
+	minimal_access = list(
+		access_medical, access_medical_equip, access_morgue, access_surgery, access_virology, access_genetics
+	)
 	alt_titles = list("Surgeon","Emergency Physician","Nurse","Virologist")
 	minimal_player_age = 14
 
@@ -73,17 +71,23 @@
 					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical(H), slot_w_uniform)
 					H.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/toggle/fr_jacket(H), slot_wear_suit)
 				if("Surgeon")
-					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/blue(H), slot_w_uniform)
+					if(H.gender == FEMALE)
+						H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/sleeveless/blue(H), slot_w_uniform)
+						H.equip_to_slot_or_del(new /obj/item/clothing/head/surgery/blue(H), slot_head)
+					else
+						H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/sleeveless/green(H), slot_w_uniform)
+						H.equip_to_slot_or_del(new /obj/item/clothing/head/surgery/green(H), slot_head)
 					H.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/toggle/labcoat(H), slot_wear_suit)
-					H.equip_to_slot_or_del(new /obj/item/clothing/head/surgery/blue(H), slot_head)
 				if("Virologist")
 					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/virologist(H), slot_w_uniform)
 					H.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/toggle/labcoat/virologist(H), slot_wear_suit)
 					H.equip_to_slot_or_del(new /obj/item/clothing/mask/surgical(H), slot_wear_mask)
 					switch(H.backbag)
 						if(2) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/virology(H), slot_back)
-						if(3) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel_vir(H), slot_back)
+						if(3) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel/vir(H), slot_back)
 						if(4) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel(H), slot_back)
+						if(5) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/dufflebag/med(H), slot_back)
+						if(6) H.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/messenger/vir(H), slot_back)
 				if("Medical Doctor")
 					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical(H), slot_w_uniform)
 					H.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/toggle/labcoat(H), slot_wear_suit)
@@ -95,10 +99,9 @@
 							H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/nurse(H), slot_w_uniform)
 						H.equip_to_slot_or_del(new /obj/item/clothing/head/nursehat(H), slot_head)
 					else
-						H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/purple(H), slot_w_uniform)
+						H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/sleeveless/purple(H), slot_w_uniform)
 		..()
 		return 1
-
 
 
 //Chemist is a medical job damnit	//YEAH FUCK YOU SCIENCE	-Pete	//Guys, behave -Erro
@@ -108,7 +111,7 @@
 	total_positions = 2
 	spawn_positions = 2
 	economic_modifier = 5
-	access = list(access_medical, access_medical_equip, access_morgue, access_surgery, access_chemistry, access_virology, access_genetics)
+	addcional_access = list(access_morgue, access_surgery, access_virology, access_genetics)
 	minimal_access = list(access_medical, access_medical_equip, access_chemistry)
 	alt_titles = list("Pharmacist")
 	minimum_character_age = 20
@@ -118,11 +121,10 @@
 	pda = /obj/item/device/pda/chemist
 	suit = /obj/item/clothing/suit/storage/toggle/labcoat/chemist
 
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/chemistry,\
-		/obj/item/weapon/storage/backpack/satchel_chem,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
+	backpack  = /obj/item/weapon/storage/backpack/chemistry
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/chem
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag/med
+	messenger = /obj/item/weapon/storage/backpack/messenger/chem
 
 	equip(var/mob/living/carbon/human/H)
 		if(!H)	return 0
@@ -130,31 +132,29 @@
 			switch(H.mind.role_alt_title)
 				if("Pharmacist")
 					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/pharma(H), slot_w_uniform)
-					H.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/toggle/fr_jacket(H), slot_wear_suit)
 		return ..()
 
 
 /datum/job/medical/geneticist
 	title = "Geneticist"
 	flag = GENETICIST
-	total_positions = 2
-	spawn_positions = 2
+	total_positions = 0
+	spawn_positions = 0
 	supervisors = "the chief medical officer and research director"
 	economic_modifier = 7
-	access = list(access_medical, access_morgue, access_surgery, access_chemistry, access_virology, access_genetics, access_research)
+	addcional_access = list(access_surgery, access_chemistry, access_virology)
 	minimal_access = list(access_medical, access_morgue, access_genetics, access_research, access_medical_equip)
 
 	uniform = /obj/item/clothing/under/rank/geneticist
 	pda = /obj/item/device/pda/geneticist
-	ear = /obj/item/device/radio/headset/headset_medsci
+	ear = /obj/item/device/radio/headset/medsci
 	suit = /obj/item/clothing/suit/storage/toggle/labcoat/genetics
 	suit_store = /obj/item/device/flashlight/pen
 
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/genetics,\
-		/obj/item/weapon/storage/backpack/satchel_gen,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
+	backpack  = /obj/item/weapon/storage/backpack/genetics
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/gen
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag/med
+	messenger = /obj/item/weapon/storage/backpack/messenger/med
 
 
 /datum/job/medical/psychiatrist
@@ -163,7 +163,7 @@
 	total_positions = 1
 	spawn_positions = 1
 	economic_modifier = 5
-	access = list(access_medical, access_medical_equip, access_morgue, access_psychiatrist)
+	addcional_access = list(access_morgue)
 	minimal_access = list(access_medical, access_medical_equip, access_psychiatrist)
 	alt_titles = list("Psychologist")
 	minimum_character_age = 20
@@ -189,21 +189,31 @@
 	total_positions = 2
 	spawn_positions = 2
 	economic_modifier = 4
-	access = list(access_medical, access_medical_equip, access_morgue, access_surgery, access_chemistry, access_virology, access_eva, access_maint_tunnels, access_external_airlocks, access_psychiatrist)
-	minimal_access = list(access_medical, access_medical_equip, access_morgue, access_eva, access_maint_tunnels, access_external_airlocks)
+	addcional_access = list(access_surgery, access_chemistry, access_virology, access_psychiatrist)
+	minimal_access = list(
+		access_medical, access_medical_equip, access_morgue, access_eva, access_maint_tunnels,
+		access_external_airlocks
+	)
 	alt_titles = list("Emergency Medical Technician")
 
-	uniform = /obj/item/clothing/under/rank/medical/black
+	uniform = /obj/item/clothing/under/rank/medical/sleeveless/paramedic
 	suit = /obj/item/clothing/suit/storage/vest/ems
+	hat = /obj/item/clothing/head/soft/emt
 	shoes = /obj/item/clothing/shoes/jackboots
+	pda = /obj/item/device/pda/emt
 	belt = /obj/item/weapon/storage/belt/medical/emt
 	hand = /obj/item/weapon/storage/firstaid/adv
-	custom_survival_gear = /obj/item/weapon/storage/box/engineer
+	adv_survival_gear = 1
+
+	backpack  = /obj/item/weapon/storage/backpack/emt
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/emt
+	dufflebag = /obj/item/weapon/storage/backpack/dufflebag/emt
+	messenger = /obj/item/weapon/storage/backpack/messenger/emt
 
 	equip(var/mob/living/carbon/human/H)
 		if(!H)	return 0
 		if (H.mind && H.mind.role_alt_title)
 			switch(H.mind.role_alt_title)
 				if("Emergency Medical Technician")
-					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/paramedic(H), slot_w_uniform)
+					H.equip_to_slot_or_del(new /obj/item/clothing/under/rank/medical/sleeveless/paramedic(H), slot_w_uniform)
 		return ..()

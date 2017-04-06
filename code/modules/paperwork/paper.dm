@@ -11,6 +11,7 @@
 	item_state = "paper"
 	throwforce = 0
 	w_class = 1
+	randpixel = 8
 	throw_range = 1
 	throw_speed = 1
 	layer = 4
@@ -39,8 +40,6 @@
 
 /obj/item/weapon/paper/New()
 	..()
-	pixel_y = rand(-8, 8)
-	pixel_x = rand(-9, 9)
 	stamps = ""
 
 	if(name != "paper")
@@ -80,7 +79,7 @@
 	return
 
 /obj/item/weapon/paper/proc/show_content(var/mob/user, var/forceshow=0)
-	if(!(ishuman(user) || isobserver(user) || istype(user, /mob/living/silicon)) && !forceshow)
+	if(!(ishuman(user) || isobserver(user) || issilicon(user)) && !forceshow)
 		user << browse("<HTML><HEAD><TITLE>[name]</TITLE></HEAD><BODY>[stars(info)][stamps]</BODY></HTML>", "window=[name]")
 		onclose(user, "[name]")
 	else
@@ -92,9 +91,12 @@
 	set category = "Object"
 	set src in usr
 
+	//TODO: DNA3 clown_block
+/*
 	if((CLUMSY in usr.mutations) && prob(50))
 		usr << "<span class='warning'>You cut yourself on the paper.</span>"
 		return
+*/
 	var/n_name = sanitizeSafe(input(usr, "What would you like to label the paper?", "Paper Labelling", null)  as text, MAX_NAME_LEN)
 
 	// We check loc one level up, so we can rename in clipboards and such. See also: /obj/item/weapon/photo/rename()
@@ -107,6 +109,16 @@
 	return
 
 /obj/item/weapon/paper/attack_self(mob/living/user as mob)
+	if(user.a_intent == I_HURT)
+		if(icon_state == "scrap")
+			user.show_message("<span class='warning'>\The [src] is already crumpled.</span>")
+			return
+		//crumple dat paper
+		info = stars(info,85)
+		user.visible_message("\The [user] crumples \the [src] into a ball!")
+		icon_state = "scrap"
+		throw_range = 5
+		return
 	user.examinate(src)
 	if(rigged && (Holiday == "April Fool's Day"))
 		if(spam_flag == 0)
@@ -378,6 +390,17 @@
 	if(user.mind && (user.mind.assigned_role == "Clown"))
 		clown = 1
 
+	if(istype(P, /obj/item/weapon/reagent_containers/food/snacks/grown))
+		var/obj/item/weapon/reagent_containers/food/snacks/grown/G = P
+		if(G.reagents && (G.reagents.has_reagent("space_drugs")||G.reagents.has_reagent("psilocybin")))
+			var/obj/item/weapon/weed_paper/WP = new(src.loc)
+			user << "You grind some [P] on the paper."
+			WP.attackby(P, user)
+			user.u_equip(src)
+			user.put_in_hands(WP)
+			del(src)
+			return
+
 	if(istype(P, /obj/item/weapon/tape_roll))
 		var/obj/item/weapon/tape_roll/tape = P
 		tape.stick(src, user)
@@ -432,6 +455,10 @@
 		B.update_icon()
 
 	else if(istype(P, /obj/item/weapon/pen))
+		if(icon_state == "scrap")
+			usr << "<span class='warning'>\The [src] is too crumpled to write on.</span>"
+			return
+
 		var/obj/item/weapon/pen/robopen/RP = P
 		if ( istype(RP) && RP.mode == 2 )
 			RP.RenamePaper(user,src)

@@ -7,13 +7,6 @@
 */
 
 /mob/living/silicon/robot/ClickOn(var/atom/A, var/params)
-	if(world.time <= next_click)
-		return
-	next_click = world.time + 1
-
-	if(client.buildmode) // comes after object.Click to allow buildmode gui objects to be clicked
-		build_click(src, client.buildmode, params, A)
-		return
 
 	var/list/modifiers = params2list(params)
 	if(modifiers["shift"] && modifiers["ctrl"])
@@ -35,7 +28,7 @@
 	if(stat || lockcharge || weakened || stunned || paralysis)
 		return
 
-	if(next_move >= world.time)
+	if(!canClick())
 		return
 
 	face_atom(A) // change direction to face what you clicked on
@@ -68,15 +61,17 @@
 		return
 
 	if(W == A)
+
 		W.attack_self(src)
 		return
 
 	// cyborgs are prohibited from using storage items so we can I think safely remove (A.loc in contents)
 	if(A == loc || (A in loc) || (A in contents))
 		// No adjacency checks
-		var/resolved = A.attackby(W,src)
+
+		var/resolved = W.resolve_attackby(A, src, params)
 		if(!resolved && A && W)
-			W.afterattack(A,src,1,params)
+			W.afterattack(A, src, 1, params) // 1 indicates adjacency
 		return
 
 	if(!isturf(loc))
@@ -85,9 +80,10 @@
 	// cyborgs are prohibited from using storage items so we can I think safely remove (A.loc && isturf(A.loc.loc))
 	if(isturf(A) || isturf(A.loc))
 		if(A.Adjacent(src)) // see adjacent.dm
-			var/resolved = A.attackby(W, src)
+
+			var/resolved = W.resolve_attackby(A, src, params)
 			if(!resolved && A && W)
-				W.afterattack(A, src, 1, params)
+				W.afterattack(A, src, 1, params) // 1 indicates adjacency
 			return
 		else
 			W.afterattack(A, src, 0, params)

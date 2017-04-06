@@ -33,7 +33,7 @@ var/can_call_ert
 		usr << "<span class='danger'>Looks like somebody beat you to it!</span>"
 		return
 
-	message_admins("[key_name_admin(usr)] is dispatching an Emergency Response Team.", 1)
+//	message_admins("[key_name_admin(usr)] is dispatching an Emergency Response Team.", 1)
 	log_admin("[key_name(usr)] used Dispatch Response Team.")
 	trigger_armed_response_team(1)
 
@@ -42,7 +42,7 @@ client/verb/JoinResponseTeam()
 	set name = "Join Response Team"
 	set category = "IC"
 
-	if(!MayRespawn(1))
+	if(!MayRespawn(1,5))
 		usr << "<span class='warning'>You cannot join the response team at this time.</span>"
 		return
 
@@ -127,7 +127,7 @@ proc/trigger_armed_response_team(var/force = 0)
 
 	command_announcement.Announce(
 		"It would appear that an emergency response team was requested for [station_name()]. \
-		We will prepare and send one as soon as possible.", "Central Command"
+		We will prepare and send one as soon as possible. Emergency Response Team - a detachment with special powers, whose task is to rescue the crew and the station. Follow the orders of ERT members. The attack on the group of employees - a particularly serious crime, the penalty for which - life imprisonment or the death penalty.", "Central Command"
 	)
 
 	can_call_ert = 0 // Only one call per round, gentleman.

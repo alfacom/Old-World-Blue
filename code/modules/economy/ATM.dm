@@ -62,6 +62,22 @@ log transactions
 			playsound(loc, 'sound/items/polaroid2.ogg', 50, 1)
 		break
 
+/obj/machinery/atm/emag_act(var/remaining_charges, var/mob/user)
+	if(!emagged)
+		return
+
+	//short out the machine, shoot sparks, spew money!
+	emagged = 1
+	spark_system.start()
+	spawn_money(rand(100,500),src.loc)
+	//we don't want to grief people by locking their id in an emagged ATM
+	release_held_id(user)
+
+	//display a message to the user
+	var/response = pick("Initiating withdraw. Have a nice day!", "CRITICAL ERROR: Activating cash chamber panic siphon.","PIN Code accepted! Emptying account balance.", "Jackpot!")
+	user << "<span class='warning'>\icon[src] The [src] beeps: \"[response]\"</span>"
+	return 1
+
 /obj/machinery/atm/attackby(obj/item/I as obj, mob/user as mob)
 	if(istype(I, /obj/item/weapon/card))
 		if(emagged > 0)
@@ -69,22 +85,12 @@ log transactions
 			user << "\red \icon[src] CARD READER ERROR. This system has been compromised!"
 			return
 		else if(istype(I,/obj/item/weapon/card/emag))
-			//short out the machine, shoot sparks, spew money!
-			emagged = 1
-			spark_system.start()
-			spawn_money(rand(100,500),src.loc)
-			//we don't want to grief people by locking their id in an emagged ATM
-			release_held_id(user)
-
-			//display a message to the user
-			var/response = pick("Initiating withdraw. Have a nice day!", "CRITICAL ERROR: Activating cash chamber panic siphon.","PIN Code accepted! Emptying account balance.", "Jackpot!")
-			user << "\red \icon[src] The [src] beeps: \"[response]\""
+			I.resolve_attackby(src, user)
 			return
 
 		var/obj/item/weapon/card/id/idcard = I
 		if(!held_card)
-			usr.drop_item()
-			idcard.loc = src
+			usr.unEquip(idcard, src)
 			held_card = idcard
 			if(authenticated_account && held_card.associated_account_number != authenticated_account.account_number)
 				authenticated_account = null
@@ -114,7 +120,7 @@ log transactions
 		..()
 
 /obj/machinery/atm/attack_hand(mob/user as mob)
-	if(istype(user, /mob/living/silicon))
+	if(issilicon(user))
 		user << "\red \icon[src] Artificial unit recognized. Artificial units do not currently receive monetary compensation, as per NanoTrasen regulation #1005."
 		return
 	if(get_dist(src,user) <= 1)
@@ -427,8 +433,7 @@ log transactions
 					else
 						var/obj/item/I = usr.get_active_hand()
 						if (istype(I, /obj/item/weapon/card/id))
-							usr.drop_item()
-							I.loc = src
+							usr.drop_from_inventory(I, src)
 							held_card = I
 				else
 					release_held_id(usr)
@@ -469,17 +474,13 @@ log transactions
 	if(!held_card)
 		return
 
-	held_card.loc = src.loc
 	authenticated_account = null
-
-	if(ishuman(human_user) && !human_user.get_active_hand())
-		human_user.put_in_hands(held_card)
+	human_user.put_in_hands(held_card)
 	held_card = null
 
 
 /obj/machinery/atm/proc/spawn_ewallet(var/sum, loc, mob/living/carbon/human/human_user as mob)
 	var/obj/item/weapon/spacecash/ewallet/E = new /obj/item/weapon/spacecash/ewallet(loc)
-	if(ishuman(human_user) && !human_user.get_active_hand())
-		human_user.put_in_hands(E)
+	human_user.put_in_hands(E)
 	E.worth = sum
 	E.owner_name = authenticated_account.owner_name

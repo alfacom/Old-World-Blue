@@ -1,11 +1,17 @@
 //This file was auto-corrected by findeclaration.exe on 25.5.2012 20:42:32
 
+/obj/effect/beam
+	name = "beam"
+	unacidable = 1//Just to be sure.
+	var/def_zone
+	pass_flags = PASSTABLE
+
 /obj/item/device/assembly/infra
 	name = "infrared emitter"
 	desc = "Emits a visible or invisible beam and is triggered when the beam is interrupted."
 	icon_state = "infrared"
+	origin_tech = list(TECH_MAGNET = 2)
 	matter = list(DEFAULT_WALL_MATERIAL = 1000, "glass" = 500, "waste" = 100)
-	origin_tech = "magnets=2"
 
 	wires = WIRE_PULSE
 
@@ -171,9 +177,7 @@
 
 
 /obj/effect/beam/i_beam/proc/hit()
-	//world << "beam \ref[src]: hit"
 	if(master)
-		//world << "beam hit \ref[src]: calling master \ref[master].hit"
 		master.trigger_beam()
 	qdel(src)
 	return
@@ -189,13 +193,10 @@
 	return
 
 /obj/effect/beam/i_beam/process()
-	//world << "i_beam \ref[src] : process"
 
 	if((loc.density || !(master)))
-	//	world << "beam hit loc [loc] or no master [master], deleting"
 		qdel(src)
 		return
-	//world << "proccess: [src.left] left"
 
 	if(left > 0)
 		left--

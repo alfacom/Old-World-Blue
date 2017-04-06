@@ -170,11 +170,11 @@ var/list/turret_icons
 		icon_state = "turretCover"
 
 /obj/machinery/porta_turret/proc/isLocked(mob/user)
-	if(ailock && user.isSilicon())
+	if(ailock && issilicon(user))
 		user << "<span class='notice'>There seems to be a firewall preventing you from accessing this device.</span>"
 		return 1
 
-	if(locked && !user.isSilicon())
+	if(locked && !issilicon(user))
 		user << "<span class='notice'>Access denied.</span>"
 		return 1
 
@@ -211,7 +211,7 @@ var/list/turret_icons
 		data["settings"] = settings
 
 	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)
-	if (!ui)
+	if(!ui)
 		ui = new(user, src, ui_key, "turret_control.tmpl", "Turret Controls", 500, 300)
 		ui.set_initial_data(data)
 		ui.open()
@@ -292,18 +292,6 @@ var/list/turret_icons
 					user << "<span class='notice'>You remove the turret but did not manage to salvage anything.</span>"
 				qdel(src) // qdel
 
-	if(istype(I, /obj/item/weapon/card/emag) && !emagged)
-		//Emagging the turret makes it go bonkers and stun everyone. It also makes
-		//the turret shoot much, much faster.
-		user << "<span class='warning'>You short out [src]'s threat assessment circuits.</span>"
-		visible_message("[src] hums oddly...")
-		emagged = 1
-		iconholder = 1
-		controllock = 1
-		enabled = 0 //turns off the turret temporarily
-		sleep(60) //6 seconds for the traitor to gtfo of the area before the turret decides to ruin his shit
-		enabled = 1 //turns it back on. The cover popUp() popDown() are automatically called in process(), no need to define it here
-
 	else if((istype(I, /obj/item/weapon/wrench)))
 		if(enabled || raised)
 			user << "<span class='warning'>You cannot unsecure an active turret!</span>"
@@ -335,7 +323,7 @@ var/list/turret_icons
 				update_icon()
 		wrenching = 0
 
-	else if(istype(I, /obj/item/weapon/card/id)||istype(I, /obj/item/device/pda))
+	else if(I.GetID())
 		//Behavior lock/unlock mangement
 		if(allowed(user))
 			locked = !locked
@@ -346,7 +334,7 @@ var/list/turret_icons
 
 	else
 		//if the turret was attacked with the intention of harming it:
-		user.changeNext_move(NEXT_MOVE_DELAY)
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		take_damage(I.force * 0.5)
 		if(I.force * 0.5 > 1) //if the force of impact dealt at least 1 damage, the turret gets pissed off
 			if(!attacked && !emagged)
@@ -355,6 +343,20 @@ var/list/turret_icons
 					sleep(60)
 					attacked = 0
 		..()
+
+/obj/machinery/porta_turret/emag_act(var/remaining_charges, var/mob/user)
+	if(!emagged)
+		//Emagging the turret makes it go bonkers and stun everyone. It also makes
+		//the turret shoot much, much faster.
+		user << "<span class='warning'>You short out [src]'s threat assessment circuits.</span>"
+		visible_message("[src] hums oddly...")
+		emagged = 1
+		iconholder = 1
+		controllock = 1
+		enabled = 0 //turns off the turret temporarily
+		sleep(60) //6 seconds for the traitor to gtfo of the area before the turret decides to ruin his shit
+		enabled = 1 //turns it back on. The cover popUp() popDown() are automatically called in process(), no need to define it here
+		return 1
 
 /obj/machinery/porta_turret/proc/take_damage(var/force)
 	if(!raised && !raising)
@@ -405,14 +407,14 @@ var/list/turret_icons
 
 /obj/machinery/porta_turret/ex_act(severity)
 	switch (severity)
-		if (1)
+		if(1)
 			qdel(src)
-		if (2)
-			if (prob(25))
+		if(2)
+			if(prob(25))
 				qdel(src)
 			else
 				take_damage(initial(health) * 8) //should instakill most turrets
-		if (3)
+		if(3)
 			take_damage(initial(health) * 8 / 3)
 
 /obj/machinery/porta_turret/proc/die()	//called when the turret dies, ie, health <= 0

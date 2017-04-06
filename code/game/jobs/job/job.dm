@@ -3,8 +3,8 @@
 	//The name of the job
 	var/title = "BASIC"
 	//Job access. The use of minimal_access or access is determined by a config setting: config.jobs_have_minimal_access
-	var/list/minimal_access = list()      // Useful for servers which prefer to only have access given to the places a job absolutely needs (Larger server population)
-	var/list/access = list()              // Useful for servers which either have fewer players, so each person needs to fill more than one role, or servers which like to give more access, so players can't hide forever in their super secure departments (I'm looking at you, chemistry!)
+	var/list/minimal_access = list()      // Only have access given to the places a job absolutely needs.
+	var/list/addcional_access = list()    // Additionasl access. Need be enabled in config.
 	var/flag = 0 	                      // Bitflags for the job
 	var/department_flag = 0
 	var/faction = "None"	              // Players will be allowed to spawn in as jobs that are set to "Station"
@@ -14,8 +14,8 @@
 	var/supervisors = null                // Supervisors, who this person answers to directly
 	var/selection_color = "#ffffff"       // Selection screen color
 	var/list/alt_titles                   // List of alternate titles, if any
-	var/req_admin_notify                  // If this is set to 1, a text is printed to the player when jobs are assigned, telling him that he should let admins know that he has to disconnect.
-	var/minimal_player_age = 0            // If you have use_age_restriction_for_jobs config option enabled and the database set up, this option will add a requirement for players to be at least minimal_player_age days old. (meaning they first signed in at least that many days before.)
+	var/req_admin_notify                  // Telling player that he should let admins know that he has to disconnect.
+	var/minimal_player_age = 0            // Add a requirement for players to be at least minimal_player_age days old.
 	var/department = null                 // Does this position have a department tag?
 	var/head_position = 0                 // Is this position Command?
 	var/minimum_character_age = 0
@@ -25,7 +25,7 @@
 	var/economic_modifier = 2			  // With how much does this job modify the initial account amount?
 
 	var/idtype = /obj/item/weapon/card/id // The type of the ID the player will have
-	var/custom_survival_gear = null       // Custom box for spawn in backpack
+	var/adv_survival_gear = null          // Spawn default or advanced survival gears.
 
 	//job equipment
 	var/implanted = 0
@@ -42,15 +42,11 @@
 	var/glasses = null
 	var/suit_store = null
 
-	var/backpack = /obj/item/weapon/storage/backpack
-	var/satchel = /obj/item/weapon/storage/backpack/satchel_norm
-	var/duffle = /obj/item/weapon/storage/backpack/duffle
-
-	var/list/backpacks = list(
-		/obj/item/weapon/storage/backpack,\
-		/obj/item/weapon/storage/backpack/satchel_norm,\
-		/obj/item/weapon/storage/backpack/satchel
-	)
+	var/backpack  = /obj/item/weapon/storage/backpack
+	var/satchel   = /obj/item/weapon/storage/backpack/satchel
+	var/satchel_j = /obj/item/weapon/storage/backpack/satchel/norm
+	var/dufflebag = /obj/item/weapon/storage/backpack/dufflebag
+	var/messenger = /obj/item/weapon/storage/backpack/messenger
 
 	//This will be put in backpack. List ordered by priority!
 	var/list/put_in_backpack = list()
@@ -72,11 +68,13 @@ For copy-pasting:
 	glasses =
 	hat =
 
-	backpack =
-	satchel =
-	duffle =
+	backpack  =
+	satchel   =
+	satchel_j =
+	dufflebag =
+	messenger =
 
-	put_in_backpack = list(\
+	put_in_backpack = list(
 	)
 */
 
@@ -86,16 +84,22 @@ For copy-pasting:
 	//Put items in hands
 	if(hand) H.equip_to_slot_or_del(new hand (H), slot_l_hand)
 
+	var/backpack_category = backbaglist[H.backbag]
+
 	//Put items in backpack
-	if( H.backbag != 1 )
-		var/backpack = backpacks[H.backbag-1]
-		var/obj/item/weapon/storage/backpack/BPK = new backpack(H)
+	if( backpack_category != "None" )
+		var/backpack_type = backpack
+		switch(backpack_category)
+			if("Backpack")		backpack_type = backpack
+			if("Satchel")		backpack_type = satchel
+			if("Satchel Job")	backpack_type = satchel_j
+			if("Dufflebag")		backpack_type = dufflebag
+			if("Messenger")		backpack_type = messenger
+
+		var/obj/item/weapon/storage/backpack/BPK = new backpack_type(H)
 		if(H.equip_to_slot_or_del(BPK, slot_back,1))
 			for( var/path in put_in_backpack )
 				new path(BPK)
-
-	//Survival equipment
-	H.equip_survival_gear(custom_survival_gear)
 
 	//No-check items (suits, gloves, etc)
 	if(ear)
@@ -111,11 +115,16 @@ For copy-pasting:
 	if(glasses)		H.equip_to_slot_or_del(new glasses (H), slot_glasses)
 
 	//Belt and PDA
-	if(belt)
-		H.equip_to_slot_or_del(new belt (H), slot_belt)
+	if(H.belt)
 		H.equip_to_slot_or_del(new pda (H), slot_l_store)
+		if(belt)
+			H.equip_to_slot_or_del(new belt (H), slot_in_backpack)
 	else
-		H.equip_to_slot_or_del(new pda (H), slot_belt)
+		if(belt)
+			H.equip_to_slot_or_del(new belt (H), slot_belt)
+			H.equip_to_slot_or_del(new pda (H), slot_l_store)
+		else
+			H.equip_to_slot_or_del(new pda (H), slot_belt)
 
 	if(!H.back || !istype(H.back, /obj/item/weapon/storage/backpack))
 		var/list/slots = list( slot_belt, slot_r_store, slot_l_store, slot_r_hand, slot_l_hand, slot_s_store )
@@ -130,6 +139,9 @@ For copy-pasting:
 				new path(H.r_hand)
 			else if(istype(H.l_hand, /obj/item/weapon/storage))
 				new path(H.l_hand)
+
+	//Survival equipment
+	H.equip_survival_gear(src)
 
 	//Loyalty implant
 	if(implanted) H.implant_loyalty(H)
@@ -150,7 +162,11 @@ For copy-pasting:
 			if(COMPANY_OPPOSED)		loyalty = 0.70
 
 	//give them an account in the station database
-	var/money_amount = (rand(5,50) + rand(5, 50)) * loyalty * economic_modifier * (H.species ? economic_species_modifier[H.species.type] : 2)
+	var/species_modifier = (H.species ? economic_species_modifier[H.species.type] : 2)
+	if(!species_modifier)
+		species_modifier = economic_species_modifier[/datum/species/human]
+
+	var/money_amount = rand(10,100) * loyalty * economic_modifier * species_modifier
 	var/datum/money_account/M = create_account(H.real_name, money_amount, null)
 	if(H.mind)
 		var/remembered_info = ""
@@ -169,11 +185,12 @@ For copy-pasting:
 
 /datum/job/proc/get_access()
 	if(!config || config.jobs_have_minimal_access)
-		return src.minimal_access.Copy()
+		return minimal_access.Copy()
 	else
-		return src.access.Copy()
+		return minimal_access.Copy() | addcional_access.Copy()
 
-//If the configuration option is set to require players to be logged as old enough to play certain jobs, then this proc checks that they are, otherwise it just returns 1
+//If the configuration option is set to require players to be logged as old enough to play certain jobs,
+// then this proc checks that they are, otherwise it just returns 1
 /datum/job/proc/player_old_enough(client/C)
 	return (available_in_days(C) == 0) //Available in 0 days = available right now = player is old enough to play.
 
@@ -181,6 +198,21 @@ For copy-pasting:
 	if(C && config.use_age_restriction_for_jobs && isnum(C.player_age) && isnum(minimal_player_age))
 		return max(0, minimal_player_age - C.player_age)
 	return 0
+
+/datum/job/proc/available_to(var/mob/player)
+	if(!player)
+		return 0
+	if(jobban_isbanned(player,title))
+		return 0
+	if(!player_old_enough(player.client))
+		return 0
+	if(!player.client || !player.client.prefs)
+		return 0
+	if(player.client.prefs.IsJobRestricted(title))
+		return 0
+	if(minimum_character_age && (player.client.prefs.age < minimum_character_age))
+		return 0
+	return 1
 
 /datum/job/proc/apply_fingerprints(var/mob/living/carbon/human/target)
 	if(!istype(target))
@@ -195,5 +227,8 @@ For copy-pasting:
 		for(var/obj/item/sub_item in item.contents)
 			apply_fingerprints_to_item(holder, sub_item)
 
-/datum/job/proc/is_position_available()
-	return (current_positions < total_positions) || (total_positions == -1)
+/datum/job/proc/is_position_available(var/latejoin = 0)
+	if(latejoin)
+		return (total_positions - current_positions) != 0
+	else
+		return (spawn_positions - current_positions) != 0

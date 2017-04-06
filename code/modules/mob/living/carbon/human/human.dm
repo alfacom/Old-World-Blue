@@ -16,7 +16,7 @@
 
 	if(!species)
 		if(new_species)
-			set_species(new_species,1)
+			set_species(new_species)
 		else
 			set_species()
 
@@ -50,8 +50,8 @@
 		qdel(organ)
 	return ..()
 
-/mob/living/carbon/human/proc/equip_survival_gear(var/custom_survival_gear)
-	species.equip_survival_gear(src, custom_survival_gear)
+/mob/living/carbon/human/proc/equip_survival_gear(var/datum/job/J)
+	species.equip_survival_gear(src, J)
 
 /mob/living/carbon/human/Stat()
 	..()
@@ -164,7 +164,7 @@
 
 /mob/living/carbon/human/meteorhit(O as obj)
 	for(var/mob/M in viewers(src, null))
-		if ((M.client && !( M.blinded )))
+		if ((M.client && !(M.blinded)))
 			M.show_message("\red [src] has been hit by [O]", 1)
 	if (health > 0)
 		var/obj/item/organ/external/affecting = get_organ(pick(BP_CHEST, BP_CHEST, BP_CHEST, BP_HEAD))
@@ -236,7 +236,7 @@
 	// Do they get an option to set internals?
 	if(istype(wear_mask, /obj/item/clothing/mask) || istype(head, /obj/item/clothing/head/helmet/space))
 		if(istype(back, /obj/item/weapon/tank) || istype(belt, /obj/item/weapon/tank) || istype(s_store, /obj/item/weapon/tank))
-			dat += "<BR><A href='?src=\ref[src];item=internals'>Toggle internals.</A>"
+			dat += "<BR><A href='?src=\ref[src];item=internals'>[internal ? "Remove" : "Set"] internals.</A>"
 
 	// Other incidentals.
 	if(istype(suit) && suit.has_sensor == 1)
@@ -326,7 +326,7 @@
 //Returns "Unknown" if facially disfigured and real_name if not. Useful for setting name when polyacided or when updating a human's name variable
 /mob/living/carbon/human/proc/get_face_name()
 	var/obj/item/organ/external/head = get_organ(BP_HEAD)
-	if(!head || head.disfigured || head.is_stump() || !real_name || (HUSK in mutations) )	//disfigured. use id-name if possible
+	if(!head || head.disfigured || head.is_stump() || !real_name || (HUSK & status_flags) )	//disfigured. use id-name if possible
 		return "Unknown"
 	return real_name
 
@@ -366,8 +366,9 @@
 /mob/living/carbon/human/Topic(href, href_list)
 
 	if (href_list["refresh"])
-		if((machine)&&(in_range(src, usr)))
-			show_inv(machine)
+		if(machine &&in_range(src, machine))
+			var/mob/living/L = machine
+			L.show_inv(src)
 
 	if (href_list["mach_close"])
 		var/t1 = text("window=[]", href_list["mach_close"])
@@ -375,6 +376,7 @@
 		src << browse(null, t1)
 
 	if(href_list["item"])
+		usr.face_atom(src)
 		handle_strip(href_list["item"],usr)
 
 	if (href_list["criminal"])
@@ -776,10 +778,6 @@
 		remoteview_target = null
 		return
 
-	if(!(mMorph in mutations))
-		src.verbs -= /mob/living/carbon/human/proc/morph
-		return
-
 	var/new_facial = input("Please select facial hair color.", "Character Generation", facial_color) as color
 	if(new_facial)
 		facial_color = new_facial
@@ -854,9 +852,6 @@
 		remoteview_target = null
 		return
 
-	if(!(mRemotetalk in src.mutations))
-		src.verbs -= /mob/living/carbon/human/proc/remotesay
-		return
 	var/list/creatures = list()
 	for(var/mob/living/carbon/h in world)
 		creatures += h
@@ -865,7 +860,7 @@
 		return
 
 	var/say = sanitize(input("What do you wish to say"))
-	if(mRemotetalk in target.mutations)
+	if(/mob/living/carbon/human/proc/remotesay in target.verbs)
 		target.show_message("\blue You hear [src.real_name]'s voice: [say]")
 	else
 		target.show_message("\blue You hear a voice that seems to echo around the room: [say]")
@@ -881,12 +876,6 @@
 	if(stat!=CONSCIOUS)
 		remoteview_target = null
 		reset_view(0)
-		return
-
-	if(!(mRemote in src.mutations))
-		remoteview_target = null
-		reset_view(0)
-		src.verbs -= /mob/living/carbon/human/proc/remoteobserve
 		return
 
 	if(client.eye != client.mob)
@@ -924,13 +913,13 @@
 
 /mob/living/carbon/human/revive()
 
-	if(species && !(species.flags & NO_BLOOD))
+	if(should_have_organ(O_HEART))
 		vessel.add_reagent("blood",species.blood_volume-vessel.total_volume)
 		fixblood()
 
 	// Fix up all organs.
 	// This will ignore any prosthetics in the prefs currently.
-	species.create_organs(src)
+	rebuild_organs()
 
 	if(!client || !key) //Don't boot out anyone already in the mob.
 		for (var/obj/item/organ/internal/brain/H in world)
@@ -939,9 +928,6 @@
 					if(H.brainmob.mind)
 						H.brainmob.mind.transfer_to(src)
 						qdel(H)
-
-	for (var/datum/disease/virus in viruses)
-		virus.cure()
 
 	for (var/ID in virus2)
 		var/datum/disease2/disease/V = virus2[ID]
@@ -1046,7 +1032,7 @@
 					src << msg
 
 				organ.take_damage(rand(1,3), 0, 0)
-				if(!(organ.status & ORGAN_ROBOT) && !(species.flags & NO_BLOOD)) //There is no blood in protheses.
+				if(!(organ.robotic >= ORGAN_ROBOT) && should_have_organ(O_HEART)) //There is no blood in protheses.
 					organ.status |= ORGAN_BLEEDING
 					src.adjustToxLoss(rand(1,3))
 
@@ -1078,7 +1064,7 @@
 	else
 		usr << "<span class='warning'>You failed to check the pulse. Try again.</span>"
 
-/mob/living/carbon/human/proc/set_species(var/new_species, var/default_colour)
+/mob/living/carbon/human/proc/set_species(var/new_species)
 
 	if(!dna)
 		if(!new_species)
@@ -1114,7 +1100,7 @@
 	if(species.default_language)
 		add_language(species.default_language)
 
-	if(species.base_color && default_colour)
+	if(species.base_color)
 		//Apply colour.
 		skin_color = species.base_color
 	else
@@ -1125,21 +1111,16 @@
 
 	icon_state = lowertext(species.name)
 
-	species.create_organs(src)
+	rebuild_organs()
 
 	species.handle_post_spawn(src)
 
 	maxHealth = species.total_health
 
-	spawn(0)
-		regenerate_icons()
-		if(vessel.total_volume < species.blood_volume)
-			vessel.maximum_volume = species.blood_volume
-			vessel.add_reagent("blood", species.blood_volume - vessel.total_volume)
-		else if(vessel.total_volume > species.blood_volume)
-			vessel.remove_reagent("blood", vessel.total_volume - species.blood_volume)
-			vessel.maximum_volume = species.blood_volume
-		fixblood()
+	fixblood()
+
+	if (species.ability_datum)
+		species_abilities = new species.ability_datum
 
 	// Rebuild the HUD. If they aren't logged in then login() should reinstantiate it for them.
 	if(client && client.screen)
@@ -1152,6 +1133,59 @@
 		return 1
 	else
 		return 0
+
+/mob/living/carbon/human/proc/rebuild_organs(var/from_preference = 0)
+	if(!species)
+		return 0
+
+	for(var/obj/item/organ/organ in (organs|internal_organs))
+		qdel(organ)
+
+	if(organs.len)                  organs.Cut()
+	if(internal_organs.len)         internal_organs.Cut()
+	if(organs_by_name.len)          organs_by_name.Cut()
+	if(internal_organs_by_name.len) internal_organs_by_name.Cut()
+
+
+	if(from_preference)
+		var/datum/preferences/Pref
+		if(istype(from_preference, /datum/preferences))
+			Pref = from_preference
+		else if(client)
+			Pref = client.prefs
+		else
+			return
+
+		var/datum/body_modification/BM = null
+		var/obj/item/organ/Organ = null
+
+		for(var/tag in species.has_limbs)
+			BM = Pref.get_modification(tag)
+			Organ = BM.create_organ(species.has_limbs[tag], Pref.modifications_colors[tag])
+			if(Organ)
+				Organ.install(src, 0) // Not update icon
+
+		for(var/tag in species.has_organ)
+			BM = Pref.get_modification(tag)
+			Organ = BM.create_organ(species.has_organ[tag], Pref.modifications_colors[tag])
+			if(Organ)
+				Organ.install(src, 0) // Not update icon
+
+	else
+		var/organ_type = null
+
+		for(var/limb_tag in species.has_limbs)
+			var/datum/organ_description/OD = species.has_limbs[limb_tag]
+			organ_type = OD.default_type
+			new organ_type(src, OD)
+
+		for(var/organ_tag in species.has_organ)
+			organ_type = species.has_organ[organ_tag]
+			new organ_type(src)
+
+	species.organs_spawned(src)
+	update_body()
+
 
 /mob/living/carbon/human/proc/bloody_doodle()
 	set category = "IC"
@@ -1320,9 +1354,10 @@
 	set desc = "Pop a joint back into place. Extremely painful."
 	set src in view(1)
 
-	if(!isliving(usr) || usr.next_move > world.time)
+	if((!ishuman(usr) && !isrobot(usr)) || !usr.canClick())
 		return
-	usr.next_move = world.time + 20
+
+	usr.setClickCooldown(20)
 
 	if(usr.stat)
 		usr << "You are unconcious and cannot do that!"
@@ -1409,8 +1444,6 @@
 		get_scooped(H)
 		return
 	return ..()
-
-
 
 /mob/living/carbon/human/is_muzzled()
 	return (wear_mask && (istype(wear_mask, /obj/item/clothing/mask/muzzle) || istype(src.wear_mask, /obj/item/weapon/grenade)))

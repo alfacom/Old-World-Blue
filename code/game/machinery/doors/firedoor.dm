@@ -84,7 +84,7 @@
 
 /obj/machinery/door/firedoor/examine(mob/user, return_dist = 1)
 	. = ..()
-	if((.>1) || !density)
+	if(!density || !issilicon(user) && (.>1))
 		return
 
 	if(pdiff >= FIREDOOR_MAX_PRESSURE_DIFF)
@@ -156,7 +156,7 @@
 	"\The [src]", "Yes, [density ? "open" : "close"]", "No")
 	if(answer == "No")
 		return
-	if(user.stat || user.stunned || user.weakened || user.paralysis || (!user.canmove && !user.isSilicon()) || (get_dist(src, user) > 1  && !isAI(user)))
+	if(user.stat || user.stunned || user.weakened || user.paralysis || (get_dist(src, user) > 1 && !issilicon(user)))
 		user << "Sorry, you must remain able bodied and close to \the [src] in order to use it."
 		return
 	if(density && (stat & (BROKEN|NOPOWER))) //can still close without power
@@ -176,7 +176,7 @@
 		if(alarmed)
 			// Accountability!
 			users_to_open |= user.name
-			needs_to_close = !user.isSilicon()
+			needs_to_close = !issilicon(user)
 		spawn()
 			open()
 	else
@@ -356,8 +356,8 @@
 		else
 			use_power(360)
 	else
-		log_admin("[usr]([usr.ckey]) has forced open an emergency shutter.")
-		message_admins("[usr]([usr.ckey]) has forced open an emergency shutter.")
+		log_game("[key_name(usr)] has forced open an emergency shutter.", src, 0)
+
 	latetoggle()
 	return ..()
 

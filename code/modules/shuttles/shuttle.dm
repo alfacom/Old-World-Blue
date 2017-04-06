@@ -15,8 +15,8 @@
 /datum/shuttle/proc/init_docking_controllers()
 	if(docking_controller_tag)
 		docking_controller = locate(docking_controller_tag)
-		if(!istype(docking_controller))
-			world << "<span class='danger'>warning: shuttle with docking tag [docking_controller_tag] could not find it's controller!</span>"
+		//if(!istype(docking_controller))
+			//world << "<span class='danger'>warning: shuttle with docking tag [docking_controller_tag] could not find it's controller!</span>"
 
 /datum/shuttle/proc/short_jump(var/area/origin,var/area/destination)
 	if(moving_status != SHUTTLE_IDLE) return
@@ -45,9 +45,7 @@
 		moving_status = SHUTTLE_INTRANSIT
 		move(departing, interim, direction)
 
-
-		while (world.time < arrive_time)
-			sleep(5)
+		sleep(arrive_time - world.time)
 
 		move(interim, destination, direction)
 		moving_status = SHUTTLE_IDLE

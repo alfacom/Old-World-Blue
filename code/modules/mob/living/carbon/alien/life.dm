@@ -91,7 +91,7 @@
 
 /mob/living/carbon/alien/handle_regular_hud_updates()
 
-	if (stat == DEAD || (XRAY in src.mutations))
+	if (stat == DEAD)
 		sight |= SEE_TURFS
 		sight |= SEE_MOBS
 		sight |= SEE_OBJS
@@ -131,7 +131,8 @@
 		if(blinded)
 			blind.alpha = 255
 		else
-			blind.alpha = 0
+			if(blind)
+				blind.alpha = 0
 			if (disabilities & NEARSIGHTED)
 				client.screen += global_hud.vimpaired
 			if (eye_blurry)

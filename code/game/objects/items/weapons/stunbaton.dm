@@ -10,7 +10,7 @@
 	edge = 0
 	throwforce = 7
 	w_class = 3
-	origin_tech = "combat=2"
+	origin_tech = list(TECH_COMBAT = 2)
 	attack_verb = list("beaten")
 	var/stunforce = 2
 	var/agonyforce = 80
@@ -57,15 +57,14 @@
 		return
 
 	if(bcell)
-		user <<"<span class='notice'>The baton is [round(bcell.percent())]% charged.</span>"
+		user <<"<span class='notice'>The baton is [bcell.percent()]% charged.</span>"
 	else
 		user <<"<span class='warning'>The baton does not have a power source installed.</span>"
 
 /obj/item/weapon/melee/baton/attackby(obj/item/weapon/W, mob/user)
 	if(istype(W, /obj/item/weapon/cell))
 		if(!bcell)
-			user.drop_item()
-			W.loc = src
+			user.drop_from_inventory(W, src)
 			bcell = W
 			user << "<span class='notice'>You install a cell in [src].</span>"
 			update_icon()
@@ -100,12 +99,14 @@
 
 
 /obj/item/weapon/melee/baton/attack(mob/M, mob/user)
+	//TODO: DNA3 clown_block
+/*
 	if(status && (CLUMSY in user.mutations) && prob(50))
 		user << "span class='danger'>You accidentally hit yourself with the [src]!</span>"
 		user.Weaken(30)
 		deductcharge(hitcost)
 		return
-
+*/
 	if(isrobot(M))
 		..()
 		return
@@ -153,7 +154,7 @@
 	L.stun_effect_act(stun, agony, target_zone, src)
 
 	playsound(loc, 'sound/weapons/Egloves.ogg', 50, 1, -1)
-	msg_admin_attack("[key_name(user)] stunned [key_name(L)] with the [src].")
+	log_attack("[key_name(user)] stunned [key_name(L)] with the [src].", L)
 
 	deductcharge(hitcost)
 
@@ -167,6 +168,10 @@
 	if(bcell)
 		bcell.emp_act(severity)	//let's not duplicate code everywhere if we don't have to please.
 	..()
+
+
+/obj/item/weapon/melee/baton/robot
+	hitcost = 100
 
 //secborg stun baton module
 /obj/item/weapon/melee/baton/robot/attack_self(mob/user)

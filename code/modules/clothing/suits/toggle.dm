@@ -9,7 +9,9 @@
 		if(!usr.canmove || usr.stat || usr.restrained())
 			return 0
 
-		if(icon_state != base_state) //Will check whether icon state is currently set to the "open" or "closed" state and switch it around with a message to the user
+		//Will check whether icon state is currently set to the "open" or "closed" state
+		// and switch it around with a message to the user
+		if(icon_state != base_state)
 			icon_state = base_state
 			wear_state = base_wear_state
 			usr << "You button up the coat."
@@ -21,36 +23,36 @@
 
 /obj/item/clothing/suit/storage/toggle/New()
 	..()
-	if(!base_state)
+	if(copytext(icon_state,-5) == "_open")
+		base_state = copytext(icon_state,1,-5)
+	else
 		base_state = icon_state
+	if(wear_state)
+		if(copytext(wear_state,-5) == "_open")
+			base_wear_state = copytext(icon_state,1,-5)
 		base_wear_state = wear_state
 	else
-		base_wear_state = copytext(wear_state,1,-5)
+		wear_state = icon_state
+		base_wear_state = base_state
 
-/obj/item/clothing/suit/storage/toggle/varsityred
+/obj/item/clothing/suit/storage/toggle/varsity
 	name = "red varsity jacket"
 	icon_state = "varsity_red"
 	body_parts_covered = UPPER_TORSO|ARMS
 	cold_protection = UPPER_TORSO|ARMS
 
-/obj/item/clothing/suit/storage/toggle/varsityblue
+/obj/item/clothing/suit/storage/toggle/varsity/blue
 	name = "blue varsity jacket"
 	icon_state = "varsity_blue"
-	body_parts_covered = UPPER_TORSO|ARMS
-	cold_protection = UPPER_TORSO|ARMS
 
-/obj/item/clothing/suit/storage/toggle/varsityblack
+/obj/item/clothing/suit/storage/toggle/varsity/black
 	name = "black varsity jacket"
 	icon_state = "varsity_black"
-	body_parts_covered = UPPER_TORSO|ARMS
-	cold_protection = UPPER_TORSO|ARMS
 
-/obj/item/clothing/suit/storage/toggle/varsitybrown
+/obj/item/clothing/suit/storage/toggle/varsity/brown
 	name = "brown varsity jacket"
 	desc = "Where are you right now?"
 	icon_state = "varsity_brown"
-	body_parts_covered = UPPER_TORSO|ARMS
-	cold_protection = UPPER_TORSO|ARMS
 
 /obj/item/clothing/suit/storage/toggle/bomber
 	name = "bomber jacket"
@@ -72,7 +74,6 @@
 	desc = "A black leather coat."
 	icon_state = "leather_jacket"
 	item_state = "leather_jacket"
-	wear_state = "leather_jacket"
 	body_parts_covered = UPPER_TORSO|ARMS
 
 /obj/item/clothing/suit/storage/toggle/leather_jacket/fox
@@ -113,7 +114,6 @@
 	desc = "A brown leather coat."
 	icon_state = "brown_jacket"
 	item_state = "brown_jacket"
-	wear_state = "brown_jacket"
 	body_parts_covered = UPPER_TORSO|ARMS
 
 /obj/item/clothing/suit/storage/toggle/brown_jacket/nanotrasen

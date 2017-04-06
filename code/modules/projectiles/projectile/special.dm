@@ -62,8 +62,8 @@
 				A.meteorhit(src)
 				playsound(src.loc, 'sound/effects/meteorimpact.ogg', 40, 1)
 
-				for(var/mob/M in range(10, src))
-					if(!M.stat && !istype(M, /mob/living/silicon/ai))\
+				for(var/mob/living/M in range(10, src))
+					if(!M.stat && !isAI(M))
 						shake_camera(M, 3, 1)
 				qdel(src)
 				return 1
@@ -93,10 +93,8 @@
 				//		V.show_message("\red [M] is mutated by the radiation beam.", 3, "\red You hear the snapping of twigs.", 2)
 					if(prob(80))
 						randmutb(M)
-						domutcheck(M,null)
 					else
 						randmutg(M)
-						domutcheck(M,null)
 				else
 					M.adjustFireLoss(rand(5,15))
 					M.show_message("\red The radiation beam singes you!")
@@ -138,12 +136,13 @@
 			M.adjustBrainLoss(20)
 			M.hallucination += 20
 
-/obj/item/projectile/icarus/pointdefense/process()
+/*/obj/item/projectile/icarus/pointdefense/process()
 	Icarus_FireLaser(get_turf(original))
 	spawn
 		qdel(src)
 
 	return
+*/
 
 /obj/item/projectile/icarus/guns/process()
 	Icarus_FireCannon(get_turf(original))

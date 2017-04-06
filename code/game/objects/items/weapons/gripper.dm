@@ -1,8 +1,3 @@
-/*
-All grippers is here
-*/
-
-
 //Simple borg hand.
 //Limited use.
 /obj/item/weapon/gripper
@@ -20,14 +15,14 @@ All grippers is here
 		/obj/item/weapon/airalarm_electronics,
 		/obj/item/weapon/airlock_electronics,
 		/obj/item/weapon/tracker_electronics,
-		/obj/item/weapon/module/power_control,
+		/obj/item/weapon/power_control,
 		/obj/item/weapon/stock_parts,
 		/obj/item/frame,
 		/obj/item/weapon/camera_assembly,
 		/obj/item/weapon/tank,
 		/obj/item/weapon/circuitboard,
 		/obj/item/weapon/smes_coil
-		)
+	)
 
 	var/obj/item/wrapped = null // Item currently being held.
 
@@ -74,6 +69,7 @@ All grippers is here
 		/obj/item/device/flash, //to build borgs
 		/obj/item/organ/internal/brain, //to insert into MMIs.
 		/obj/item/stack/cable_coil, //again, for borg building
+		/obj/item/weapon/disk,
 		/obj/item/weapon/circuitboard,
 		/obj/item/slime_extract,
 		/obj/item/weapon/reagent_containers/glass,
@@ -90,7 +86,54 @@ All grippers is here
 		/obj/item/weapon/reagent_containers/glass,
 		/obj/item/weapon/reagent_containers/food,
 		/obj/item/seeds,
-		/obj/item/weapon/grown
+		/obj/item/weapon/grown,
+		/obj/item/weapon/storage/fancy,
+		/obj/item/weapon/reagent_containers/condiment //робот сможет носить соусы,муку, универсальные энзимы и т.д.
+		)
+
+/obj/item/weapon/gripper/no_use/organ
+	name = "organ gripper"
+	icon_state = "gripper-flesh"
+	desc = "A specialized grasping tool used to preserve and manipulate organic material."
+
+	can_hold = list(
+		/obj/item/organ
+		)
+
+/obj/item/weapon/gripper/no_use/organ/Entered(var/atom/movable/AM)
+	if(istype(AM, /obj/item/organ))
+		var/obj/item/organ/O = AM
+		O.preserved = 1
+		for(var/obj/item/organ/organ in O)
+			organ.preserved = 1
+	..()
+
+/obj/item/weapon/gripper/no_use/organ/Exited(var/atom/movable/AM)
+	if(istype(AM, /obj/item/organ))
+		var/obj/item/organ/O = AM
+		O.preserved = 0
+		for(var/obj/item/organ/organ in O)
+			organ.preserved = 0
+	..()
+/*
+/obj/item/weapon/gripper/no_use/organ/robotics
+	name = "external organ gripper"
+	icon_state = "gripper-flesh"
+	desc = "A specialized grasping tool used in robotics work."
+
+	can_hold = list(
+		/obj/item/organ/external,
+		/obj/item/organ/internal/cell
+		)
+*/
+/obj/item/weapon/gripper/no_use/mech
+	name = "exosuit gripper"
+	icon_state = "gripper-mech"
+	desc = "A large, heavy-duty grasping tool used in construction of mechs."
+
+	can_hold = list(
+		/obj/item/mecha_parts/part,
+		/obj/item/mecha_parts/mecha_equipment
 		)
 
 /obj/item/weapon/gripper/no_use //Used when you want to hold and put items in other things, but not able to 'use' the item
@@ -118,20 +161,26 @@ All grippers is here
 	set desc = "Release an item from your magnetic gripper."
 	set category = "Robot Commands"
 
+	drop_to(get_turf(src))
+
+
+/obj/item/weapon/gripper/proc/drop_to(var/atom/target)
+	if(!target) target = get_turf(src)
+
 	if(!wrapped)
 		//There's some weirdness with items being lost inside the arm. Trying to fix all cases. ~Z
 		for(var/obj/item/thing in src.contents)
-			thing.loc = get_turf(src)
-		return
+			thing.forceMove(target)
+		return TRUE
 
 	if(wrapped.loc != src)
 		wrapped = null
-		return
+		return FALSE
 
-	src.loc << "<span class='danger'>You drop \the [wrapped].</span>"
-	wrapped.loc = get_turf(src)
+	src.loc << "<span class='notice'>You drop \the [wrapped].</span>"
+	wrapped.forceMove(target)
 	wrapped = null
-	//update_icon()
+	return TRUE
 
 /obj/item/weapon/gripper/attack(mob/living/carbon/M as mob, mob/living/carbon/user as mob)
 	if(wrapped) 	//The force of the wrapped obj gets set to zero during the attack() and afterattack().

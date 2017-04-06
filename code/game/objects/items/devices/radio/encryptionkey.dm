@@ -1,6 +1,6 @@
 
 /obj/item/device/encryptionkey/
-	name = "standard encrpytion key"
+	name = "standard encryption key"
 	desc = "An encryption key for a radio headset. Contains cypherkeys."
 	icon = 'icons/obj/radio.dmi'
 	icon_state = "cypherkey"
@@ -12,53 +12,50 @@
 	var/syndie = 0
 	var/list/channels = list()
 
-
-/obj/item/device/encryptionkey/New()
-
 /obj/item/device/encryptionkey/attackby(obj/item/weapon/W as obj, mob/user as mob)
 
 /obj/item/device/encryptionkey/syndicate
 	icon_state = "cypherkey"
 	channels = list("Mercenary" = 1)
-	origin_tech = "syndicate=3"
+	origin_tech = list(TECH_ILLEGAL = 3)
 	syndie = 1//Signifies that it de-crypts Syndicate transmissions
 
 /obj/item/device/encryptionkey/binary
 	icon_state = "cypherkey"
 	translate_binary = 1
-	origin_tech = "syndicate=3"
+	origin_tech = list(TECH_ILLEGAL = 3)
 
-/obj/item/device/encryptionkey/headset_sec
+/obj/item/device/encryptionkey/sec
 	name = "security radio encryption key"
 	icon_state = "sec_cypherkey"
 	channels = list("Security" = 1)
 
-/obj/item/device/encryptionkey/headset_eng
+/obj/item/device/encryptionkey/eng
 	name = "engineering radio encryption key"
 	icon_state = "eng_cypherkey"
 	channels = list("Engineering" = 1)
 
-/obj/item/device/encryptionkey/headset_rob
+/obj/item/device/encryptionkey/rob
 	name = "robotics radio encryption key"
 	icon_state = "rob_cypherkey"
 	channels = list("Engineering" = 1, "Science" = 1)
 
-/obj/item/device/encryptionkey/headset_med
+/obj/item/device/encryptionkey/med
 	name = "medical radio encryption key"
 	icon_state = "med_cypherkey"
 	channels = list("Medical" = 1)
 
-/obj/item/device/encryptionkey/headset_sci
+/obj/item/device/encryptionkey/sci
 	name = "science radio encryption key"
 	icon_state = "sci_cypherkey"
 	channels = list("Science" = 1)
 
-/obj/item/device/encryptionkey/headset_medsci
+/obj/item/device/encryptionkey/medsci
 	name = "medical research radio encryption key"
 	icon_state = "medsci_cypherkey"
 	channels = list("Medical" = 1, "Science" = 1)
 
-/obj/item/device/encryptionkey/headset_com
+/obj/item/device/encryptionkey/com
 	name = "command radio encryption key"
 	icon_state = "com_cypherkey"
 	channels = list("Command" = 1)
@@ -98,27 +95,22 @@
 	name = "head of personnel's encryption key"
 	icon_state = "hop_cypherkey"
 	channels = list("Supply" = 1, "Service" = 1, "Command" = 1, "Security" = 0)
-/*
-/obj/item/device/encryptionkey/headset_mine
-	name = "mining radio encryption key"
-	icon_state = "mine_cypherkey"
-	channels = list("Mining" = 1)
 
 /obj/item/device/encryptionkey/heads/qm
 	name = "quartermaster's encryption key"
 	icon_state = "qm_cypherkey"
 	channels = list("Cargo" = 1, "Mining" = 1)
-*/
-/obj/item/device/encryptionkey/headset_cargo
+
+/obj/item/device/encryptionkey/cargo
 	name = "supply radio encryption key"
 	icon_state = "cargo_cypherkey"
 	channels = list("Supply" = 1)
 
-/obj/item/device/encryptionkey/headset_service
+/obj/item/device/encryptionkey/service
 	name = "service radio encryption key"
 	icon_state = "srv_cypherkey"
 	channels = list("Service" = 1)
 
 /obj/item/device/encryptionkey/ert
-	name = "\improper NanoTrasen ERT radio encryption key"
+	name = "\improper ERT radio encryption key"
 	channels = list("Response Team" = 1, "Science" = 1, "Command" = 1, "Medical" = 1, "Engineering" = 1, "Security" = 1, "Supply" = 1, "Service" = 1)

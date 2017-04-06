@@ -172,18 +172,8 @@
 					O << "[U] holds \a [itemname] up to one of the cameras ..."
 					O << browse(text("<HTML><HEAD><TITLE>[]</TITLE></HEAD><BODY><TT>[]</TT></BODY></HTML>", itemname, info), text("window=[]", itemname))
 
-	else if (istype(W, /obj/item/weapon/camera_bug))
-		if (!src.can_use())
-			user << "<span class='warning'>Camera non-functional.</span>"
-			return
-		if (src.bugged)
-			user << "<span class='notice'>Camera bug removed.</span>"
-			src.bugged = 0
-		else
-			user << "<span class='notice'>Camera bugged.</span>"
-			src.bugged = 1
-
 	else if(W.damtype == BRUTE || W.damtype == BURN) //bashing cameras
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		if (W.force >= src.toughness)
 			user.do_attack_animation(src)
 			visible_message("<span class='warning'><b>[user] [pick(W.attack_verb)] [src] with [W]!</b></span>")
@@ -198,7 +188,7 @@
 
 /obj/machinery/camera/proc/deactivate(user as mob, var/choice = 1)
 	// The only way for AI to reactivate cameras are malf abilities, this gives them different messages.
-	if(istype(user, /mob/living/silicon/ai))
+	if(isAI(user))
 		user = null
 
 	if(choice != 1)
@@ -362,7 +352,7 @@
 	return 0
 
 /obj/machinery/camera/interact(mob/living/user as mob)
-	if(!panel_open || istype(user, /mob/living/silicon/ai))
+	if(!panel_open || isAI(user))
 		return
 
 	if(stat & BROKEN)

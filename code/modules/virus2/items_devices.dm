@@ -15,19 +15,22 @@
 
 	if (ishuman(C))
 		var/mob/living/carbon/human/H = C
-		if(H.species && H.species.flags & NO_BLOOD)
+		if(!H.should_have_organ(O_HEART))
 			report("Scan aborted: The target does not have blood.", user)
 			return
 
 	if(!C.antibodies.len)
 		report("Scan Complete: No antibodies detected.", user)
 		return
-
+	//TODO: DNA3 clown_block
+	/*
 	if (CLUMSY in user.mutations && prob(50))
 		// I was tempted to be really evil and rot13 the output.
 		report("Antibodies detected: [reverse_text(antigens2string(C.antibodies))]", user)
 	else
 		report("Antibodies detected: [antigens2string(C.antibodies)]", user)
+	*/
+	report("Antibodies detected: [antigens2string(C.antibodies)]", user)
 
 /obj/item/device/antibody_scanner/proc/report(var/text, mob/user as mob)
 	user << "\blue \icon[src] \The [src] beeps, \"[text]\""

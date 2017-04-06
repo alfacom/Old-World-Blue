@@ -8,6 +8,7 @@
 /obj/item/weapon/storage
 	name = "storage"
 	icon = 'icons/obj/storage.dmi'
+	sprite_group = SPRITE_STORAGE
 	w_class = 3
 	var/list/can_hold = new/list() //List of objects which this item can store (if set, it can't store anything else)
 	var/list/cant_hold = new/list() //List of objects which this item can't store (in effect only if can_hold isn't set)
@@ -31,38 +32,36 @@
 	..()
 
 /obj/item/weapon/storage/MouseDrop(obj/over_object as obj)
-
-	if(!canremove)
+	if(!ishuman(usr))
 		return
 
-	if (ishuman(usr) || issmall(usr)) //so monkeys can take off their backpacks -- Urist
+	var/mob/living/carbon/human/H = usr
+	if (istype(H.loc,/obj/mecha)) // stops inventory actions in a mech. why?
+		return
 
-		if (istype(usr.loc,/obj/mecha)) // stops inventory actions in a mech. why?
-			return
+	if(over_object == H && Adjacent(H)) // this must come before the screen objects only block
+		src.open(H)
+		return
 
-		if(over_object == usr && Adjacent(usr)) // this must come before the screen objects only block
-			src.open(usr)
-			return
+	if (!istype(over_object, /obj/screen))
+		return ..()
 
-		if (!istype(over_object, /obj/screen))
-			return ..()
+	//makes sure that the storage is equipped, so that we can't drag it into our hand from miles away.
+	//there's got to be a better way of doing this.
+	if (!(src.loc == H) || (src.loc && src.loc.loc == H))
+		return
 
-		//makes sure that the storage is equipped, so that we can't drag it into our hand from miles away.
-		//there's got to be a better way of doing this.
-		if (!(src.loc == usr) || (src.loc && src.loc.loc == usr))
-			return
+	if (usr.restrained() || usr.stat)
+		return
 
-		if (usr.restrained() || usr.stat)
-			return
-
-		switch(over_object.name)
-			if(BP_R_HAND)
-				if(usr.unEquip(src))
-					usr.put_in_r_hand(src)
-			if(BP_L_HAND)
-				if(usr.unEquip(src))
-					usr.put_in_l_hand(src)
-		src.add_fingerprint(usr)
+	switch(over_object.name)
+		if(BP_R_HAND)
+			if(H.unEquip(src))
+				H.put_in_r_hand(src)
+		if(BP_L_HAND)
+			if(H.unEquip(src))
+				H.put_in_l_hand(src)
+	src.add_fingerprint(H)
 
 
 /obj/item/weapon/storage/proc/return_inv()
@@ -211,7 +210,7 @@
 
 	//var/mob/living/carbon/human/H = user
 	var/row_num = 0
-	var/col_count = min(7,storage_slots) -1
+	var/col_count = storage_slots ? min(7,storage_slots) -1 : 6
 	if (adjusted_contents > 7)
 		row_num = round((adjusted_contents-1) / 7) // 7 is the maximum allowed width.
 	src.standard_orient_objs(row_num, col_count, numbered_contents)
@@ -241,9 +240,14 @@
 			usr << "<span class='notice'>[src] cannot hold [W].</span>"
 		return 0
 
+	if(storage_slots && contents.len >= storage_slots)
+		if(!stop_messages)
+			usr << "<span class='notice'>[src] is full, make some space.</span>"
+		return 0 //Storage item is full
+
 	if (W.w_class > max_w_class)
 		if(!stop_messages)
-			usr << "<span class='notice'>[W] is too big for this [src].</span>"
+			usr << "<span class='notice'>[W] is too long for \the [src].</span>"
 		return 0
 
 	var/total_storage_space = W.get_storage_cost()
@@ -270,10 +274,10 @@
 //such as when picking up all the items on a tile with one click.
 /obj/item/weapon/storage/proc/handle_item_insertion(obj/item/W as obj, prevent_warning = 0)
 	if(!istype(W)) return 0
-	if(usr)
+	if(usr && W in usr)
 		if(!usr.unEquip(W))
 			return
-	W.loc = src
+	W.forceMove(src)
 	W.on_enter_storage(src)
 	if(usr)
 		if (usr.client && usr.s_active != src)
@@ -286,9 +290,9 @@
 				if (M == usr)
 					usr << "<span class='notice'>You put \the [W] into [src].</span>"
 				else if (M in range(1)) //If someone is standing close enough, they can tell what it is...
-					M.show_message("<span class='notice'>[usr] puts [W] into [src].</span>")
+					M.show_message("<span class='notice'>\The [usr] puts [W] into [src].</span>")
 				else if (W && W.w_class >= 3) //Otherwise they can only see large or normal items from a distance...
-					M.show_message("<span class='notice'>[usr] puts [W] into [src].</span>")
+					M.show_message("<span class='notice'>\The [usr] puts [W] into [src].</span>")
 
 		src.orient2hud(usr)
 		if(usr.s_active)
@@ -312,9 +316,9 @@
 			W.layer = 20
 		else
 			W.layer = initial(W.layer)
-		W.loc = new_location
+		W.forceMove(new_location)
 	else
-		W.loc = get_turf(src)
+		W.forceMove(get_turf(src))
 
 	if(usr)
 		src.orient2hud(usr)
@@ -338,16 +342,16 @@
 
 	if(istype(W, /obj/item/weapon/tray))
 		var/obj/item/weapon/tray/T = W
-		if(T.carrying.len)
+		if(T.contents.len)
 			if(prob(85))
-				user << "\red The tray won't fit in [src]."
+				user << "<span class='warning'>The tray won't fit in [src].</span>"
 				return
 			else
-				W.loc = user.loc
+				W.forceMove(get_turf(user))
 				if ((user.client && user.s_active != src))
 					user.client.screen -= W
 				W.dropped(user)
-				user << "\red God damnit!"
+				user << "<span class='warning'>God damnit!</span>"
 
 	W.add_fingerprint(user)
 	return handle_item_insertion(W)
@@ -413,6 +417,12 @@
 	else
 		verbs -= /obj/item/weapon/storage/verb/toggle_gathering_mode
 
+	spawn(5)
+		var/total_storage_space = 0
+		for(var/obj/item/I in contents)
+			total_storage_space += I.get_storage_cost()
+		max_storage_space = max(total_storage_space,max_storage_space) //prevents spawned containers from being too small for their contents
+
 	src.boxes = new /obj/screen/storage(  )
 	src.boxes.name = "storage"
 	src.boxes.master = src
@@ -444,17 +454,6 @@
 		if(istype(A,/obj/))
 			var/obj/O = A
 			O.hear_talk(M, text, verb, speaking)
-
-/obj/item/weapon/storage/proc/make_exact_fit()
-	storage_slots = contents.len
-
-	can_hold.Cut()
-	max_w_class = 0
-	max_storage_space = 0
-	for(var/obj/item/I in src)
-		can_hold[I.type]++
-		max_w_class = max(I.w_class, max_w_class)
-		max_storage_space += I.get_storage_cost()
 
 //Returns the storage depth of an atom. This is the number of storage items the atom is contained in before reaching toplevel (the area).
 //Returns -1 if the atom was not found on container.
@@ -494,3 +493,14 @@
 
 /obj/item/proc/get_storage_cost()
 	return 2**(w_class-1) //1,2,4,8,16,...
+
+/obj/item/weapon/storage/proc/make_exact_fit()
+	storage_slots = contents.len
+
+	can_hold.Cut()
+	max_w_class = 0
+	max_storage_space = 0
+	for(var/obj/item/I in src)
+		can_hold[I.type]++
+		max_w_class = max(I.w_class, max_w_class)
+		max_storage_space += I.get_storage_cost()

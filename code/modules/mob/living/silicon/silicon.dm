@@ -46,9 +46,6 @@
 /mob/living/silicon/proc/show_laws()
 	return
 
-/mob/living/silicon/drop_item()
-	return
-
 /mob/living/silicon/emp_act(severity)
 	switch(severity)
 		if(1)
@@ -337,10 +334,13 @@
 	src << "[A.alarm_name()]!"
 
 /mob/living/silicon/ai/raised_alarm(var/datum/alarm/A)
-	var/cameratext = ""
+	var/list/cameras = list()
 	for(var/obj/machinery/camera/C in A.cameras())
-		cameratext += "[(cameratext == "")? "" : "|"]<A HREF=?src=\ref[src];switchcamera=\ref[C]>[C.c_tag]</A>"
-	src << "[A.alarm_name()]! ([(cameratext)? cameratext : "No Camera"])"
+		cameras += "<A HREF=?src=\ref[src];switchcamera=\ref[C]>[C.c_tag]</A>"
+	var/cameratext = "No Camera"
+	if(cameras.len)
+		cameratext = jointext(cameras, "|")
+	src << "[A.alarm_name()]! ([cameratext])"
 
 
 /mob/living/silicon/proc/is_traitor()

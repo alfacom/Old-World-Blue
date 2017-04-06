@@ -177,34 +177,41 @@
 	playsound(loc, 'sound/effects/Glasshit.ogg', 50, 1)
 
 /obj/structure/window/attack_hand(mob/user as mob)
-	user.next_move = world.time + 8
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	//TODO: DNA3 hulk
+	/*
 	if(HULK in user.mutations)
 		user.say(pick(";RAAAAAAAARGH!", ";HNNNNNNNNNGGGGGGH!", ";GWAAAAAAAARRRHHH!", "NNNNNNNNGGGGGGGGHH!", ";AAAAAAARRRGH!"))
 		user.visible_message("<span class='danger'>[user] smashes through [src]!</span>")
 		user.do_attack_animation(src)
 		shatter()
+		return
+	*/
 
-	else if (usr.a_intent == I_HURT)
+	if(usr.a_intent == I_HURT)
 		if (ishuman(usr))
-			var/mob/living/carbon/human/H = user
+			var/mob/living/carbon/human/H = usr
 			if(H.can_shred())
 				attack_generic(H,25)
 				return
 
 		playsound(src.loc, 'sound/effects/glassknock.ogg', 80, 1)
 		user.do_attack_animation(src)
-		usr.visible_message("\red [usr.name] bangs against the [src.name]!",
-							"\red You bang against the [src.name]!",
-							"You hear a banging sound.")
+		usr.visible_message(
+			"<span class='danger'>\The [usr] bangs against \the [src]!</span>",
+			"<span class='danger'>You bang against \the [src]!</span>",
+			"You hear a banging sound."
+		)
 	else
 		playsound(src.loc, 'sound/effects/glassknock.ogg', 80, 1)
-		usr.visible_message("[usr.name] knocks on the [src.name].",
-							"You knock on the [src.name].",
-							"You hear a knocking sound.")
-	return
+		usr.visible_message(
+			"[usr.name] knocks on the [src.name].",
+			"You knock on the [src.name].",
+			"You hear a knocking sound."
+		)
 
 /obj/structure/window/attack_generic(var/mob/user, var/damage)
-	user.next_move = world.time + 8
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 	if(!damage)
 		return
 	if(damage >= 10)
@@ -216,7 +223,6 @@
 	return 1
 
 /obj/structure/window/attackby(obj/item/W as obj, mob/user as mob)
-	user.next_move = world.time + 8
 	if(!istype(W)) return//I really wish I did not need this
 	if (istype(W, /obj/item/weapon/grab) && get_dist(src,user)<2)
 		var/obj/item/weapon/grab/G = W
@@ -240,9 +246,11 @@
 					M.Weaken(5)
 					M.apply_damage(20)
 					hit(50)
-			user.attack_log += "\[[time_stamp()]\]<font color='red'> Smashed [M.name] ([M.ckey]) against \the [src]</font>"
-			M.attack_log += "\[[time_stamp()]\]<font color='orange'> Smashed against \the [src] by [user.name] ([user.ckey])</font>"
-			msg_admin_attack("[key_name(user)] smashed [key_name(M)] against \the [src]")
+			admin_attack_log(user, M,
+				"Smashed [key_name(M)] against \the [src]",
+				"Smashed against \the [src] by [key_name(user)]",
+				"smashed [key_name(M)] against \the [src]."
+			)
 			return
 
 	if(W.flags & NOBLUDGEON) return
@@ -270,6 +278,7 @@
 		if(!glasstype)
 			user << "<span class='notice'>You're not sure how to dismantle \the [src] properly.</span>"
 		else
+			playsound(src.loc, 'sound/items/Ratchet.ogg', 75, 1)
 			visible_message("<span class='notice'>[user] dismantles \the [src].</span>")
 			if(dir == SOUTHWEST)
 				var/obj/item/stack/material/mats = new glasstype(loc)
@@ -278,6 +287,7 @@
 				new glasstype(loc)
 			qdel(src)
 	else
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		if(W.damtype == BRUTE || W.damtype == BURN)
 			user.do_attack_animation(src)
 			hit(W.force)

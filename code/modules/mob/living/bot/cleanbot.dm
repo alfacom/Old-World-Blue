@@ -71,7 +71,7 @@
 		return
 
 	if(!target) // Find a target
-		for(var/obj/effect/decal/cleanable/D in reverselist(view(src)))
+		for(var/obj/effect/decal/cleanable/D in reverseRange(view(src)))
 			if(D in ignorelist)
 				continue
 			for(var/T in target_types)
@@ -163,7 +163,7 @@
 	visible_message("<span class='danger'>[src] blows apart!</span>")
 	var/turf/Tsec = get_turf(src)
 
-	new /obj/item/weapon/reagent_containers/glass/bucket(Tsec)
+	new /obj/item/weapon/reagent_containers/glass/beaker/bucket(Tsec)
 	new /obj/item/device/assembly/prox_sensor(Tsec)
 	if(prob(50))
 		new /obj/item/robot_parts/l_arm(Tsec)
@@ -232,11 +232,14 @@
 			usr << "<span class='notice'>You press the weird button.</span>"
 	attack_hand(usr)
 
-/mob/living/bot/cleanbot/Emag(var/mob/user)
-	..()
-	visible_message("<span class='notice'>The [src] buzzes and beeps.</span>")
-	oddbutton = 1
-	screwloose = 1
+/mob/living/bot/cleanbot/emag_act(var/remaining_uses, var/mob/user)
+	. = ..()
+	if(!screwloose || !oddbutton)
+		if(user)
+			user << "<span class='notice'>The [src] buzzes and beeps.</span>"
+		oddbutton = 1
+		screwloose = 1
+		return 1
 
 /mob/living/bot/cleanbot/proc/get_targets()
 	target_types = list(
@@ -269,37 +272,3 @@
 	if(dist < cleanbot.closest_dist) // We check all signals, choosing the closest beakon; then we move to the NEXT one after the closest one
 		cleanbot.closest_dist = dist
 		cleanbot.next_dest = signal.data["next_patrol"]
-
-/* Assembly */
-
-/obj/item/weapon/bucket_sensor
-	desc = "It's a bucket. With a sensor attached."
-	name = "proxy bucket"
-	icon = 'icons/obj/aibots.dmi'
-	icon_state = "bucket_proxy"
-	force = 3.0
-	throwforce = 10.0
-	throw_speed = 2
-	throw_range = 5
-	w_class = 3.0
-	var/created_name = "Cleanbot"
-
-/obj/item/weapon/bucket_sensor/attackby(var/obj/item/O, var/mob/user)
-	..()
-	if(istype(O, /obj/item/robot_parts/l_arm) || istype(O, /obj/item/robot_parts/r_arm))
-		user.drop_item()
-		qdel(O)
-		var/turf/T = get_turf(loc)
-		var/mob/living/bot/cleanbot/A = new /mob/living/bot/cleanbot(T)
-		A.name = created_name
-		user << "<span class='notice'>You add the robot arm to the bucket and sensor assembly. Beep boop!</span>"
-		user.drop_from_inventory(src)
-		qdel(src)
-
-	else if(istype(O, /obj/item/weapon/pen))
-		var/t = sanitizeName(input(user, "Enter new robot name", name, created_name), allow_numbers = 1)
-		if(!t)
-			return
-		if(!in_range(src, usr) && src.loc != usr)
-			return
-		created_name = t

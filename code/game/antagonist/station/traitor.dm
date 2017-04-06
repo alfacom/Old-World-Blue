@@ -22,7 +22,7 @@ var/datum/antagonist/traitor/traitors
 	if(!..())
 		return
 
-	if(istype(traitor.current, /mob/living/silicon))
+	if(issilicon(traitor.current))
 		var/datum/objective/assassinate/kill_objective = new
 		kill_objective.owner = traitor
 		kill_objective.find_target()
@@ -44,12 +44,11 @@ var/datum/antagonist/traitor/traitors
 					kill_objective.owner = traitor
 					kill_objective.find_target()
 					traitor.objectives += kill_objective
-				if(34 to 50)
-					var/datum/objective/brig/brig_objective = new
-					brig_objective.owner = traitor
-					brig_objective.find_target()
-					traitor.objectives += brig_objective
-				if(51 to 66)
+				if(34 to 44)
+					var/datum/objective/explosion/explosion_objective = new
+					explosion_objective.owner = traitor
+					traitor.objectives += explosion_objective
+				if(45 to 66)
 					var/datum/objective/harm/harm_objective = new
 					harm_objective.owner = traitor
 					harm_objective.find_target()
@@ -74,7 +73,7 @@ var/datum/antagonist/traitor/traitors
 	return
 
 /datum/antagonist/traitor/equip(var/mob/living/carbon/human/traitor_mob)
-	if(istype(traitor_mob, /mob/living/silicon)) // this needs to be here because ..() returns false if the mob isn't human
+	if(issilicon(traitor_mob)) // this needs to be here because ..() returns false if the mob isn't human
 		add_law_zero(traitor_mob)
 		return 1
 

@@ -132,10 +132,14 @@
 		admins += src
 		holder.owner = src
 
-	else if(config.panicbuner && get_player_age(ckey)<1) //first connection
+	else if(config.panic_bunker && get_player_age(ckey)<0) //first connection
+		message_admins("<span class='adminnotice'>Failed Login: [key] - New account attempting to connect during panic bunker</span>")
 		src << "Sorry but the server is currently not accepting connections from never before seen players."
 		del(src)
 		return 0
+
+
+
 
 	//preferences datum - also holds some persistant data for the client (because we may as well keep these datums to a minimum)
 	prefs = preferences_datums[ckey]
@@ -350,9 +354,9 @@
 mob/proc/MayRespawn()
 	return 0
 
-client/proc/MayRespawn()
+client/proc/MayRespawn(feed, delay)
 	if(mob)
-		return mob.MayRespawn()
+		return mob.MayRespawn(feed, delay)
 
 	// Something went wrong, client is usually kicked or transfered to a new mob at this point
 	return 0
@@ -361,7 +365,7 @@ client/verb/character_setup()
 	set name = "Character Setup"
 	set category = "Preferences"
 	if(prefs)
-		prefs.ShowChoices(usr)
+		prefs.NewShowChoices(usr)
 
 client/verb/new_character_setup()
 	set name = "New Character Setup"

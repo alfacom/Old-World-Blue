@@ -108,7 +108,7 @@
 		return 1
 
 /*
-	if(in_range(src, usr) || istype(usr, /mob/living/silicon))
+	if(in_range(src, usr) || issilicon(usr))
 		usr.set_machine(src)
 */
 
@@ -145,7 +145,7 @@
 		if(!istype(P))	return
 
 		var/timeout = world.time + 600
-		var/reason = sanitize(copytext(input(usr,"Reason:","Why do you require this item?","") as null|text,1,MAX_MESSAGE_LEN))
+		var/reason = cp1251_to_utf8( sanitize(input(usr,"Reason:","Why do you require this item?","") as null|text,MAX_MESSAGE_LEN,1) )
 		if(world.time > timeout)	return
 		if(!reason)	return
 
@@ -281,14 +281,11 @@
 	if((SP.hidden && !hacked) || (SP.contraband && !can_order_contraband) || SP.group != last_viewed_group) return
 	temp += "<A href='?src=\ref[src];doorder=[supply_name]'>[supply_name]</A> Cost: [SP.cost]<BR>"
 
-/obj/machinery/computer/order/supply/attackby(I as obj, user as mob)
-	if(istype(I,/obj/item/weapon/card/emag) && !hacked)
-		user << "\blue Special supplies unlocked."
+/obj/machinery/computer/order/supply/emag_act(var/remaining_charges, var/mob/user)
+	if(!hacked)
+		user << "<span class='notice'>Special supplies unlocked.</span>"
 		hacked = 1
-		return
-	else
-		..()
-	return
+		return 1
 
 /obj/machinery/computer/order/supply/proc/post_signal(var/command)
 

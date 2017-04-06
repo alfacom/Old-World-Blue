@@ -13,21 +13,30 @@
 	icon = 'icons/obj/items.dmi'
 	icon_state = "gift1"
 	item_state = "gift1"
+	randpixel = 10
 
 /obj/item/weapon/a_gift/New()
 	..()
-	pixel_x = rand(-10,10)
-	pixel_y = rand(-10,10)
 	if(w_class > 0 && w_class < 4)
 		icon_state = "gift[w_class]"
 	else
 		icon_state = "gift[pick(1, 2, 3)]"
 	return
 
+/obj/item/weapon/gift
+	name = "gift"
+	desc = "A wrapped item."
+	icon = 'icons/obj/items.dmi'
+	icon_state = "gift3"
+	var/size = 3.0
+	var/obj/item/gift = null
+	item_state = "gift"
+	w_class = 4.0
+
 /obj/item/weapon/gift/attack_self(mob/user as mob)
-	user.drop_item()
+	user.unEquip(src)
 	if(src.gift)
-		user.put_in_active_hand(gift)
+		user.put_in_hands(gift)
 		src.gift.add_fingerprint(user)
 	else
 		user << "\blue The gift was empty!"
@@ -171,8 +180,8 @@
 					return
 
 				src.amount -= a_used
-				user.drop_item()
-				var/obj/item/weapon/gift/G = new /obj/item/weapon/gift( src.loc )
+				user.drop_from_inventory(W)
+				var/obj/item/weapon/gift/G = new(src.loc)
 				G.size = W.w_class
 				G.w_class = G.size + 1
 				G.icon_state = text("gift[]", G.size)
@@ -210,9 +219,11 @@
 
 			H.loc = present
 
-			H.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been wrapped with [src.name]  by [user.name] ([user.ckey])</font>")
-			user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to wrap [H.name] ([H.ckey])</font>")
-			msg_admin_attack("[key_name(user)] used [src] to wrap [key_name(H)]")
+			admin_attack_log(user, H,
+				"Used the [src.name] to wrap [H.name] ([H.ckey])",
+				"Has been wrapped with [src.name]  by [user.name] ([user.ckey])",
+				"used [src] to wrap [key_name(H)]"
+			)
 
 		else
 			user << "\blue You need more paper."

@@ -29,7 +29,7 @@
 	if(panel_open)
 		user << "The power cell is [cell ? "installed" : "missing"]."
 	else
-		user << "The charge meter reads [cell ? round(cell.percent(),1) : 0]%"
+		user << "The charge meter reads [cell ? cell.percent() : 0]%"
 	return
 
 /obj/machinery/space_heater/powered()
@@ -53,15 +53,13 @@
 				return
 			else
 				// insert cell
-				var/obj/item/weapon/cell/C = usr.get_active_hand()
-				if(istype(C))
-					user.drop_item()
-					cell = C
-					C.loc = src
-					C.add_fingerprint(usr)
+				var/obj/item/weapon/cell/C = I
+				user.drop_from_inventory(C, src)
+				cell = C
+				C.add_fingerprint(usr)
 
-					user.visible_message("\blue [user] inserts a power cell into [src].", "\blue You insert the power cell into [src].")
-					power_change()
+				user.visible_message("\blue [user] inserts a power cell into [src].", "\blue You insert the power cell into [src].")
+				power_change()
 		else
 			user << "The hatch must be open to insert a power cell."
 			return
@@ -91,7 +89,7 @@
 		else
 			dat += "<A href='byond://?src=\ref[src];op=cellinstall'>Removed</A><BR>"
 
-		dat += "Power Level: [cell ? round(cell.percent(),1) : 0]%<BR><BR>"
+		dat += "Power Level: [cell ? cell.percent() : 0]%<BR><BR>"
 
 		dat += "Set Temperature: "
 
@@ -113,7 +111,7 @@
 /obj/machinery/space_heater/Topic(href, href_list)
 	if (usr.stat)
 		return
-	if ((in_range(src, usr) && istype(src.loc, /turf)) || (istype(usr, /mob/living/silicon)))
+	if ((in_range(src, usr) && istype(src.loc, /turf)) || (issilicon(usr)))
 		usr.set_machine(src)
 
 		switch(href_list["op"])
@@ -125,22 +123,24 @@
 				set_temperature = dd_range(T0C, T0C + 90, set_temperature + value)
 
 			if("cellremove")
-				if(panel_open && cell && !usr.get_active_hand())
-					usr.visible_message("\blue [usr] removes \the [cell] from \the [src].", "\blue You remove \the [cell] from \the [src].")
+				if(panel_open && cell)
+					usr.visible_message(
+						"\blue [usr] removes \the [cell] from \the [src].",
+						"\blue You remove \the [cell] from \the [src]."
+					)
 					cell.update_icon()
-					usr.put_in_hands(cell)
-					cell.add_fingerprint(usr)
 					cell = null
 					power_change()
+					cell.add_fingerprint(usr)
+					usr.put_in_hands(cell)
 
 
 			if("cellinstall")
 				if(panel_open && !cell)
 					var/obj/item/weapon/cell/C = usr.get_active_hand()
 					if(istype(C))
-						usr.drop_item()
+						usr.drop_from_inventory(C, src)
 						cell = C
-						C.loc = src
 						C.add_fingerprint(usr)
 						power_change()
 						usr.visible_message("\blue [usr] inserts \the [C] into \the [src].", "\blue You insert \the [C] into \the [src].")

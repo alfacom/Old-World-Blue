@@ -13,8 +13,8 @@
 	throw_speed = 1
 	throw_range = 5
 	w_class = 3.0
+	origin_tech = list(TECH_ENGINEERING = 4, TECH_MATERIAL = 2)
 	matter = list(DEFAULT_WALL_MATERIAL = 50000)
-	origin_tech = "engineering=4;materials=2"
 	var/datum/effect/effect/system/spark_spread/spark_system
 	var/stored_matter = 0
 	var/working = 0
@@ -32,7 +32,7 @@
 /obj/item/weapon/rcd/examine()
 	. = ..()
 	if(src.type == /obj/item/weapon/rcd && loc == usr)
-		usr << "It currently holds [stored_matter]/30 matter-units."
+		usr << "It currently holds [stored_matter]/100 matter-units."
 
 /obj/item/weapon/rcd/New()
 	..()
@@ -48,14 +48,14 @@
 /obj/item/weapon/rcd/attackby(obj/item/weapon/W, mob/user)
 
 	if(istype(W, /obj/item/weapon/rcd_ammo))
-		if((stored_matter + 10) > 30)
+		if((stored_matter + 20) > 100)
 			user << "<span class='notice'>The RCD can't hold any more matter-units.</span>"
 			return
 		user.drop_from_inventory(W)
 		qdel(W)
-		stored_matter += 10
+		stored_matter += 20
 		playsound(src.loc, 'sound/machines/click.ogg', 50, 1)
-		user << "<span class='notice'>The RCD now holds [stored_matter]/30 matter-units.</span>"
+		user << "<span class='notice'>The RCD now holds [stored_matter]/100 matter-units.</span>"
 		return
 	..()
 
@@ -156,7 +156,7 @@
 	icon_state = "rcd"
 	item_state = "rcdammo"
 	w_class = 2
-	origin_tech = "materials=2"
+	origin_tech = list(TECH_MATERIAL = 2)
 	matter = list(DEFAULT_WALL_MATERIAL = 30000,"glass" = 15000)
 
 /obj/item/weapon/rcd/borg

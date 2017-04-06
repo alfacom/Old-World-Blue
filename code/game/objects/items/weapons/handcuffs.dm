@@ -10,22 +10,37 @@
 	w_class = 2.0
 	throw_speed = 2
 	throw_range = 5
+	origin_tech = list(TECH_MATERIAL = 1)
 	matter = list(DEFAULT_WALL_MATERIAL = 500)
-	origin_tech = "materials=1"
 	var/dispensed_type = 0
 	var/breakouttime = 1200 //Deciseconds = 120s = 2 minutes
 	var/cuff_sound = 'sound/weapons/handcuffs.ogg'
 	var/cuff_type = "handcuffs"
+
+/obj/item/weapon/legcuffs
+	name = "legcuffs"
+	desc = "Use this to keep prisoners in line."
+	gender = PLURAL
+	icon = 'icons/obj/items.dmi'
+	icon_state = "handcuff"
+	flags = CONDUCT
+	throwforce = 0
+	w_class = 3.0
+	origin_tech = list(TECH_MATERIAL = 1)
+	var/breakouttime = 300	//Deciseconds = 30s = 0.5 minute
 
 /obj/item/weapon/handcuffs/attack(var/mob/living/carbon/C, var/mob/living/user)
 
 	if(!user.IsAdvancedToolUser())
 		return
 
+	//TODO: DNA3 clown_block
+	/*
 	if ((CLUMSY in user.mutations) && prob(50))
 		user << "<span class='warning'>Uh ... how do those things work?!</span>"
 		place_handcuffs(user, user)
 		return
+	*/
 
 	if(!C.handcuffed)
 		if (C == user)
@@ -67,9 +82,14 @@
 	if(!do_mob(user, target, 30))
 		return
 
-	H.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been handcuffed (attempt) by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Attempted to handcuff [H.name] ([H.ckey])</font>")
-	msg_admin_attack("[key_name(user)] attempted to handcuff [key_name(H)]")
+	admin_attack_log(user, H,
+		"Attempted to handcuff [H.name] ([H.ckey])",
+		"Has been handcuffed (attempt) by [user.name] ([user.ckey])",
+		"attempted to handcuff"
+	)
+
+	user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
+	user.do_attack_animation(H)
 
 	user.visible_message("<span class='danger'>\The [user] has put [cuff_type] on \the [H]!</span>")
 
@@ -84,7 +104,9 @@
 	target.update_inv_handcuffed()
 	return
 
-var/last_chew = 0
+/mob/living/carbon/human
+	var/last_chew = 0
+
 /mob/living/carbon/human/RestrainedClickOn(var/atom/A)
 	if (A != src) return ..()
 	if (last_chew + 26 > world.time) return
@@ -99,13 +121,11 @@ var/last_chew = 0
 	var/obj/item/organ/external/O = H.get_organ( H.hand ? BP_L_HAND : BP_R_HAND)
 	if (!O) return
 
-	var/s = "\red [H.name] chews on \his [O.name]!"
-	H.visible_message(s, "\red You chew on your [O.name]!")
-	H.attack_log += text("\[[time_stamp()]\] <font color='red'>[s] ([H.ckey])</font>")
-	log_attack("[s] ([H.ckey])")
-
 	if(O.take_damage(3,0,1,1,"teeth marks"))
-		H:UpdateDamageIcon()
+		H.UpdateDamageIcon()
+
+	self_attack_log(H, "chews on his/her [O.name]!")
+	H.visible_message("[H] chews on \his [O.name]!", "\red You chew on your [O.name]!")
 
 	last_chew = world.time
 

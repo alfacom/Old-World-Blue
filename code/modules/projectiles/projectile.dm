@@ -178,22 +178,30 @@
 
 	//hit messages
 	if(silenced)
-		target_mob << "<span class='danger'>You've been hit in the [parse_zone(def_zone)] by \the [src]!</span>"
+		if(ishuman(target_mob))
+			target_mob << "<span class='danger'>You've been hit in the [parse_zone(def_zone)] by \the [src]!</span>"
+		else
+			target_mob << "<span class='danger'>You've been hit by \the [src]!</span>"
 	else
-		visible_message("<span class='danger'>\The [target_mob] is hit by \the [src] in the [parse_zone(def_zone)]!</span>")//X has fired Y is now given by the guns so you cant tell who shot you if you could not see the shooter
+		if(ishuman(target_mob))
+			visible_message("<span class='danger'>\The [target_mob] is hit by \the [src] in the [parse_zone(def_zone)]!</span>")
+		else
+			visible_message("<span class='danger'>\The [target_mob] is hit by \the [src]!</span>")
 
 	//admin logs
 	if(!no_attack_log)
-		if(istype(firer, /mob))
+		if(!firer)
+			self_attack_log(target_mob, "UNKNOWN SUBJECT (No longer exists) shot [key_name(target_mob)] with \a [src]", 1)
 
+		if(istype(firer, /mob))
 			var/attacker_message = "shot with \a [src.type]"
 			var/victim_message = "shot with \a [src.type]"
 			var/admin_message = "shot (\a [src.type])"
 
 			admin_attack_log(firer, target_mob, attacker_message, victim_message, admin_message)
+
 		else
-			target_mob.attack_log += "\[[time_stamp()]\] <b>UNKNOWN SUBJECT (No longer exists)</b> shot <b>[target_mob]/[target_mob.ckey]</b> with <b>\a [src]</b>"
-			msg_admin_attack("UNKNOWN shot [target_mob] ([target_mob.ckey]) with \a [src] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[target_mob.x];Y=[target_mob.y];Z=[target_mob.z]'>JMP</a>)")
+			self_attack_log(target_mob, "[firer] shot [key_name(target_mob)] with \a [src]", 1)
 
 	//sometimes bullet_act() will want the projectile to continue flying
 	if (result == PROJECTILE_CONTINUE)

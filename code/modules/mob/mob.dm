@@ -13,8 +13,6 @@
 		client.screen = list()
 	if(mind && mind.current == src)
 		spellremove(src)
-	for(var/infection in viruses)
-		qdel(infection)
 	ghostize()
 	..()
 
@@ -57,19 +55,19 @@
 	if(!client)	return
 
 	if (type)
-		if(type & 1 && (sdisabilities & BLIND || blinded || paralysis) )//Vision related
+		if((type & 1) && ((sdisabilities & BLIND) || blinded || paralysis) )//Vision related
 			if (!( alt ))
 				return
 			else
 				msg = alt
 				type = alt_type
-		if (type & 2 && (sdisabilities & DEAF || ear_deaf))//Hearing related
+		if ((type & 2) && ((sdisabilities & DEAF) || ear_deaf))//Hearing related
 			if (!( alt ))
 				return
 			else
 				msg = alt
 				type = alt_type
-				if (type & 1 && sdisabilities & BLIND)
+				if ((type & 1) && (sdisabilities & BLIND))
 					return
 	// Added voice muffling for Issue 41.
 	if(stat == UNCONSCIOUS || sleeping > 0)
@@ -210,40 +208,20 @@
 	face_atom(A)
 	return 1
 
-
-/mob/proc/ret_grab(obj/effect/list_container/mobl/L as obj, flag)
-	if ( !(istype(l_hand, /obj/item/weapon/grab)||istype(r_hand, /obj/item/weapon/grab)) )
-		if (!L)
-			return null
-		else
-			return L.container
-	else
-		if (!L)
-			L = new /obj/effect/list_container/mobl( null )
-			L.container += src
-			L.master = src
-		if (istype(l_hand, /obj/item/weapon/grab))
-			var/obj/item/weapon/grab/G = l_hand
-			if (!L.container.Find(G.affecting))
-				L.container += G.affecting
+//Gets the mob grab conga line.
+/mob/proc/ret_grab(list/L)
+	if (!istype(l_hand, /obj/item/weapon/grab) && !istype(r_hand, /obj/item/weapon/grab))
+		return L
+	if (!L)
+		L = list(src)
+	for(var/A in list(l_hand,r_hand))
+		if (istype(A, /obj/item/weapon/grab))
+			var/obj/item/weapon/grab/G = A
+			if (!(G.affecting in L))
+				L += G.affecting
 				if (G.affecting)
-					G.affecting.ret_grab(L, 1)
-		if (istype(r_hand, /obj/item/weapon/grab))
-			var/obj/item/weapon/grab/G = r_hand
-			if (!( L.container.Find(G.affecting) ))
-				L.container += G.affecting
-				if (G.affecting)
-					G.affecting.ret_grab(L, 1)
-		if (!flag)
-			if (L.master == src)
-				var/list/temp = list(  )
-				temp += L.container
-				//L = null
-				qdel(L)
-				return temp
-			else
-				return L.container
-	return
+					G.affecting.ret_grab(L)
+	return L
 
 /mob/verb/mode()
 	set name = "Activate Held Object"
@@ -262,8 +240,6 @@
 		if (W)
 			W.attack_self(src)
 			update_inv_r_hand()
-	//if(next_move < world.time)
-	//	next_move = world.time + 2
 	return
 
 /*
@@ -339,75 +315,6 @@
 	src << browse('html/help.html', "window=help")
 	return
 */
-
-/mob/verb/abandon_mob()
-	set name = "Respawn"
-	set category = "OOC"
-
-	if (!( config.abandon_allowed ))
-		usr << "<span class='notice'>Respawn is disabled.</span>"
-		return
-	if ((stat != 2 || !( ticker )))
-		usr << "<span class='notice'><B>You must be dead to use this!</B></span>"
-		return
-	if (ticker.mode.deny_respawn) //BS12 EDIT
-		usr << "<span class='notice'>Respawn is disabled for this roundtype.</span>"
-		return
-	else
-		var/is_admin = 0
-		if(src.client)
-			is_admin = check_rights(0, 0)
-		var/deathtime = world.time - src.timeofdeath
-		if(!is_admin && isobserver(src))
-			var/mob/observer/dead/G = src
-			if(G.has_enabled_antagHUD == 1 && config.antag_hud_restricted)
-				usr << "\blue <B>Upon using the antagHUD you forfeighted the ability to join the round.</B>"
-				return
-		var/deathtimeminutes = round(deathtime / 600)
-		var/pluralcheck = "minute"
-		if(deathtimeminutes == 0)
-			pluralcheck = ""
-		else if(deathtimeminutes == 1)
-			pluralcheck = " [deathtimeminutes] minute and"
-		else if(deathtimeminutes > 1)
-			pluralcheck = " [deathtimeminutes] minutes and"
-		var/deathtimeseconds = round((deathtime - deathtimeminutes * 600) / 10,1)
-		usr << "You have been dead for[pluralcheck] [deathtimeseconds] seconds."
-
-		if (deathtime < config.respawn_time*600)
-			if(is_admin)
-				if(alert("Normal players must wait at least [config.respawn_time] minutes to respawn! Continue?","Warning", "Respawn", "Cancel") == "Cancel")
-					return
-			else
-				usr << "You must wait [config.respawn_time] minutes to respawn!"
-				return
-		else
-			usr << "You can respawn now, enjoy your new life!"
-
-	log_game("[usr.name]/[usr.key] used abandon mob.")
-
-	usr << "\blue <B>Make sure to play a different character, and please roleplay correctly!</B>"
-
-	if(!client)
-		log_game("[usr.key] AM failed due to disconnect.")
-		return
-	client.screen.Cut()
-	if(!client)
-		log_game("[usr.key] AM failed due to disconnect.")
-		return
-
-	announce_ghost_joinleave(client, 0)
-
-	var/mob/new_player/M = new /mob/new_player()
-	if(!client)
-		log_game("[usr.key] AM failed due to disconnect.")
-		qdel(M)
-		return
-
-	M.key = key
-	if(M.mind)
-		M.mind.reset()
-	return
 
 /client/verb/changes()
 	set name = "Changelog"
@@ -626,7 +533,7 @@
 /mob/proc/is_mechanical()
 	if(mind && (mind.assigned_role == "Cyborg" || mind.assigned_role == "AI"))
 		return 1
-	return istype(src, /mob/living/silicon) || get_species() == "Machine"
+	return issilicon(src) || get_species() == "Machine"
 
 /mob/proc/is_ready()
 	return client && !!mind
@@ -746,8 +653,8 @@
 		density = initial(density)
 
 	if(downed)
-		drop_l_hand()
-		drop_r_hand()
+		drop_active_hand()
+		drop_inactive_hand()
 
 	for(var/obj/item/weapon/grab/G in grabbed_by)
 		if(G.state >= GRAB_AGGRESSIVE)
@@ -757,17 +664,17 @@
 	//Temporarily moved here from the various life() procs
 	//I'm fixing stuff incrementally so this will likely find a better home.
 	//It just makes sense for now. ~Carn
-	if( update_icon )	//forces a full overlay update
+	if(update_icon)	//forces a full overlay update
 		update_icon = 0
 		regenerate_icons()
-	else if( lying != lying_prev )
+	else if(lying != lying_prev)
 		update_icons()
 
 	return canmove
 
 
 /mob/proc/facedir(var/ndir)
-	if(!canface() || client.moving || world.time < client.move_delay)
+	if( !canface() || (client && (client.moving || world.time < client.move_delay)) )
 		return 0
 	set_dir(ndir)
 	if(buckled && buckled.buckle_movable)
@@ -899,11 +806,11 @@ mob/proc/yank_out_object()
 	set desc = "Remove an embedded item at the cost of bleeding and pain."
 	set src in view(1)
 
-	if(!isliving(usr) || usr.next_move > world.time)
+	if(!ishuman(usr) || !usr.canClick() || !Adjacent(usr))
 		return
-	usr.next_move = world.time + 20
+	usr.setClickCooldown(20)
 
-	if(usr.stat == 1)
+	if(usr.stat)
 		usr << "You are unconcious and cannot do that!"
 		return
 
@@ -969,7 +876,6 @@ mob/proc/yank_out_object()
 			var/mob/living/carbon/human/human_user = U
 			human_user.bloody_hands(H)
 
-	selection.forceMove(get_turf(src))
 	U.put_in_hands(selection)
 
 	for(var/obj/item/weapon/O in pinned)
@@ -1064,3 +970,13 @@ mob/proc/yank_out_object()
 	src.in_throw_mode = 1
 	if(src.throw_icon)
 		src.throw_icon.icon_state = "act_throw_on"
+
+
+/mob/proc/check_CH(CH_name as text, var/CH_type)
+	if(!src.client.CH || !istype(src.client.CH, CH_type))//(src.client.CH.handler_name != CH_name))
+		src.client.CH = PoolOrNew(CH_type,src.client)
+		src << "<span class='warning'>You prepare [CH_name].</span>"
+	else
+		qdel(src.client.CH)
+		src << "<span class='notice'>You unprepare [CH_name].</span>"
+	return

@@ -9,13 +9,13 @@
 	spawn_positions = 1
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_hydroponics, access_bar, access_kitchen, access_morgue)
+	addcional_access = list(access_hydroponics, access_kitchen)
 	minimal_access = list(access_bar)
 
 	uniform = /obj/item/clothing/under/rank/bartender
 	pda = /obj/item/device/pda/bar
 	suit = /obj/item/clothing/suit/storage/vest
-	ear = /obj/item/device/radio/headset/headset_service
+	ear = /obj/item/device/radio/headset/service
 
 	equip(var/mob/living/carbon/human/H)
 		if(!..())	return 0
@@ -53,8 +53,8 @@
 	spawn_positions = 2
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_hydroponics, access_bar, access_kitchen, access_morgue)
-	minimal_access = list(access_kitchen, access_morgue)
+	addcional_access = list(access_hydroponics, access_bar)
+	minimal_access = list(access_kitchen)
 	alt_titles = list("Cook")
 
 	uniform = /obj/item/clothing/under/rank/chef
@@ -62,7 +62,7 @@
 	pda = /obj/item/device/pda/chef
 	hat = /obj/item/clothing/head/chefhat
 	suit = /obj/item/clothing/suit/chef
-	ear = /obj/item/device/radio/headset/headset_service
+	ear = /obj/item/device/radio/headset/service
 
 /datum/job/hydro
 	title = "Gardener"
@@ -74,25 +74,23 @@
 	spawn_positions = 1
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_hydroponics, access_bar, access_kitchen, access_morgue) // Removed tox and chem access because STOP PISSING OFF THE CHEMIST GUYS // //Removed medical access because WHAT THE FUCK YOU AREN'T A DOCTOR YOU GROW WHEAT //Given Morgue access because they have a viable means of cloning.
-	minimal_access = list(access_hydroponics, access_morgue) // Removed tox and chem access because STOP PISSING OFF THE CHEMIST GUYS // //Removed medical access because WHAT THE FUCK YOU AREN'T A DOCTOR YOU GROW WHEAT //Given Morgue access because they have a viable means of cloning.
+	addcional_access = list(access_bar, access_kitchen)
+	minimal_access = list(access_hydroponics)
 	alt_titles = list("Hydroponicist")
 
 	uniform = /obj/item/clothing/under/rank/hydroponics
 	pda = /obj/item/device/pda/botanist
 	suit = /obj/item/clothing/suit/apron
 	gloves = /obj/item/clothing/gloves/botanic_leather
-	ear = /obj/item/device/radio/headset/headset_service
+	ear = /obj/item/device/radio/headset/service
 
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/hydroponics,\
-		/obj/item/weapon/storage/backpack/satchel_hyd,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
+	backpack  = /obj/item/weapon/storage/backpack/hydroponics
+	satchel_j = /obj/item/weapon/storage/backpack/satchel/hyd
+	messenger = /obj/item/weapon/storage/backpack/messenger/hyd
 
-	put_in_backpack = list(\
+	put_in_backpack = list(
 		/obj/item/device/analyzer/plant_analyzer
-		)
+	)
 
 
 //Cargo
@@ -106,14 +104,16 @@
 	spawn_positions = 1
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_maint_tunnels, access_mailsorting, access_cargo, access_cargo_bot, access_qm, access_mining, access_mining_station)
-	minimal_access = list(access_maint_tunnels, access_mailsorting, access_cargo, access_cargo_bot, access_qm, access_mining, access_mining_station)
+	minimal_access = list(
+		access_maint_tunnels, access_mailsorting, access_cargo, access_cargo_bot, access_qm, access_mining,
+		access_mining_station
+	)
 
 	uniform = /obj/item/clothing/under/rank/qm
 	shoes = /obj/item/clothing/shoes/brown
 	pda = /obj/item/device/pda/quartermaster
 	gloves = /obj/item/clothing/gloves/black
-	ear = /obj/item/device/radio/headset/headset_cargo
+	ear = /obj/item/device/radio/headset/cargo
 	hand = /obj/item/weapon/clipboard
 	glasses = /obj/item/clothing/glasses/sunglasses
 
@@ -129,12 +129,12 @@
 	spawn_positions = 2
 	supervisors = "the quartermaster and the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_maint_tunnels, access_mailsorting, access_cargo, access_cargo_bot, access_qm, access_mining, access_mining_station)
+	addcional_access = list(access_qm, access_mining, access_mining_station)
 	minimal_access = list(access_maint_tunnels, access_cargo, access_cargo_bot, access_mailsorting)
 
-	uniform = /obj/item/clothing/under/rank/cargotech
+	uniform = /obj/item/clothing/under/rank/cargoshort
 	pda = /obj/item/device/pda/cargo
-	ear = /obj/item/device/radio/headset/headset_cargo
+	ear = /obj/item/device/radio/headset/cargo
 
 
 /datum/job/mining
@@ -147,99 +147,18 @@
 	spawn_positions = 3
 	supervisors = "the quartermaster and the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_maint_tunnels, access_mailsorting, access_cargo, access_cargo_bot, access_qm, access_mining, access_mining_station)
+	addcional_access = list(access_maint_tunnels, access_cargo, access_cargo_bot, access_qm)
 	minimal_access = list(access_mining, access_mining_station, access_mailsorting)
 	alt_titles = list("Drill Technician","Prospector")
 
 	uniform = /obj/item/clothing/under/rank/miner
 	pda = /obj/item/device/pda/shaftminer
-	ear = /obj/item/device/radio/headset/headset_cargo
+	ear = /obj/item/device/radio/headset/cargo
 
-	put_in_backpack = list(\
-		/obj/item/weapon/crowbar,\
+	put_in_backpack = list(
+		/obj/item/weapon/crowbar,
 		/obj/item/weapon/storage/bag/ore
-		)
-
-
-/*
-/datum/job/clown
-	title = "Clown"
-	flag = CLOWN
-	department_flag = CIVILIAN
-	faction = "Station"
-	total_positions = 0
-	spawn_positions = 0
-	supervisors = "the head of personnel"
-	selection_color = "#dddddd"
-	access = list(access_clown, access_theatre, access_maint_tunnels)
-	minimal_access = list(access_clown, access_theatre)
-
-	uniform = /obj/item/clothing/under/rank/clown
-	shoes = /obj/item/clothing/shoes/clown_shoes
-	pda = /obj/item/device/pda/clown
-	mask = /obj/item/clothing/mask/gas/clown_hat
-	hand = /obj/item/weapon/stamp/clown
-	ear = /obj/item/device/radio/headset/headset_service
-
-	put_in_backpack = list(\
-		/obj/item/weapon/reagent_containers/food/snacks/grown/banana,\
-		/obj/item/weapon/bikehorn,\
-		/obj/item/toy/crayon/rainbow,\
-		/obj/item/weapon/storage/fancy/crayons
-		)
-
-	backpacks = list(
-		/obj/item/weapon/storage/backpack/clown,\
-		/obj/item/weapon/storage/backpack/satchel_norm,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
-
-	equip(var/mob/living/carbon/human/H)
-		if(!..())	return 0
-		H.mutations.Add(CLUMSY)
-		return 1
-
-
-
-/datum/job/mime
-	title = "Mime"
-	flag = MIME
-	department_flag = CIVILIAN
-	faction = "Station"
-	total_positions = 0
-	spawn_positions = 0
-	supervisors = "the head of personnel"
-	selection_color = "#dddddd"
-	access = list(access_mime, access_theatre, access_maint_tunnels)
-	minimal_access = list(access_mime, access_theatre)
-
-	uniform = /obj/item/clothing/under/mime
-	pda = /obj/item/device/pda/mime
-	hat = /obj/item/clothing/head/beret
-	gloves = /obj/item/clothing/gloves/white
-	mask = /obj/item/clothing/mask/gas/mime
-	ear = /obj/item/device/radio/headset/headset_service
-	hand = /obj/item/weapon/reagent_containers/glass/drinks/bottle/bottleofnothing
-
-//	put_in_backpack = list(\
-//		/obj/item/pen/crayon/mime
-//		)
-
-	backpacks = list(
-		/obj/item/weapon/storage/backpack,\
-		/obj/item/weapon/storage/backpack/satchel_norm,\
-		/obj/item/weapon/storage/backpack/satchel
-		)
-
-	equip(var/mob/living/carbon/human/H)
-		if(!..())	return 0
-		H.verbs += /client/proc/mimespeak
-		H.verbs += /client/proc/mimewall
-		H.mind.special_verbs += /client/proc/mimespeak
-		H.mind.special_verbs += /client/proc/mimewall
-		H.miming = 1
-		return 1*/
-
+	)
 
 /datum/job/janitor
 	title = "Janitor"
@@ -251,12 +170,13 @@
 	spawn_positions = 1
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_janitor, access_maint_tunnels, access_engine, access_research, access_sec_doors, access_medical)
-	minimal_access = list(access_janitor, access_maint_tunnels, access_engine, access_research, access_sec_doors, access_medical)
+	minimal_access = list(
+		access_janitor, access_maint_tunnels, access_engine, access_research, access_sec_doors, access_medical
+	)
 
 	uniform = /obj/item/clothing/under/rank/janitor
 	pda = /obj/item/device/pda/janitor
-	ear = /obj/item/device/radio/headset/headset_service
+	ear = /obj/item/device/radio/headset/service
 
 
 
@@ -271,7 +191,7 @@
 	spawn_positions = 1
 	supervisors = "the head of personnel"
 	selection_color = "#dddddd"
-	access = list(access_library, access_maint_tunnels)
+	addcional_access = list(access_maint_tunnels)
 	minimal_access = list(access_library)
 	alt_titles = list("Journalist")
 
@@ -291,7 +211,7 @@
 	spawn_positions = 2
 	supervisors = "Nanotrasen officials and Corporate Regulations"
 	selection_color = "#dddddd"
-	access = list(access_lawyer, access_court, access_sec_doors, access_maint_tunnels, access_heads)
+	addcional_access = list(access_maint_tunnels)
 	minimal_access = list(access_lawyer, access_court, access_sec_doors, access_heads)
 
 	implanted = 1

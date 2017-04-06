@@ -62,8 +62,7 @@
 /obj/machinery/computer/guestpass/attackby(obj/O, mob/user)
 	if(istype(O, /obj/item/weapon/card/id))
 		if(!giver)
-			user.drop_item()
-			O.loc = src
+			user.drop_from_inventory(O, src)
 			giver = O
 			updateUsrDialog()
 		else
@@ -123,9 +122,9 @@
 				if(reas)
 					reason = reas
 			if ("duration")
-				var/dur = input("Duration (in minutes) during which pass is valid (up to 30 minutes).", "Duration") as num|null
+				var/dur = input("Duration (in minutes) during which pass is valid (up to 120 minutes).", "Duration") as num|null
 				if (dur)
-					if (dur > 0 && dur <= 30)
+					if (dur > 0 && dur <= 120)
 						duration = dur
 					else
 						usr << "<span class='warning'>Invalid duration.</span>"
@@ -139,20 +138,13 @@
 		switch(href_list["action"])
 			if ("id")
 				if (giver)
-					if(ishuman(usr))
-						giver.loc = usr.loc
-						if(!usr.get_active_hand())
-							usr.put_in_hands(giver)
-						giver = null
-					else
-						giver.loc = src.loc
-						giver = null
+					usr.put_in_hands(giver)
+					giver = null
 					accesses.Cut()
 				else
 					var/obj/item/I = usr.get_active_hand()
 					if (istype(I, /obj/item/weapon/card/id))
-						usr.drop_item()
-						I.loc = src
+						usr.drop_from_inventory(I, src)
 						giver = I
 				updateUsrDialog()
 
@@ -184,6 +176,7 @@
 					pass.expiration_time = world.time + duration*10*60
 					pass.reason = reason
 					pass.name = "guest pass #[number]"
+					usr.put_in_hands(pass)
 				else
 					usr << "\red Cannot issue pass without issuing ID."
 	updateUsrDialog()

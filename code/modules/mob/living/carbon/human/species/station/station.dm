@@ -14,6 +14,7 @@
 	While the central Sol government maintains control of its far-flung people, powerful corporate \
 	interests, rampant cyber and bio-augmentation and secretive factions make life on most human \
 	worlds tumultous at best."
+	name_language = null // Use the first-name last-name generator rather than a language scrambler
 	min_age = 17
 	max_age = 110
 
@@ -24,46 +25,14 @@
 
 	flags = CAN_JOIN | HAS_SKIN_TONE | HAS_LIPS | HAS_UNDERWEAR | HAS_EYE_COLOR
 
-
-/datum/species/human/cursed
-	name = "Cursed huamn"
-	name_plural = "Humans"
-	language = "Sol Common"
-	primitive_form = ""
-	flags = HAS_SKIN_TONE | HAS_LIPS | HAS_UNDERWEAR | HAS_EYE_COLOR | IS_RESTRICTED
-
-/datum/species/human/cursed/handle_environment_special(var/mob/living/carbon/human/H)
-	var/is_skeleton = (SKELETON in H.mutations)
-	var/light_amount = 0
-	if(isturf(H.loc))
-		var/turf/T = H.loc
-		var/atom/movable/lighting_overlay/L = locate(/atom/movable/lighting_overlay) in T
-		if(L)
-			light_amount = L.lum_r + L.lum_g + L.lum_b //hardcapped so it's not abused by having a ton of flashlights
-		else
-			light_amount =  10
-	if(light_amount > 0.9)
-		if(is_skeleton)
-			H.mutations -= SKELETON
-			H.update_hair(0)
-			H.update_body()
-	else
-		if(!is_skeleton)
-			H.mutations |= SKELETON
-			H.update_hair(0)
-			H.update_body()
-
-/datum/species/human/cursed/get_bodytype()
-	return "Human"
-
 /datum/species/unathi
 	name = "Unathi"
 	name_plural = "Unathi"
-	icobase = 'icons/mob/human_races/r_lizard.dmi'
-	deform = 'icons/mob/human_races/r_def_lizard.dmi'
+	icobase = 'icons/mob/human_races/unathi.dmi'
+	deform = 'icons/mob/human_races/unathi_def.dmi'
 	language = "Sinta'unathi"
 	tail = "sogtail"
-	tail_animation = 'icons/mob/species/unathi/tail.dmi'
+	tail_animation = 'icons/mob/human_races/unathi_tail.dmi'
 	unarmed_attacks = list(
 		new /datum/unarmed_attack/stomp,
 		new /datum/unarmed_attack/kick,
@@ -75,6 +44,7 @@
 	gluttonous = 1
 	slowdown = 0.5
 	brute_mod = 0.8
+	name_language = "Sinta'unathi"
 
 	min_age = 18
 	max_age = 60
@@ -85,12 +55,12 @@
 	else, frequently even their own lives. They prefer warmer temperatures than most species and \
 	their native tongue is a heavy hissing laungage called Sinta'Unathi."
 
-	cold_level_1 = 280 //Default 260 - Lower is better
-	cold_level_2 = 220 //Default 200
-	cold_level_3 = 130 //Default 120
+	cold_level_1 = 280  //Default 260 - Lower is better
+	cold_level_2 = 220  //Default 200
+	cold_level_3 = 130  //Default 120
 
-	heat_level_1 = 420 //Default 360 - Higher is better
-	heat_level_2 = 480 //Default 400
+	heat_level_1 = 420  //Default 360 - Higher is better
+	heat_level_2 = 480  //Default 400
 	heat_level_3 = 1100 //Default 1000
 
 	flags = CAN_JOIN | IS_WHITELISTED | HAS_LIPS | HAS_UNDERWEAR | HAS_SKIN_COLOR | HAS_EYE_COLOR
@@ -99,6 +69,16 @@
 
 	reagent_tag = IS_UNATHI
 	base_color = "#066000"
+
+	emotes = list(
+		/datum/emote/tail/swish,
+		/datum/emote/tail/wag,
+		/datum/emote/tail/wag/sway,
+		/datum/emote/tail/qwag,
+		/datum/emote/tail/qwag/fastsway,
+		/datum/emote/tail/swag,
+		/datum/emote/tail/swag/stopsway,
+	)
 
 	heat_discomfort_level = 295
 	heat_discomfort_strings = list(
@@ -118,23 +98,43 @@
 				  "Ñ"="Ññ", "Ø"="Øø", "Ù"="Ùù")
 	accentFL = list("ã" = "õ", "Ã" = "Õ")
 
-	restricted_jobs = list("Captain", "Head of Personnel", "Head of Security", "Chief Engineer",\
-						"Research Director", "Chief Medical Officer", "Detective",\
-						"Medical Doctor", "Geneticist", "Chemist", "Scientist", "Roboticist",\
-						"Xenobiologist", "Quartermaster", "Internal Affairs Agent")
+	body_builds = list(
+		new/datum/body_build/unathi
+	)
 
-/datum/species/unathi/equip_survival_gear(var/mob/living/carbon/human/H)
+	restricted_jobs = list(
+		"Captain", "Head of Personnel", "Head of Security", "Chief Engineer",
+		"Research Director", "Chief Medical Officer", "Detective",
+		"Medical Doctor", "Geneticist", "Chemist", "Scientist", "Roboticist",
+		"Xenobiologist", "Quartermaster", "Internal Affairs Agent"
+	)
+
+/datum/species/tajaran/equip_survival_gear(mob/living/carbon/human/H, var/datum/job/J)
 	..()
-	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/sandal(H),slot_shoes)
+	var/gear = /obj/item/clothing/shoes/sandal
+
+	if(J)
+		if(ispath(J.shoes, /obj/item/clothing/shoes/jackboots))
+			gear = /obj/item/clothing/shoes/jackboots/unathi
+		else if(ispath(J.shoes, /obj/item/clothing/shoes/workboots))
+			gear = /obj/item/clothing/shoes/workboots/toeless
+
+	if(H.shoes && H.shoes.type == J.shoes) // Do not delete loadout items.
+		var/obj/item/shoes = H.shoes
+		if(H.unEquip(shoes))
+			qdel(shoes)
+
+	if(!H.shoes)
+		H.equip_to_slot_or_del(new gear (H),slot_shoes)
 
 /datum/species/tajaran
 	name = "Tajara"
 	name_plural = "Tajaran"
-	icobase = 'icons/mob/human_races/r_tajaran.dmi'
-	deform = 'icons/mob/human_races/r_def_tajaran.dmi'
+	icobase = 'icons/mob/human_races/tajaran.dmi'
+	deform = 'icons/mob/human_races/tajaran_def.dmi'
 	language = "Siik'tajr"
 	tail = "tajtail"
-	tail_animation = 'icons/mob/species/tajaran/tail.dmi'
+	tail_animation = 'icons/mob/human_races/tajaran_tail.dmi'
 	unarmed_attacks = list(
 		new /datum/unarmed_attack/stomp,
 		new /datum/unarmed_attack/kick,
@@ -146,6 +146,7 @@
 	brute_mod = 1.15
 	burn_mod =  1.15
 	gluttonous = 1
+	name_language = "Siik'tajr"
 
 	min_age = 17
 	max_age = 80
@@ -173,6 +174,16 @@
 
 	reagent_tag = IS_TAJARA
 
+	emotes = list(
+		/datum/emote/tail/swish,
+		/datum/emote/tail/wag,
+		/datum/emote/tail/wag/sway,
+		/datum/emote/tail/qwag,
+		/datum/emote/tail/qwag/fastsway,
+		/datum/emote/tail/swag,
+		/datum/emote/tail/swag/stopsway,
+	)
+
 	heat_discomfort_level = 292
 	heat_discomfort_strings = list(
 		"Your fur prickles in the heat.",
@@ -180,21 +191,43 @@
 		"Your overheated skin itches."
 		)
 	cold_discomfort_level = 275
-	restricted_jobs = list("Captain", "Head of Personnel", "Head of Security", "Chief Engineer",\
-						"Research Director", "Chief Medical Officer", "Warden", "Detective", "Security Officer",\
-						"Medical Doctor", "Geneticist", "Scientist", "Roboticist", "Xenobiologist",\
-						"Quartermaster", "Internal Affairs Agent")
+
+	body_builds = list(
+		new/datum/body_build/tajaran
+	)
+
+	restricted_jobs = list(
+		"Captain", "Head of Personnel", "Head of Security", "Chief Engineer",
+		"Research Director", "Chief Medical Officer", "Warden", "Detective", "Security Officer",
+		"Medical Doctor", "Geneticist", "Scientist", "Roboticist", "Xenobiologist",
+		"Quartermaster", "Internal Affairs Agent"
+	)
 	accent = list("ð" = "ðð", "Ð" = "Ðð")
 
-/datum/species/tajaran/equip_survival_gear(var/mob/living/carbon/human/H)
+/datum/species/tajaran/equip_survival_gear(mob/living/carbon/human/H, var/datum/job/J)
 	..()
-	H.equip_to_slot_or_del(new /obj/item/clothing/shoes/sandal(H),slot_shoes)
+	var/gear = /obj/item/clothing/shoes/sandal
+
+	if(J)
+		if(ispath(J.shoes, /obj/item/clothing/shoes/jackboots))
+			gear = /obj/item/clothing/shoes/jackboots/unathi
+		else if(ispath(J.shoes, /obj/item/clothing/shoes/workboots))
+			gear = /obj/item/clothing/shoes/workboots/toeless
+
+	if(H.shoes && H.shoes.type == J.shoes) // Do not delete loadout items.
+		var/obj/item/shoes = H.shoes
+		if(H.unEquip(shoes))
+			qdel(shoes)
+
+	if(!H.shoes)
+		H.equip_to_slot_or_del(new gear (H),slot_shoes)
+
 
 /datum/species/skrell
 	name = "Skrell"
 	name_plural = "Skrell"
-	icobase = 'icons/mob/human_races/r_skrell.dmi'
-	deform = 'icons/mob/human_races/r_def_skrell.dmi'
+	icobase = 'icons/mob/human_races/skrell.dmi'
+	deform = 'icons/mob/human_races/skrell_def.dmi'
 	language = "Skrellian"
 	primitive_form = "Neaera"
 	unarmed_attacks = list(new /datum/unarmed_attack/punch)
@@ -203,6 +236,7 @@
 	of the Qerr'Katish, a caste within their society which keeps the empire of the Skrell running smoothly. Skrell are \
 	herbivores on the whole and tend to be co-operative with the other species of the galaxy, although they rarely reveal \
 	the secrets of their empire to their allies."
+	name_language = "Skrellian"
 
 	min_age = 19
 	max_age = 80
@@ -229,8 +263,8 @@
 /datum/species/diona
 	name = "Diona"
 	name_plural = "Dionaea"
-	icobase = 'icons/mob/human_races/r_diona.dmi'
-	deform = 'icons/mob/human_races/r_def_plant.dmi'
+	icobase = 'icons/mob/human_races/diona.dmi'
+	deform = 'icons/mob/human_races/diona_def.dmi'
 	language = "Rootspeak"
 	unarmed_attacks = list(
 		new /datum/unarmed_attack/stomp,
@@ -243,6 +277,7 @@
 	hud = new /datum/hud_data/diona
 	siemens_coefficient = 0.3
 	show_ssd = "completely quiescent"
+	name_language = "Rootspeak"
 
 	min_age = 1
 	max_age = 300
@@ -256,16 +291,16 @@
 	water and other radiation."
 
 	has_organ = list(
-		"nutrient channel" =   /obj/item/organ/internal/nutrients,
-		O_STRATA =      /obj/item/organ/internal/diona/strata,
-		O_RESPONSE =      /obj/item/organ/internal/node,
-		O_GBLADDER =        /obj/item/organ/internal/diona/bladder,
-		O_POLYP =      /obj/item/organ/internal/diona/polyp,
-		O_ANCHOR = /obj/item/organ/internal/diona/ligament
+		O_NUTRIENT =/obj/item/organ/internal/nutrients,
+		O_STRATA =  /obj/item/organ/internal/diona/strata,
+		O_RESPONSE =/obj/item/organ/internal/node,
+		O_GBLADDER =/obj/item/organ/internal/diona/bladder,
+		O_POLYP =   /obj/item/organ/internal/diona/polyp,
+		O_ANCHOR =  /obj/item/organ/internal/diona/ligament
 	)
 
 	has_limbs = list(
-		BP_CHEST =  new /datum/organ_description/diona,
+		BP_CHEST =  new /datum/organ_description/chest/diona,
 		BP_GROIN =  new /datum/organ_description/groin/diona,
 		BP_HEAD =   new /datum/organ_description/head/diona,
 		BP_L_ARM =  new /datum/organ_description/arm/left/diona,
@@ -295,16 +330,18 @@
 
 	body_temperature = T0C + 15		//make the plant people have a bit lower body temperature, why not
 
-	flags = CAN_JOIN | IS_WHITELISTED | NO_BREATHE | NO_SCAN | IS_PLANT | NO_BLOOD | NO_PAIN | NO_SLIP | REGENERATES_LIMBS
+	flags = CAN_JOIN | IS_WHITELISTED | NO_BREATHE | NO_SCAN | IS_PLANT | NO_BLOOD | NO_PAIN | NO_SLIP
 
 	blood_color = "#004400"
 	flesh_color = "#907E4A"
 
 	reagent_tag = IS_DIONA
-	restricted_jobs = list("Captain", "Head of Personnel", "Head of Security", "Chief Engineer",\
-						"Research Director", "Chief Medical Officer", "Warden", "Detective", "Security Officer",\
-						"Station Engineer", "Atmospheric Technician", "Medical Doctor", "Geneticist", "Paramedic",\
-						"Scientist", "Roboticist", "Bartender", "Quartermaster", "Internal Affairs Agent")
+	restricted_jobs = list(
+		"Captain", "Head of Personnel", "Head of Security", "Chief Engineer",
+		"Research Director", "Chief Medical Officer", "Warden", "Detective", "Security Officer",
+		"Station Engineer", "Atmospheric Technician", "Medical Doctor", "Geneticist", "Paramedic",
+		"Scientist", "Roboticist", "Bartender", "Quartermaster", "Internal Affairs Agent"
+	)
 
 /datum/species/diona/can_understand(var/mob/other)
 	var/mob/living/carbon/alien/diona/D = other
@@ -345,15 +382,15 @@
 	name = "Machine"
 	name_plural = "machines"
 
-	icobase = 'icons/mob/human_races/r_machine.dmi'
-	deform = 'icons/mob/human_races/r_machine.dmi'
-	language = "EAL"
+	icobase = 'icons/mob/human_races/machine.dmi'
+	deform = 'icons/mob/human_races/machine.dmi'
+	language = "Encoded Audio Language"
 	unarmed_attacks = list(
 		new /datum/unarmed_attack/punch
 		)
 	rarity_value = 2
 
-	brute_mod = 0.5
+	brute_mod = 1
 	burn_mod = 1
 	show_ssd = "flashing a 'system offline' glyph on their monitor"
 	virus_immune = 1
@@ -379,21 +416,31 @@
 
 	has_organ = list() //TODO: Positronic brain.
 
-	restricted_jobs = list("Captain", "Head of Personnel", "Head of Security", "Chief Engineer",\
-						"Research Director", "Chief Medical Officer", "Warden", "Detective",\
-						"Security Officer", "Medical Doctor", "Geneticist",\
-						"Psychiatrist", "Paramedic", "Quartermaster", "Shaft Miner", "Internal Affairs Agent")
+	body_builds = list(
+		new/datum/body_build,
+		new/datum/body_build/slim
+	)
 
-/datum/species/machine/equip_survival_gear(var/mob/living/carbon/human/H)
+	restricted_jobs = list(
+		"Captain", "Head of Personnel", "Head of Security", "Chief Engineer",
+		"Research Director", "Chief Medical Officer", "Warden", "Detective",
+		"Security Officer", "Medical Doctor", "Geneticist",
+		"Psychiatrist", "Paramedic", "Quartermaster", "Shaft Miner", "Internal Affairs Agent"
+	)
+
+/datum/species/machine/equip_survival_gear()
 	return
 
-/datum/species/machine/handle_post_spawn(var/mob/living/carbon/human/H)
+/datum/species/machine/sanitize_name(var/new_name)
+	return sanitizeName(new_name, allow_numbers = 1)
+
+/datum/species/machine/organs_spawned(var/mob/living/carbon/human/H)
+	..()
 	for(var/obj/item/organ/O in H.organs)
-		O.robotize()
+		O.robotic = 2
 
 /datum/species/machine/handle_death(var/mob/living/carbon/human/H)
 	..()
-	if(flags & IS_SYNTHETIC)
-		H.h_style = ""
-		spawn(100)
-			if(H) H.update_hair()
+	H.h_style = ""
+	spawn(100)
+		if(H) H.update_hair()

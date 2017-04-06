@@ -9,21 +9,16 @@
 
 	attackby(var/obj/item/weapon/card/W as obj, var/mob/user as mob)
 		if(stat & (BROKEN|NOPOWER))	return
-		if ((!( istype(W, /obj/item/weapon/card) ) || !( ticker ) || emergency_shuttle.location() || !( user )))	return
-		if (istype(W, /obj/item/weapon/card/id)||istype(W, /obj/item/device/pda))
-			if (istype(W, /obj/item/device/pda))
-				var/obj/item/device/pda/pda = W
-				W = pda.id
-			if (!W:access) //no access
-				user << "The access level of [W:registered_name]\'s card is not high enough. "
-				return
-
-			var/list/cardaccess = W:access
+		if (!ticker || emergency_shuttle.location() || !user)
+			return
+		if (W.GetID())
+			var/obj/item/weapon/card/id/ID = W.GetID()
+			var/list/cardaccess = ID.access
 			if(!istype(cardaccess, /list) || !cardaccess.len) //no access
 				user << "The access level of [W:registered_name]\'s card is not high enough. "
 				return
 
-			if(!(access_heads in W:access)) //doesn't have this access
+			if(!(access_heads in ID.access)) //doesn't have this access
 				user << "The access level of [W:registered_name]\'s card is not high enough. "
 				return 0
 
@@ -32,14 +27,12 @@
 				return 0
 			switch(choice)
 				if("Authorize")
-					src.authorized -= W:registered_name
-					src.authorized += W:registered_name
+					src.authorized -= ID.registered_name
+					src.authorized += ID.registered_name
 					if (src.auth_need - src.authorized.len > 0)
-						message_admins("[key_name_admin(user)] has authorized early shuttle launch")
-						log_game("[user.ckey] has authorized early shuttle launch")
+						log_game("[user.ckey] has authorized early shuttle launch", src)
 						world << text("<span class='notice'><b>Alert: [] authorizations needed until shuttle is launched early</b></span>", src.auth_need - src.authorized.len)
 					else
-						message_admins("[key_name_admin(user)] has launched the shuttle")
 						log_game("[user.ckey] has launched the shuttle early")
 						world << "<span class='notice'><b>Alert: Shuttle launch time shortened to 10 seconds!</b></span>"
 						emergency_shuttle.set_launch_countdown(10)
@@ -48,7 +41,7 @@
 						src.authorized = list(  )
 
 				if("Repeal")
-					src.authorized -= W:registered_name
+					src.authorized -= ID.registered_name
 					world << text("<span class='notice'><b>Alert: [] authorizations needed until shuttle is launched early</b></span>", src.auth_need - src.authorized.len)
 
 				if("Abort")

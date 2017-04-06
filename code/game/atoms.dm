@@ -39,7 +39,7 @@
 //return flags that should be added to the viewer's sight var.
 //Otherwise return a negative number to indicate that the view should be cancelled.
 /atom/proc/check_eye(user as mob)
-	if (istype(user, /mob/living/silicon/ai)) // WHYYYY
+	if (isAI(user)) // WHYYYY
 		return 0
 	return -1
 
@@ -228,6 +228,9 @@ its easier to just keep the beam vertical.
 /atom/proc/ex_act()
 	return
 
+/atom/proc/emag_act(var/remaining_charges, var/mob/user, var/emag_source)
+	return -1
+
 /atom/proc/blob_act()
 	return
 
@@ -278,13 +281,18 @@ its easier to just keep the beam vertical.
 		add_fibers(M)
 
 		//He has no prints!
+		//TODO: DNA3
+		/*
 		if (mFingerprints in M.mutations)
 			if(fingerprintslast != M.key)
 				fingerprintshidden += "(Has no fingerprints) Real name: [M.real_name], Key: [M.key]"
 				fingerprintslast = M.key
 			return 0		//Now, lets get to the dirty work.
+		*/
 		//First, make sure their DNA makes sense.
 		var/mob/living/carbon/human/H = M
+		var/obj/item/clothing/gloves/Gloves = (H.gloves != src) ? H.gloves : null
+
 		if (!istype(H.dna, /datum/dna) || !H.dna.uni_identity || (length(H.dna.uni_identity) != 32))
 			if(!istype(H.dna, /datum/dna))
 				H.dna = new /datum/dna(null)
@@ -292,7 +300,7 @@ its easier to just keep the beam vertical.
 		H.check_dna()
 
 		//Now, deal with gloves.
-		if (H.gloves && H.gloves != src)
+		if (Gloves)
 			if(fingerprintslast != H.key)
 				fingerprintshidden += "\[[time_stamp()]\](Wearing gloves). Real name: [H.real_name], Key: [H.key]"
 				fingerprintslast = H.key
@@ -300,10 +308,11 @@ its easier to just keep the beam vertical.
 
 		//Deal with gloves the pass finger/palm prints.
 		if(!ignoregloves)
-			if(H.gloves && H.gloves != src && !H.gloves:clipped)
-				if(prob(75) && istype(H.gloves, /obj/item/clothing/gloves/white/latex))
-					return 0
-				else if(H.gloves && !istype(H.gloves, /obj/item/clothing/gloves/white/latex))
+			if(istype(Gloves) && !Gloves.clipped)
+				if(istype(Gloves, /obj/item/clothing/gloves/latex))
+					if(prob(75))
+						return 0
+				else
 					return 0
 
 		//More adminstuffz

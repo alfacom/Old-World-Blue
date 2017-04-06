@@ -37,7 +37,13 @@
 	if(!client)
 
 		if(vocal && prob(1))
-			var/message = pick("Radar, put a mask on!", "There's always a catch, and it's the best there is.", "I knew it, I should've been a plastic surgeon.", "What kind of medbay is this? Everyone's dropping like dead flies.", "Delicious!")
+			var/message = pick(\
+				"Radar, put a mask on!",
+				"There's always a catch, and it's the best there is.",
+				"I knew it, I should've been a plastic surgeon.",
+				"What kind of medbay is this? Everyone's dropping like dead flies.",
+				"Delicious!"\
+			)
 			say(message)
 
 		if(patient)
@@ -59,7 +65,7 @@
 				if(get_dist(src, patient) > 7 || frustration > 8)
 					patient = null
 		else
-			for(var/mob/living/carbon/human/H in reverselist(view(7, src))) // Time to find a patient!
+			for(var/mob/living/carbon/human/H in reverseRange(view(7, src))) // Time to find a patient!
 				if(valid_healing_target(H))
 					patient = H
 					frustration = 0
@@ -164,10 +170,9 @@
 			user << "<span class='notice'>There is already a beaker loaded.</span>"
 			return
 
-		user.drop_item()
-		O.loc = src
-		reagent_glass = O
-		user << "<span class='notice'>You insert [O].</span>"
+		if(user.unEquip(O, src))
+			reagent_glass = O
+			user << "<span class='notice'>You insert [O].</span>"
 		return
 	else
 		..()
@@ -218,8 +223,8 @@
 	attack_hand(usr)
 	return
 
-/mob/living/bot/medbot/Emag(var/mob/user)
-	..()
+/mob/living/bot/medbot/emag_act(var/remaining_uses, var/mob/user)
+	. = ..()
 	if(!emagged)
 		if(user)
 			user << "<span class='warning'>You short out [src]'s reagent synthesis circuits.</span>"
@@ -285,10 +290,6 @@
 	if((H.getToxLoss() >= heal_threshold) && (!H.reagents.has_reagent(treatment_tox)))
 		return treatment_tox
 
-	for(var/datum/disease/D in H.viruses)
-		if (!H.reagents.has_reagent(treatment_virus))
-			return treatment_virus // STOP DISEASE FOREVER
-
 /* Construction */
 
 /obj/item/weapon/storage/firstaid/attackby(var/obj/item/robot_parts/S, mob/user as mob)
@@ -343,16 +344,16 @@
 		switch(build_step)
 			if(0)
 				if(istype(W, /obj/item/device/healthanalyzer))
-					user.drop_item()
-					qdel(W)
-					build_step++
-					user << "<span class='notice'>You add the health sensor to [src].</span>"
-					name = "First aid/robot arm/health analyzer assembly"
-					overlays += image('icons/obj/aibots.dmi', "na_scanner")
+					if(user.unEquip(W)) // Mounted Healhanalyzer and so on.
+						qdel(W)
+						build_step++
+						user << "<span class='notice'>You add the health sensor to [src].</span>"
+						name = "First aid/robot arm/health analyzer assembly"
+						overlays += image('icons/obj/aibots.dmi', "na_scanner")
 
 			if(1)
 				if(isprox(W))
-					user.drop_item()
+					user.drop_from_inventory(W)
 					qdel(W)
 					user << "<span class='notice'>You complete the Medibot! Beep boop.</span>"
 					var/turf/T = get_turf(src)

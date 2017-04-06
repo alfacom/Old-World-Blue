@@ -3,8 +3,8 @@
 	name_plural = "slimes"
 	is_small = 1
 
-	icobase = 'icons/mob/human_races/r_slime.dmi'
-	deform = 'icons/mob/human_races/r_slime.dmi'
+	icobase = 'icons/mob/human_races/slime.dmi'
+	deform = 'icons/mob/human_races/slime.dmi'
 
 	language = "Sol Common" //todo?
 	unarmed_attacks = list(
@@ -32,7 +32,7 @@
 	push_flags = MONKEY|SLIME|SIMPLE_ANIMAL
 
 	has_limbs = list(
-		BP_CHEST =  new /datum/organ_description/slime,
+		BP_CHEST =  new /datum/organ_description/chest/slime,
 		BP_GROIN =  new /datum/organ_description/groin/slime,
 		BP_HEAD =   new /datum/organ_description/head/slime,
 		BP_L_ARM =  new /datum/organ_description/arm/left/slime,

@@ -7,19 +7,18 @@
 	throw_range = 5
 	w_class = 2.0
 	var/obj/item/weapon/implant/imp = null
-
+/*
 /obj/item/weapon/implanter/attack_self(var/mob/user)
 	if(!imp)
 		return ..()
-	imp.loc = get_turf(src)
 	user.put_in_hands(imp)
 	user << "<span class='notice'>You remove \the [imp] from \the [src].</span>"
 	name = "implanter"
 	imp = null
-	update()
+	update_icon()
 	return
-
-/obj/item/weapon/implanter/proc/update()
+*/
+/obj/item/weapon/implanter/update_icon()
 	if (src.imp)
 		src.icon_state = "implanter1"
 	else
@@ -38,16 +37,21 @@
 		return
 
 	if (user && src.imp)
-		for (var/mob/O in viewers(M, null))
-			O.show_message("\red [user] is attemping to implant [M].", 1)
+		M.visible_message("<span class='warning'>[user] is attemping to implant [M].</span>")
+
+		user.setClickCooldown(DEFAULT_QUICK_COOLDOWN)
+		user.do_attack_animation(M)
 
 		var/turf/T1 = get_turf(M)
 		if (T1 && ((M == user) || do_after(user, 50)))
 			if(user && M && (get_turf(M) == T1) && src && src.imp)
-				for (var/mob/O in viewers(M, null))
-					O.show_message("\red [M] has been implanted by [user].", 1)
+				M.visible_message("<span class='warning'>[M] has been implanted by [user].</span>")
 
-				admin_attack_log(user, M, "Implanted using \the [src.name] ([src.imp.name])", "Implanted with \the [src.name] ([src.imp.name])", "used an implanter, [src.name] ([src.imp.name]), on")
+				admin_attack_log(user, M,
+					"Implanted using \the [src.name] ([src.imp.name])",
+					"Implanted with \the [src.name] ([src.imp.name])",
+					"used an implanter, [src.name] ([src.imp.name]), on"
+				)
 
 				user.show_message("\red You implanted the implant into [M].")
 				if(src.imp.implanted(M))
@@ -61,7 +65,7 @@
 						BITSET(M:hud_updateflag, IMPLOYAL_HUD)
 
 				src.imp = null
-				update()
+				update_icon()
 
 	return
 
@@ -71,7 +75,7 @@
 /obj/item/weapon/implanter/loyalty/New()
 	src.imp = new /obj/item/weapon/implant/loyalty( src )
 	..()
-	update()
+	update_icon()
 	return
 
 /obj/item/weapon/implanter/explosive
@@ -80,7 +84,7 @@
 /obj/item/weapon/implanter/explosive/New()
 	src.imp = new /obj/item/weapon/implant/explosive( src )
 	..()
-	update()
+	update_icon()
 	return
 
 /obj/item/weapon/implanter/adrenalin
@@ -89,7 +93,7 @@
 /obj/item/weapon/implanter/adrenalin/New()
 	src.imp = new /obj/item/weapon/implant/adrenalin(src)
 	..()
-	update()
+	update_icon()
 	return
 
 /obj/item/weapon/implanter/compressed
@@ -99,10 +103,10 @@
 /obj/item/weapon/implanter/compressed/New()
 	imp = new /obj/item/weapon/implant/compressed( src )
 	..()
-	update()
+	update_icon()
 	return
 
-/obj/item/weapon/implanter/compressed/update()
+/obj/item/weapon/implanter/compressed/update_icon()
 	if (imp)
 		var/obj/item/weapon/implant/compressed/c = imp
 		if(!c.scanned)
@@ -137,4 +141,4 @@
 			var/obj/item/weapon/storage/S = A.loc
 			S.remove_from_storage(A)
 		A.loc.contents.Remove(A)
-		update()
+		update_icon()

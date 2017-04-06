@@ -1,8 +1,10 @@
 /obj/item/inflatable
-	name = "inflatable"
+	name = "inflatable wall"
+	desc = "A folded membrane which rapidly expands into a large cubical shape on activation."
 	w_class = 2
+	icon_state = "folded_wall"
 	icon = 'icons/obj/inflatable.dmi'
-	var/deploy_path = null
+	var/deploy_path = /obj/structure/inflatable
 
 /obj/item/inflatable/attack_self(mob/user)
 	if(!deploy_path)
@@ -14,14 +16,7 @@
 	R.add_fingerprint(user)
 	qdel(src)
 
-
-/obj/item/inflatable/wall
-	name = "inflatable wall"
-	desc = "A folded membrane which rapidly expands into a large cubical shape on activation."
-	icon_state = "folded_wall"
-	deploy_path = /obj/structure/inflatable/wall
-
-/obj/item/inflatable/door/
+/obj/item/inflatable/door
 	name = "inflatable door"
 	desc = "A folded membrane which rapidly expands into a simple door on activation."
 	icon_state = "folded_door"
@@ -37,13 +32,8 @@
 	icon = 'icons/obj/inflatable.dmi'
 	icon_state = "wall"
 
-	var/undeploy_path = null
+	var/undeploy_path = /obj/item/inflatable
 	var/health = 50.0
-
-/obj/structure/inflatable/wall
-	name = "inflatable wall"
-	undeploy_path = /obj/item/inflatable/wall
-
 
 /obj/structure/inflatable/New(location)
 	..()
@@ -65,6 +55,13 @@
 	if(health <= 0)
 		deflate(1)
 	return
+
+/obj/structure/inflatable/AltClick(mob/living/carbon/human/user)
+	if(src.Adjacent(user))
+		hand_deflate()
+	else
+		return ..()
+
 
 /obj/structure/inflatable/ex_act(severity)
 	switch(severity)
@@ -128,7 +125,7 @@
 	set category = "Object"
 	set src in oview(1)
 
-	if(isobserver(usr)) //to stop ghosts from deflating
+	if(usr.stat || !usr.IsAdvancedToolUser()) //to stop ghosts from deflating
 		return
 
 	verbs -= /obj/structure/inflatable/verb/hand_deflate
@@ -268,7 +265,7 @@
 		new /obj/item/inflatable/door(src)
 		new /obj/item/inflatable/door(src)
 		new /obj/item/inflatable/door(src)
-		new /obj/item/inflatable/wall(src)
-		new /obj/item/inflatable/wall(src)
-		new /obj/item/inflatable/wall(src)
-		new /obj/item/inflatable/wall(src)
+		new /obj/item/inflatable(src)
+		new /obj/item/inflatable(src)
+		new /obj/item/inflatable(src)
+		new /obj/item/inflatable(src)

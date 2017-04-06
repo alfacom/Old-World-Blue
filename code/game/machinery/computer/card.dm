@@ -36,19 +36,15 @@
 	set name = "Eject ID Card"
 	set src in oview(1)
 
-	if(!usr || usr.stat || usr.lying)	return
+	if(!usr || usr.stat || usr.lying || !Adjacent(usr)) return
 
 	if(scan)
 		usr << "You remove \the [scan] from \the [src]."
-		scan.loc = get_turf(src)
-		if(!usr.get_active_hand() && ishuman(usr))
-			usr.put_in_hands(scan)
+		usr.put_in_hands(scan)
 		scan = null
 	else if(modify)
 		usr << "You remove \the [modify] from \the [src]."
-		modify.loc = get_turf(src)
-		if(!usr.get_active_hand() && ishuman(usr))
-			usr.put_in_hands(modify)
+		usr.put_in_hands(modify)
 		modify = null
 	else
 		usr << "There is nothing to remove from the console."
@@ -59,12 +55,10 @@
 		return ..()
 
 	if(!scan && access_change_ids in id_card.access)
-		user.drop_item()
-		id_card.loc = src
+		user.drop_from_inventory(id_card, src)
 		scan = id_card
 	else if(!modify)
-		user.drop_item()
-		id_card.loc = src
+		user.drop_from_inventory(id_card, src)
 		modify = id_card
 
 	nanomanager.update_uis(src)
@@ -146,36 +140,22 @@
 			if (modify)
 				data_core.manifest_modify(modify.registered_name, modify.assignment)
 				modify.name = text("[modify.registered_name]'s ID Card ([modify.assignment])")
-				if(ishuman(usr))
-					modify.loc = usr.loc
-					if(!usr.get_active_hand())
-						usr.put_in_hands(modify)
-					modify = null
-				else
-					modify.loc = loc
-					modify = null
+				usr.put_in_hands(modify)
+				modify = null
 			else
 				var/obj/item/I = usr.get_active_hand()
 				if (istype(I, /obj/item/weapon/card/id))
-					usr.drop_item()
-					I.loc = src
+					usr.drop_from_inventory(I, src)
 					modify = I
 
 		if ("scan")
 			if (scan)
-				if(ishuman(usr))
-					scan.loc = usr.loc
-					if(!usr.get_active_hand())
-						usr.put_in_hands(scan)
-					scan = null
-				else
-					scan.loc = src.loc
-					scan = null
+				usr.put_in_hands(scan)
+				scan = null
 			else
 				var/obj/item/I = usr.get_active_hand()
 				if (istype(I, /obj/item/weapon/card/id))
-					usr.drop_item()
-					I.loc = src
+					usr.drop_from_inventory(I, src)
 					scan = I
 
 		if("access")
@@ -222,7 +202,7 @@
 		if ("reg")
 			if (is_authenticated())
 				var/t2 = modify
-				if ((modify == t2 && (in_range(src, usr) || (istype(usr, /mob/living/silicon))) && istype(loc, /turf)))
+				if ((modify == t2 && (in_range(src, usr) || (issilicon(usr))) && istype(loc, /turf)))
 					var/temp_name = sanitizeName(href_list["reg"])
 					if(temp_name)
 						modify.registered_name = temp_name
@@ -233,7 +213,7 @@
 		if ("account")
 			if (is_authenticated())
 				var/t2 = modify
-				if ((modify == t2 && (in_range(src, usr) || (istype(usr, /mob/living/silicon))) && istype(loc, /turf)))
+				if ((modify == t2 && (in_range(src, usr) || (issilicon(usr))) && istype(loc, /turf)))
 					var/account_num = text2num(href_list["account"])
 					modify.associated_account_number = account_num
 			nanomanager.update_uis(src)

@@ -7,6 +7,7 @@
 	use_power = 1
 	idle_power_usage = 10
 	active_power_usage = 2000
+	circuit = /obj/item/weapon/circuitboard/autolathe
 
 	var/tmp/list/machine_recipes
 	var/list/stored_material =  list(DEFAULT_WALL_MATERIAL = 0, "glass" = 0)
@@ -26,18 +27,8 @@
 
 
 /obj/machinery/autolathe/New()
-
 	..()
 	wires = new(src)
-	//Create parts for lathe.
-	component_parts = list()
-	component_parts += new /obj/item/weapon/circuitboard/autolathe(src)
-	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
-	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
-	component_parts += new /obj/item/weapon/stock_parts/matter_bin(src)
-	component_parts += new /obj/item/weapon/stock_parts/manipulator(src)
-	component_parts += new /obj/item/weapon/stock_parts/console_screen(src)
-	RefreshParts()
 
 /obj/machinery/autolathe/proc/update_recipe_list()
 	if(!machine_recipes)
@@ -241,9 +232,7 @@
 
 		//Exploit detection, not sure if necessary after rewrite.
 		if(!making || multiplier < 0 || multiplier > 100)
-			var/turf/exploit_loc = get_turf(usr)
-			message_admins("[key_name_admin(usr)] tried to exploit an autolathe to duplicate an item! ([exploit_loc ? "<a href='?_src_=holder;adminplayerobservecoodjump=1;X=[exploit_loc.x];Y=[exploit_loc.y];Z=[exploit_loc.z]'>JMP</a>" : "null"])", 0)
-			log_admin("EXPLOIT : [key_name(usr)] tried to exploit an autolathe to duplicate an item!")
+			log_game("EXPLOIT : [key_name(usr)] tried to exploit an autolathe to duplicate an item!", src)
 			return
 
 		busy = 1
@@ -298,18 +287,11 @@
 	storage_capacity[DEFAULT_WALL_MATERIAL] = mb_rating  * 25000
 	storage_capacity["glass"] = mb_rating  * 12500
 	build_time = 50 / man_rating
-	mat_efficiency = 1.1 - man_rating * 0.1// Normally, price is 1.25 the amount of material, so this shouldn't go higher than 0.8. Maximum rating of parts is 3
+	mat_efficiency = 1.1 - man_rating * 0.3// Normally, price is 1.25 the amount of material, so this shouldn't go higher than 0.8. Maximum rating of parts is 3
 
 /obj/machinery/autolathe/dismantle()
 
 	for(var/mat in stored_material)
-		var/material/M = get_material_by_name(mat)
-		if(!istype(M))
-			continue
-		var/obj/item/stack/material/S = new M.stack_type(get_turf(src))
-		if(stored_material[mat] > S.perunit)
-			S.amount = round(stored_material[mat] / S.perunit)
-		else
-			qdel(S)
+		create_material_stack(mat, stored_material[mat], get_turf(src))
 	..()
 	return 1

@@ -38,6 +38,8 @@
 /obj/item/clothing/accessory/badge/attack(mob/living/carbon/human/M, mob/living/user)
 	if(isliving(user))
 		user.visible_message("<span class='danger'>[user] invades [M]'s personal space, thrusting [src] into their face insistently.</span>","<span class='danger'>You invade [M]'s personal space, thrusting [src] into their face insistently.</span>")
+		user.do_attack_animation(M)
+		user.setClickCooldown(DEFAULT_QUICK_COOLDOWN) //to prevent spam
 
 //.Holobadges.
 /obj/item/clothing/accessory/badge/holo
@@ -56,18 +58,17 @@
 		return
 	return ..()
 
+/obj/item/clothing/accessory/badge/holo/emag_act(var/remaining_charges, var/mob/user)
+	if (emagged)
+		user << "<span class='danger'>\The [src] is already cracked.</span>"
+		return
+	else
+		emagged = 1
+		user << "<span class='danger'>You crack the holobadge security checks.</span>"
+		return 1
+
 /obj/item/clothing/accessory/badge/holo/attackby(var/obj/item/O as obj, var/mob/user as mob)
-
-	if (istype(O, /obj/item/weapon/card/emag))
-		if (emagged)
-			user << "<span class='danger'>[src] is already cracked.</span>"
-			return
-		else
-			emagged = 1
-			user << "<span class='danger'>You swipe [O] and crack the holobadge security checks.</span>"
-			return
-
-	else if(istype(O, /obj/item/weapon/card/id) || istype(O, /obj/item/device/pda))
+	if(istype(O, /obj/item/weapon/card/id) || istype(O, /obj/item/device/pda))
 
 		var/obj/item/weapon/card/id/id_card = null
 
@@ -103,3 +104,35 @@
 	desc = "An immaculately polished gold security badge on leather. Labeled 'Investigator.'"
 	icon_state = "badge"
 	slot_flags = SLOT_TIE | SLOT_BELT
+
+/obj/item/clothing/accessory/badge/holo/warden
+	name = "warden's holobadge"
+	desc = "A silver corporate security badge. Stamped with the words 'Warden.'"
+	icon_state = "silverbadge"
+	slot_flags = SLOT_TIE | SLOT_BELT
+
+/obj/item/clothing/accessory/badge/holo/hos
+	name = "head of security's holobadge"
+	desc = "An immaculately polished gold security badge. Labeled 'Head of Security.'"
+	icon_state = "goldbadge"
+	slot_flags = SLOT_TIE | SLOT_BELT
+
+/obj/item/clothing/accessory/badge/holo/detective
+	name = "detective's holobadge"
+	desc = "An immaculately polished gold security badge on leather. Labeled 'Detective.'"
+	icon_state = "marshalbadge"
+	slot_flags = SLOT_TIE | SLOT_BELT
+
+/obj/item/weapon/storage/box/holobadge/hos
+	name = "holobadge box"
+	desc = "A box claiming to contain holobadges."
+	New()
+		new /obj/item/clothing/accessory/badge/holo(src)
+		new /obj/item/clothing/accessory/badge/holo(src)
+		new /obj/item/clothing/accessory/badge/holo/warden(src)
+		new /obj/item/clothing/accessory/badge/holo/detective(src)
+		new /obj/item/clothing/accessory/badge/holo/detective(src)
+		new /obj/item/clothing/accessory/badge/holo/hos(src)
+		new /obj/item/clothing/accessory/badge/holo/cord(src)
+		..()
+		return

@@ -70,7 +70,7 @@
 			var/obj/item/I = M.get_active_hand()
 			if(I)
 				I = I.GetID()
-			if(istype(I,/obj/item/weapon/card/id) && check_access(I))
+			if(I.GetID() && check_access(I.GetID()))
 				authenticated = 1
 				if(access_captain in I.GetAccess())
 					authenticated = 2
@@ -87,7 +87,7 @@
 			var/obj/item/I = M.get_active_hand()
 			I = I.GetID()
 
-			if (istype(I,/obj/item/weapon/card/id))
+			if(I)
 				if(access_captain in I.GetAccess())
 					var/old_level = security_level
 					if(!tmp_alertlevel) tmp_alertlevel = SEC_LEVEL_GREEN
@@ -96,10 +96,9 @@
 					set_security_level(tmp_alertlevel)
 					if(security_level != old_level)
 						//Only notify the admins if an actual change happened
-						log_game("[key_name(usr)] has changed the security level to [get_security_level()].")
-						message_admins("[key_name_admin(usr)] has changed the security level to [get_security_level()].")
+						log_game("[key_name(usr)] has changed the security level to [get_security_level()].", src)
 					tmp_alertlevel = 0
-				else:
+				else
 					usr << "You are not authorized to do this."
 					tmp_alertlevel = 0
 				state = STATE_DEFAULT
@@ -192,7 +191,7 @@
 					return
 				Centcomm_announce(input, usr)
 				usr << "Message transmitted."
-				log_say("[key_name(usr)] has made a Centcomm announcement: [input]")
+				log_game("[key_name(usr)] has made a Centcomm announcement: [input]", null, 0)
 				centcomm_message_cooldown = 1
 				spawn(600)//10 minute cooldown
 					centcomm_message_cooldown = 0
@@ -209,7 +208,7 @@
 					return
 				Syndicate_announce(input, usr)
 				usr << "Message transmitted."
-				log_say("[key_name(usr)] has made an illegal announcement: [input]")
+				log_game("[key_name(usr)] has made an illegal announcement: [input]", null, 0)
 				centcomm_message_cooldown = 1
 				spawn(600)//10 minute cooldown
 					centcomm_message_cooldown = 0

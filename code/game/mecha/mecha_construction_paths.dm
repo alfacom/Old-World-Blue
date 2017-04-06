@@ -70,10 +70,10 @@
 /datum/construction/mecha/ripley_chassis
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/ripley_torso),//1
-		list("key"=/obj/item/mecha_parts/part/ripley_left_arm),//2
-		list("key"=/obj/item/mecha_parts/part/ripley_right_arm),//3
-		list("key"=/obj/item/mecha_parts/part/ripley_left_leg),//4
-		list("key"=/obj/item/mecha_parts/part/ripley_right_leg)//5
+		list("key"=/obj/item/mecha_parts/part/ripley/left_arm),//2
+		list("key"=/obj/item/mecha_parts/part/ripley/right_arm),//3
+		list("key"=/obj/item/mecha_parts/part/ripley/left_leg),//4
+		list("key"=/obj/item/mecha_parts/part/ripley/right_leg)//5
 	)
 
 	custom_action(step, atom/used_atom, mob/user)
@@ -98,7 +98,7 @@
 
 
 /datum/construction/reversible/mecha/ripley
-	result = "/obj/mecha/working/ripley"
+	result = /obj/mecha/working/ripley
 	steps = list(
 		//1
 		list("key"=/obj/item/weapon/weldingtool,
@@ -357,10 +357,10 @@
 /datum/construction/mecha/gygax_chassis
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/gygax_torso),//1
-		list("key"=/obj/item/mecha_parts/part/gygax_left_arm),//2
-		list("key"=/obj/item/mecha_parts/part/gygax_right_arm),//3
-		list("key"=/obj/item/mecha_parts/part/gygax_left_leg),//4
-		list("key"=/obj/item/mecha_parts/part/gygax_right_leg),//5
+		list("key"=/obj/item/mecha_parts/part/gygax/left_arm),//2
+		list("key"=/obj/item/mecha_parts/part/gygax/right_arm),//3
+		list("key"=/obj/item/mecha_parts/part/gygax/left_leg),//4
+		list("key"=/obj/item/mecha_parts/part/gygax/right_leg),//5
 		list("key"=/obj/item/mecha_parts/part/gygax_head)
 	)
 
@@ -385,7 +385,7 @@
 
 
 /datum/construction/reversible/mecha/gygax
-	result = "/obj/mecha/combat/gygax"
+	result = /obj/mecha/combat/gygax
 	steps = list(
 		//1
 		list("key"=/obj/item/weapon/weldingtool,
@@ -751,17 +751,17 @@
 /datum/construction/mecha/firefighter_chassis
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/ripley_torso),//1
-		list("key"=/obj/item/mecha_parts/part/ripley_left_arm),//2
-		list("key"=/obj/item/mecha_parts/part/ripley_right_arm),//3
-		list("key"=/obj/item/mecha_parts/part/ripley_left_leg),//4
-		list("key"=/obj/item/mecha_parts/part/ripley_right_leg),//5
+		list("key"=/obj/item/mecha_parts/part/ripley/left_arm),//2
+		list("key"=/obj/item/mecha_parts/part/ripley/right_arm),//3
+		list("key"=/obj/item/mecha_parts/part/ripley/left_leg),//4
+		list("key"=/obj/item/mecha_parts/part/ripley/right_leg),//5
 		list("key"=/obj/item/clothing/suit/fire)//6
 	)
 
 	custom_action(step, atom/used_atom, mob/user)
 		user.visible_message("[user] has connected [used_atom] to [holder].", "You connect [used_atom] to [holder]")
 		holder.overlays += used_atom.icon_state+"+o"
-		user.drop_item()
+		user.drop_from_inventory(used_atom)
 		qdel(used_atom)
 		return 1
 
@@ -780,7 +780,7 @@
 
 
 /datum/construction/reversible/mecha/firefighter
-	result = "/obj/mecha/working/ripley/firefighter"
+	result = /obj/mecha/working/ripley/firefighter
 	steps = list(
 		//1
 		list("key"=/obj/item/weapon/weldingtool,
@@ -1061,10 +1061,10 @@
 /datum/construction/mecha/durand_chassis
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/durand_torso),//1
-		list("key"=/obj/item/mecha_parts/part/durand_left_arm),//2
-		list("key"=/obj/item/mecha_parts/part/durand_right_arm),//3
-		list("key"=/obj/item/mecha_parts/part/durand_left_leg),//4
-		list("key"=/obj/item/mecha_parts/part/durand_right_leg),//5
+		list("key"=/obj/item/mecha_parts/part/durand/left_arm),//2
+		list("key"=/obj/item/mecha_parts/part/durand/right_arm),//3
+		list("key"=/obj/item/mecha_parts/part/durand/left_leg),//4
+		list("key"=/obj/item/mecha_parts/part/durand/right_leg),//5
 		list("key"=/obj/item/mecha_parts/part/durand_head)
 	)
 
@@ -1088,7 +1088,7 @@
 		return
 
 /datum/construction/reversible/mecha/durand
-	result = "/obj/mecha/combat/durand"
+	result = /obj/mecha/combat/durand
 	steps = list(
 		//1
 		list("key"=/obj/item/weapon/weldingtool,
@@ -1461,10 +1461,10 @@
 /datum/construction/mecha/phazon_chassis
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/phazon_torso),//1
-		list("key"=/obj/item/mecha_parts/part/phazon_left_arm),//2
-		list("key"=/obj/item/mecha_parts/part/phazon_right_arm),//3
-		list("key"=/obj/item/mecha_parts/part/phazon_left_leg),//4
-		list("key"=/obj/item/mecha_parts/part/phazon_right_leg),//5
+		list("key"=/obj/item/mecha_parts/part/phazon/left_arm),//2
+		list("key"=/obj/item/mecha_parts/part/phazon/right_arm),//3
+		list("key"=/obj/item/mecha_parts/part/phazon/left_leg),//4
+		list("key"=/obj/item/mecha_parts/part/phazon/right_leg),//5
 		list("key"=/obj/item/mecha_parts/part/phazon_head)
 	)
 
@@ -1490,7 +1490,7 @@
 
 
 /datum/construction/reversible/mecha/phazon
-	result = "/obj/mecha/combat/phazon"
+	result = /obj/mecha/combat/phazon
 	steps = list(
 		//1
 		list("key"=/obj/item/stack/cable_coil,
@@ -1924,10 +1924,10 @@
 	steps = list(
 		list("key"=/obj/item/mecha_parts/part/odysseus_torso),//1
 		list("key"=/obj/item/mecha_parts/part/odysseus_head),//2
-		list("key"=/obj/item/mecha_parts/part/odysseus_left_arm),//3
-		list("key"=/obj/item/mecha_parts/part/odysseus_right_arm),//4
-		list("key"=/obj/item/mecha_parts/part/odysseus_left_leg),//5
-		list("key"=/obj/item/mecha_parts/part/odysseus_right_leg)//6
+		list("key"=/obj/item/mecha_parts/part/odysseus/left_arm),//3
+		list("key"=/obj/item/mecha_parts/part/odysseus/right_arm),//4
+		list("key"=/obj/item/mecha_parts/part/odysseus/left_leg),//5
+		list("key"=/obj/item/mecha_parts/part/odysseus/right_leg)//6
 	)
 
 	custom_action(step, atom/used_atom, mob/user)
@@ -1951,7 +1951,7 @@
 
 
 /datum/construction/reversible/mecha/odysseus
-	result = "/obj/mecha/medical/odysseus"
+	result = /obj/mecha/medical/odysseus
 	steps = list(
 		//1
 		list("key"=/obj/item/weapon/weldingtool,

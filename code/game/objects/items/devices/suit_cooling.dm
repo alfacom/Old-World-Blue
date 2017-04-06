@@ -13,12 +13,12 @@
 	throw_speed = 1
 	throw_range = 4
 
-	origin_tech = "magnets=2;materials=2"
+	origin_tech = list(TECH_MAGNET = 2, TECH_MATERIAL = 2)
 
 	var/on = 0				//is it turned on?
 	var/cover_open = 0		//is the cover open?
 	var/obj/item/weapon/cell/cell
-	var/max_cooling = 12				//in degrees per second - probably don't need to mess with heat capacity here
+	var/max_cooling = 15				// in degrees per second - probably don't need to mess with heat capacity here
 	var/charge_consumption = 16.6		//charge per second at max_cooling
 	var/thermostat = T20C
 
@@ -26,8 +26,7 @@
 
 /obj/item/device/suit_cooling_unit/New()
 	processing_objects |= src
-
-	cell = new/obj/item/weapon/cell()	//comes with the crappy default power cell - high-capacity ones shouldn't be hard to find
+	cell = new/obj/item/weapon/cell/high()	//comes not with the crappy default power cell - because this is dedicated EVA equipment
 	cell.loc = src
 
 /obj/item/device/suit_cooling_unit/process()
@@ -62,7 +61,7 @@
 	if (ishuman(loc))
 		var/mob/living/carbon/human/H = loc
 		if(istype(H.loc, /obj/mecha))
-			var/obj/mecha/M = loc
+			var/obj/mecha/M = H.loc
 			return M.return_temperature()
 		else if(istype(H.loc, /obj/machinery/atmospherics/unary/cryo_cell))
 			return H.loc:air_contents.temperature
@@ -83,7 +82,7 @@
 
 	var/mob/living/carbon/human/H = M
 
-	if (!H.wear_suit || H.s_store != src)
+	if (!H.wear_suit || (H.s_store != src && H.back != src))
 		return 0
 
 	return 1
@@ -106,13 +105,9 @@
 
 /obj/item/device/suit_cooling_unit/attack_self(mob/user as mob)
 	if(cover_open && cell)
-		if(ishuman(user))
-			user.put_in_hands(cell)
-		else
-			cell.loc = get_turf(loc)
+		user.put_in_hands(cell)
 
 		cell.add_fingerprint(user)
-		cell.update_icon()
 
 		user << "You remove the [src.cell]."
 		src.cell = null
@@ -143,8 +138,7 @@
 			if(cell)
 				user << "There is a [cell] already installed here."
 			else
-				user.drop_item()
-				W.loc = src
+				user.drop_from_inventory(W, src)
 				cell = W
 				user << "You insert the [cell]."
 		updateicon()
@@ -181,6 +175,6 @@
 			user << "The panel is open."
 
 	if (cell)
-		user << "The charge meter reads [round(cell.percent())]%."
+		user << "The charge meter reads [cell.percent()]%."
 	else
 		user << "It doesn't have a power cell installed."

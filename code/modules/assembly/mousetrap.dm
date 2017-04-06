@@ -2,8 +2,8 @@
 	name = "mousetrap"
 	desc = "A handy little spring-loaded trap for catching pesty rodents."
 	icon_state = "mousetrap"
+	origin_tech = list(TECH_COMBAT = 1)
 	matter = list(DEFAULT_WALL_MATERIAL = 100, "waste" = 10)
-	origin_tech = "combat=1"
 	var/armed = 0
 
 
@@ -54,10 +54,14 @@
 		if(!armed)
 			user << "<span class='notice'>You arm [src].</span>"
 		else
-			if(((user.getBrainLoss() >= 60 || (CLUMSY in user.mutations)) && prob(50)))
+			//TODO: DNA3 clown_block
+			//TODO: BrainLoss >= 60 mean dead
+			if(((user.getBrainLoss() >= 60) && prob(50)))
 				triggered(user, user.hand ? BP_L_HAND : BP_R_HAND)
-				user.visible_message("<span class='warning'>[user] accidentally sets off [src], breaking their fingers.</span>", \
-									 "<span class='warning'>You accidentally trigger [src]!</span>")
+				user.visible_message(
+					"<span class='warning'>[user] accidentally sets off [src], breaking their fingers.</span>",
+					"<span class='warning'>You accidentally trigger [src]!</span>"
+				)
 				return
 			user << "<span class='notice'>You disarm [src].</span>"
 		armed = !armed
@@ -67,10 +71,14 @@
 
 	attack_hand(mob/living/user as mob)
 		if(armed)
-			if(((user.getBrainLoss() >= 60 || CLUMSY in user.mutations)) && prob(50))
+			//TODO: DNA3 clown_block
+			//TODO: BrainLoss >= 60 mean dead
+			if(((user.getBrainLoss() >= 60)) && prob(50))
 				triggered(user, user.hand ? BP_L_HAND : BP_R_HAND)
-				user.visible_message("<span class='warning'>[user] accidentally sets off [src], breaking their fingers.</span>", \
-									 "<span class='warning'>You accidentally trigger [src]!</span>")
+				user.visible_message(
+					"<span class='warning'>[user] accidentally sets off [src], breaking their fingers.</span>",
+					"<span class='warning'>You accidentally trigger [src]!</span>"
+				)
 				return
 		..()
 
@@ -81,17 +89,21 @@
 				var/mob/living/carbon/H = AM
 				if(H.m_intent == "run")
 					triggered(H)
-					H.visible_message("<span class='warning'>[H] accidentally steps on [src].</span>", \
-									  "<span class='warning'>You accidentally step on [src]</span>")
+					H.visible_message(
+						"<span class='warning'>[H] accidentally steps on [src].</span>",
+						"<span class='warning'>You accidentally step on [src]</span>"
+					)
 			if(ismouse(AM))
 				triggered(AM)
 		..()
 
 
-	on_found(mob/finder as mob)
+	on_found(mob/living/finder as mob)
 		if(armed)
-			finder.visible_message("<span class='warning'>[finder] accidentally sets off [src], breaking their fingers.</span>", \
-								   "<span class='warning'>You accidentally trigger [src]!</span>")
+			finder.visible_message(
+				"<span class='warning'>[finder] accidentally sets off [src], breaking their fingers.</span>",
+				"<span class='warning'>You accidentally trigger [src]!</span>"
+			)
 			triggered(finder, finder.hand ? BP_L_HAND : BP_R_HAND)
 			return 1	//end the search!
 		return 0

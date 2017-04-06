@@ -64,11 +64,11 @@
 	return
 
 /obj/machinery/turretid/proc/isLocked(mob/user)
-	if(ailock && user.isSilicon())
+	if(ailock && issilicon(user))
 		user << "<span class='notice'>There seems to be a firewall preventing you from accessing this device.</span>"
 		return 1
 
-	if(locked && !user.isSilicon())
+	if(locked && !issilicon(user))
 		user << "<span class='notice'>Access denied.</span>"
 		return 1
 
@@ -84,15 +84,8 @@
 	if(stat & BROKEN)
 		return
 
-	if(!emagged && istype(W, /obj/item/weapon/card/emag))
-		user << "<span class='danger'>You short out the turret controls' access analysis module.</span>"
-		emagged = 1
-		locked = 0
-		ailock = 0
-		return
-
-	if(istype(W, /obj/item/weapon/card/id)||istype(W, /obj/item/device/pda))
-		if(src.allowed(usr))
+	if(W.GetID())
+		if(allowed(usr))
 			if(emagged)
 				user << "<span class='notice'>The turret control is unresponsive.</span>"
 			else
@@ -100,6 +93,14 @@
 				user << "<span class='notice'>You [ locked ? "lock" : "unlock"] the panel.</span>"
 		return
 	return ..()
+
+/obj/machinery/turretid/emag_act(var/remaining_charges, var/mob/user)
+	if(!emagged)
+		user << "<span class='danger'>You short out the turret controls' access analysis module.</span>"
+		emagged = 1
+		locked = 0
+		ailock = 0
+		return 1
 
 /obj/machinery/turretid/attack_ai(mob/user as mob)
 	if(isLocked(user))
@@ -132,7 +133,7 @@
 		data["settings"] = settings
 
 	ui = nanomanager.try_update_ui(user, src, ui_key, ui, data, force_open)
-	if (!ui)
+	if(!ui)
 		ui = new(user, src, ui_key, "turret_control.tmpl", "Turret Controls", 500, 300)
 		ui.set_initial_data(data)
 		ui.open()
@@ -148,8 +149,7 @@
 			enabled = value
 		else if(href_list["command"] == "lethal")
 			lethal = value
-			message_admins("[usr]([usr.ckey])(<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>) turned turret to lethal mode at [src.x],[src.y],[src.z] in area ([get_area(src)]).", 0)
-			log_game("[usr]([usr.ckey]) turned turret to lethal mode at [src.x],[src.y],[src.z] in area ([get_area(src)])")
+			log_game("[usr]([usr.ckey]) turned turret to lethal mode.", src)
 		else if(href_list["command"] == "check_synth")
 			check_synth = value
 		else if(href_list["command"] == "check_weapons")

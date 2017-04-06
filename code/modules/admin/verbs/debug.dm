@@ -5,11 +5,9 @@
 
 	if(Debug2)
 		Debug2 = 0
-		message_admins("[key_name(src)] toggled debugging off.")
 		log_admin("[key_name(src)] toggled debugging off.")
 	else
 		Debug2 = 1
-		message_admins("[key_name(src)] toggled debugging on.")
 		log_admin("[key_name(src)] toggled debugging on.")
 
 
@@ -174,7 +172,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("Wait until the game starts")
 		return
 	if(ishuman(M))
-		log_admin("[key_name(src)] has robotized [M.key].")
+		log_admin("[key_name(src)] has robotized [key_name(M)].", M, 0)
 		spawn(10)
 			M:Robotize()
 
@@ -197,7 +195,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("The mob must not be a new_player.")
 		return
 
-	log_admin("[key_name(src)] has animalized [M.key].")
+	log_admin("[key_name(src)] has animalized [key_name(M)].", M, 0)
 	spawn(10)
 		M.Animalize()
 
@@ -236,11 +234,10 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("Wait until the game starts")
 		return
 	if(ishuman(M))
-		log_admin("[key_name(src)] has alienized [M.key].")
+		log_admin("[key_name(src)] has alienized [key_name(M)].", M, 0)
 		spawn(10)
 			M:Alienize()
-		log_admin("[key_name(usr)] made [key_name(M)] into an alien.")
-		message_admins("\blue [key_name_admin(usr)] made [key_name(M)] into an alien.", 1)
+		log_admin("[key_name(usr)] made [key_name(M)] into an alien.", M, 0)
 	else
 		alert("Invalid mob")
 
@@ -252,105 +249,15 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		alert("Wait until the game starts")
 		return
 	if(ishuman(M))
-		log_admin("[key_name(src)] has slimeized [M.key].")
+		log_admin("[key_name(src)] has slimeized [M.key].", M, 0)
 		spawn(10)
 			M:slimeize()
-		log_admin("[key_name(usr)] made [key_name(M)] into a slime.")
+		log_admin("[key_name(usr)] made [key_name(M)] into a slime.", M, 0)
 		message_admins("\blue [key_name_admin(usr)] made [key_name(M)] into a slime.", 1)
 	else
 		alert("Invalid mob")
 
-/*
-/client/proc/cmd_admin_monkeyize(var/mob/living/carbon/human/H in world)
-	set category = "Fun"
-	set name = "Make Monkey"
 
-	if(!ticker)
-		alert("Wait until the game starts")
-		return
-	if(istype(H))
-		alert("Invalid mob")
-		return
-
-	log_admin("[key_name(src)] is attempting to monkeyize [H.key].")
-	spawn(10)
-		H.monkeyize()
-
-/client/proc/cmd_admin_changelinginize(var/mob/living/carbon/human/H in world)
-	set category = "Fun"
-	set name = "Make Changeling"
-
-	if(!ticker)
-		alert("Wait until the game starts")
-		return
-	if(istype(H))
-		alert("Invalid mob")
-		return
-
-	log_admin("[key_name(src)] has made [H.key] a changeling.")
-	spawn(10)
-		H.absorbed_dna[H.real_name] = H.dna.Clone()
-		H.make_changeling()
-		if(H.mind)
-			H.mind.special_role = "Changeling"
-*/
-/*
-/client/proc/cmd_admin_abominize(var/mob/living/carbon/human/H in world)
-	set category = null
-	set name = "Make Abomination"
-
-	usr << "Ruby Mode disabled. Command aborted."
-	return
-	if(!ticker)
-		alert("Wait until the game starts.")
-		return
-	if(istype(H))
-		log_admin("[key_name(src)] has made [H.key] an abomination.")
-
-	//	spawn(10)
-	//		H.make_abomination()
-
-*/
-/*
-/client/proc/make_cultist(var/mob/living/carbon/human/H in world) // -- TLE, modified by Urist
-	set category = "Fun"
-	set name = "Make Cultist"
-	set desc = "Makes target a cultist"
-	if(!cultwords["travel"])
-		runerandom()
-	if(H)
-		if(H.mind in ticker.mode.cult)
-			return
-		else
-			if(alert("Spawn that person a tome?",,"Yes","No")=="Yes")
-				H << "\red You catch a glimpse of the Realm of Nar-Sie, The Geometer of Blood. You now see how flimsy the world is, you see that it should be open to the knowledge of Nar-Sie. A tome, a message from your new master, appears on the ground."
-				new /obj/item/weapon/book/tome(M.loc)
-			else
-				M << "\red You catch a glimpse of the Realm of Nar-Sie, The Geometer of Blood. You now see how flimsy the world is, you see that it should be open to the knowledge of Nar-Sie."
-			var/glimpse=pick("1","2","3","4","5","6","7","8")
-			switch(glimpse)
-				if("1")
-					H << "\red You remembered one thing from the glimpse... [cultwords["travel"]] is travel..."
-				if("2")
-					H << "\red You remembered one thing from the glimpse... [cultwords["blood"]] is blood..."
-				if("3")
-					H << "\red You remembered one thing from the glimpse... [cultwords["join"]] is join..."
-				if("4")
-					H << "\red You remembered one thing from the glimpse... [cultwords["hell"]] is Hell..."
-				if("5")
-					H << "\red You remembered one thing from the glimpse... [cultwords["destroy"]] is destroy..."
-				if("6")
-					H << "\red You remembered one thing from the glimpse... [cultwords["technology"]] is technology..."
-				if("7")
-					H << "\red You remembered one thing from the glimpse... [cultwords["self"]] is self..."
-				if("8")
-					H << "\red You remembered one thing from the glimpse... [cultwords["see"]] is see..."
-
-			if(H.mind)
-				H.mind.special_role = "Cultist"
-				ticker.mode.cult += M.mind
-			src << "Made [H] a cultist."
-*/
 
 //TODO: merge the vievars version into this or something maybe mayhaps
 /client/proc/cmd_debug_del_all()
@@ -365,22 +272,19 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			if(istype(O, hsbitem))
 				qdel(O)
 		log_admin("[key_name(src)] has deleted all instances of [hsbitem].")
-		message_admins("[key_name_admin(src)] has deleted all instances of [hsbitem].", 0)
 
 /client/proc/cmd_debug_make_powernets()
 	set category = "Debug"
 	set name = "Make Powernets"
 	makepowernets()
 	log_admin("[key_name(src)] has remade the powernet. makepowernets() called.")
-	message_admins("[key_name_admin(src)] has remade the powernets. makepowernets() called.", 0)
 
 /client/proc/cmd_debug_tog_aliens()
 	set category = "Server"
 	set name = "Toggle Aliens"
 
 	config.aliens_allowed = !config.aliens_allowed
-	log_admin("[key_name(src)] has turned aliens [config.aliens_allowed ? "on" : "off"].")
-	message_admins("[key_name_admin(src)] has turned aliens [config.aliens_allowed ? "on" : "off"].", 0)
+	log_admin("[key_name(src)] has turned aliens [config.aliens_allowed ? "ON" : "OFF"].")
 
 /client/proc/cmd_admin_grantfullaccess(var/mob/living/carbon/human/H in mob_list)
 	set category = "Admin"
@@ -410,8 +314,8 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		H.equip_to_slot_or_del(id, slot_wear_id)
 		H.update_inv_wear_id()
 
-	log_admin("[key_name(src)] has granted [H.key] full access.")
-	message_admins("\blue [key_name_admin(usr)] has granted [H.key] full access.", 1)
+	src << SPAN_NOTE("You grant full access to [key_name(H)].")
+	log_admin("[key_name(src)] has granted [key_name(H)] full access.", H, 0)
 
 /client/proc/cmd_assume_direct_control(var/mob/M in mob_list)
 	set category = "Admin"
@@ -425,14 +329,11 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		else
 			var/mob/observer/dead/ghost = new (M,1)
 			ghost.ckey = M.ckey
-	message_admins("\blue [key_name_admin(usr)] assumed direct control of [M].", 1)
-	log_admin("[key_name(usr)] assumed direct control of [M].")
+	log_admin("[key_name(usr)] assumed direct control of [M].", M, 0)
 	var/mob/adminmob = src.mob
 	M.ckey = src.ckey
 	if( isobserver(adminmob) )
 		qdel(adminmob)
-
-
 
 
 
@@ -532,7 +433,6 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 	var/mob/living/carbon/human/M = input("Select mob.", "Select equipment.") as null|anything in human_mob_list
 	if(!M) return
 
-	//log_admin("[key_name(src)] has alienized [M.key].")
 	var/list/dresspacks = list(
 		"strip",
 		"job",
@@ -560,8 +460,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		"emergency response team",
 		"nanotrasen representative",
 		"nanotrasen officer",
-		"nanotrasen captain",
-		"knight"
+		"nanotrasen captain"
 		)
 	var/dresscode = input("Select dress for [M]", "Robust quick dress shop") as null|anything in dresspacks
 	if (isnull(dresscode))
@@ -597,7 +496,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			var /obj/item/weapon/tank/jetpack/J = new /obj/item/weapon/tank/jetpack/oxygen(M)
 			M.equip_to_slot_or_del(J, slot_back)
 			J.toggle()
-			M.equip_to_slot_or_del(new /obj/item/clothing/mask/breath/toggleable(M), slot_wear_mask)
+			M.equip_to_slot_or_del(new /obj/item/clothing/mask/breath(M), slot_wear_mask)
 			J.Topic(null, list("stat" = 1))
 		if ("tournament standard red","tournament standard green") //we think stunning weapon is too overpowered to use it on tournaments. --rastaf0
 			if (dresscode=="tournament standard red")
@@ -615,7 +514,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 
 
 		if ("tournament gangster") //gangster are supposed to fight each other. --rastaf0
-			M.equip_to_slot_or_del(new /obj/item/clothing/under/det(M), slot_w_uniform)
+			M.equip_to_slot_or_del(new /obj/item/clothing/under/rank/det(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/black(M), slot_shoes)
 
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/storage/det_suit(M), slot_wear_suit)
@@ -647,7 +546,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(backpack, slot_back)
 
 			M.equip_to_slot_or_del(new /obj/item/weapon/mop(M), slot_r_hand)
-			var/obj/item/weapon/reagent_containers/glass/bucket/bucket = new(M)
+			var/obj/item/weapon/reagent_containers/glass/beaker/bucket/bucket = new(M)
 			bucket.reagents.add_reagent("water", 70)
 			M.equip_to_slot_or_del(bucket, slot_l_hand)
 
@@ -706,7 +605,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		if("masked killer")
 			M.equip_to_slot_or_del(new /obj/item/clothing/under/overalls(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/white(M), slot_shoes)
-			M.equip_to_slot_or_del(new /obj/item/clothing/gloves/white/latex(M), slot_gloves)
+			M.equip_to_slot_or_del(new /obj/item/clothing/gloves/latex(M), slot_gloves)
 			M.equip_to_slot_or_del(new /obj/item/clothing/mask/surgical(M), slot_wear_mask)
 			M.equip_to_slot_or_del(new /obj/item/clothing/head/welding(M), slot_head)
 			M.equip_to_slot_or_del(new /obj/item/device/radio/headset(M), slot_l_ear)
@@ -889,7 +788,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(W, slot_wear_id)
 
 		if("red code agent")
-			M.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel_sec(M), slot_back)
+			M.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel/sec(M), slot_back)
 			M.equip_to_slot_or_del(new /obj/item/clothing/head/beret/sec/alt(M), slot_head)
 			M.equip_to_slot_or_del(new /obj/item/clothing/under/syndicate/PMC(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/armor/vest(M), slot_wear_suit)
@@ -928,7 +827,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(new /obj/item/clothing/gloves/black(M), slot_gloves)
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/armor/riot(M), slot_wear_suit)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/jackboots(M), slot_shoes)
-			M.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel_sec(M), slot_back)
+			M.equip_to_slot_or_del(new /obj/item/weapon/storage/backpack/satchel/sec(M), slot_back)
 			M.equip_to_slot_or_del(new /obj/item/weapon/storage/belt/security/tactical(M), slot_belt)
 			M.equip_to_slot_or_del(new /obj/item/weapon/tank/emergency_oxygen/double(M), slot_r_store)
 			M.equip_to_slot_or_del(new /obj/item/clothing/mask/gas(M), slot_wear_mask)
@@ -961,7 +860,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(W, slot_wear_id)
 
 		if("blue wizard")
-			M.equip_to_slot_or_del(new /obj/item/clothing/under/lightpurple(M), slot_w_uniform)
+			M.equip_to_slot_or_del(new /obj/item/clothing/under/color/lightpurple(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/wizrobe(M), slot_wear_suit)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/sandal(M), slot_shoes)
 			M.equip_to_slot_or_del(new /obj/item/device/radio/headset(M), slot_l_ear)
@@ -973,7 +872,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(new /obj/item/weapon/storage/box(M), slot_in_backpack)
 
 		if("red wizard")
-			M.equip_to_slot_or_del(new /obj/item/clothing/under/lightpurple(M), slot_w_uniform)
+			M.equip_to_slot_or_del(new /obj/item/clothing/under/color/lightpurple(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/wizrobe/red(M), slot_wear_suit)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/sandal(M), slot_shoes)
 			M.equip_to_slot_or_del(new /obj/item/device/radio/headset(M), slot_l_ear)
@@ -985,7 +884,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			M.equip_to_slot_or_del(new /obj/item/weapon/storage/box(M), slot_in_backpack)
 
 		if("marisa wizard")
-			M.equip_to_slot_or_del(new /obj/item/clothing/under/lightpurple(M), slot_w_uniform)
+			M.equip_to_slot_or_del(new /obj/item/clothing/under/color/lightpurple(M), slot_w_uniform)
 			M.equip_to_slot_or_del(new /obj/item/clothing/suit/wizrobe/marisa(M), slot_wear_suit)
 			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/sandal/marisa(M), slot_shoes)
 			M.equip_to_slot_or_del(new /obj/item/device/radio/headset(M), slot_l_ear)
@@ -1015,20 +914,11 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			W.registered_name = M.real_name
 			M.equip_to_slot_or_del(W, slot_wear_id)
 
-		if("knight")
-			M.equip_to_slot_or_del(new /obj/item/clothing/under/bum2(M), slot_w_uniform)
-			M.equip_to_slot_or_del(new /obj/item/clothing/suit/armor/knight/templar(M), slot_wear_suit)
-			M.equip_to_slot_or_del(new /obj/item/clothing/head/helmet/knight/templar(M), slot_head)
-			M.equip_to_slot_or_del(new /obj/item/clothing/shoes/jackboots(M), slot_shoes)
-			M.equip_to_slot_or_del(new /obj/item/weapon/material/sword(M), slot_r_hand)
-			M.equip_to_slot_or_del(new /obj/item/weapon/shield/buckler(M), slot_l_hand)
-
 	var/obj/item/device/pda/P = locate(/obj/item/device/pda) in M
 	if(P) P.toff = 1
 	M.regenerate_icons()
 
-	log_admin("[key_name(usr)] changed the equipment of [key_name(M)] to [dresscode].")
-	message_admins("\blue [key_name_admin(usr)] changed the equipment of [key_name_admin(M)] to [dresscode]..", 1)
+	log_admin("[key_name(usr)] changed the equipment of [key_name(M)] to [dresscode].", M, 0)
 	return
 
 /client/proc/startSinglo()
@@ -1159,8 +1049,7 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 		T.zone.air.update_values()
 
 
-	log_admin("[key_name(usr)] setup the supermatter engine [response == "Setup except coolant" ? "without coolant" : ""]")
-	message_admins("\blue [key_name_admin(usr)] setup the supermatter engine  [response == "Setup except coolant" ? "without coolant": ""]", 1)
+	log_admin("[key_name(usr)] setup the supermatter engine [response == "Setup except coolant" ? "without coolant" : ""]", SM)
 	return
 
 
@@ -1183,19 +1072,3 @@ But you can call procs that are of type /mob/living/carbon/human/proc/ for that 
 			usr << jointext(dead_mob_list,",")
 		if("Clients")
 			usr << jointext(clients,",")
-
-// DNA2 - Admin Hax
-/client/proc/cmd_admin_toggle_block(var/mob/M,var/block)
-	if(!ticker)
-		alert("Wait until the game starts")
-		return
-	if(istype(M, /mob/living/carbon))
-		M.dna.SetSEState(block,!M.dna.GetSEState(block))
-		domutcheck(M,null,MUTCHK_FORCED)
-		M.update_mutations()
-		var/state="[M.dna.GetSEState(block)?"on":"off"]"
-		var/blockname=assigned_blocks[block]
-		message_admins("[key_name_admin(src)] has toggled [M.key]'s [blockname] block [state]!")
-		log_admin("[key_name(src)] has toggled [M.key]'s [blockname] block [state]!")
-	else
-		alert("Invalid mob")

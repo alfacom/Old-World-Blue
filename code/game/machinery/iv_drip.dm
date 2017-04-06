@@ -52,8 +52,7 @@
 			user << "There is already a reagent container loaded!"
 			return
 
-		user.drop_item()
-		W.loc = src
+		user.drop_from_inventory(W, src)
 		src.beaker = W
 		user << "You attach \the [W] to \the [src]."
 		src.update_icon()
@@ -99,10 +98,10 @@
 			if(!istype(T)) return
 			if(!T.dna)
 				return
-			if(NOCLONE in T.mutations)
+			if(NOCLONE & T.status_flags)
 				return
 
-			if(T.species && T.species.flags & NO_BLOOD)
+			if(!T.should_have_organ(O_HEART))
 				return
 
 			// If the human is losing too much blood, beep.

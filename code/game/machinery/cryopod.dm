@@ -131,13 +131,13 @@
 
 /obj/item/weapon/circuitboard/cryopodcontrol
 	name = "Circuit board (Cryogenic Oversight Console)"
-	build_path = "/obj/machinery/computer/cryopod"
-	origin_tech = "programming=3"
+	build_path = /obj/machinery/computer/cryopod
+	origin_tech = list(TECH_DATA = 3)
 
 /obj/item/weapon/circuitboard/robotstoragecontrol
 	name = "Circuit board (Robotic Storage Console)"
-	build_path = "/obj/machinery/computer/cryopod/robot"
-	origin_tech = "programming=3"
+	build_path = /obj/machinery/computer/cryopod/robot
+	origin_tech = list(TECH_DATA = 3)
 
 //Decorative structures to go alongside cryopods.
 /obj/structure/cryofeed
@@ -251,8 +251,7 @@
 
 	// Don't send messages unless we *need* the computer, and less than five minutes have passed since last time we messaged
 	if(!control_computer && urgent && last_no_computer_message + 5*60*10 < world.time)
-		log_admin("Cryopod in [src.loc.loc] could not find control computer!")
-		message_admins("Cryopod in [src.loc.loc] could not find control computer!")
+		warning("Cryopod ([src]) could not find control computer!", src)
 		last_no_computer_message = world.time
 
 	return control_computer != null
@@ -394,51 +393,61 @@
 	set_occupant(null)
 
 
-/obj/machinery/cryopod/attackby(var/obj/item/weapon/W as obj, var/mob/user as mob)
-
-	var/obj/item/weapon/grab/G = W
+/obj/machinery/cryopod/attackby(var/obj/item/weapon/grab/G as obj, var/mob/user as mob)
 	if(istype(G))
+		put_inside(G.affecting, user)
+	else
+		return ..()
 
-		if(occupant)
-			user << "<span class='notice'>\The [src] is in use.</span>"
-			return
+/obj/machinery/cryopod/MouseDrop_T(var/mob/living/L, mob/living/user)
+	if(istype(L) && istype(user))
+		put_inside(L, user)
 
-		if( !(ismob(G.affecting) && get_dist(src,G.affecting)<2))
-			return
+/obj/machinery/cryopod/proc/put_inside(var/mob/living/affecting, var/mob/living/user)
+	if(occupant)
+		user << "<span class='notice'>\The [src] is in use.</span>"
+		return
 
-		if(!check_occupant_allowed(G.affecting))
-			return
+	if(!ismob(affecting) || !Adjacent(affecting) || !Adjacent(user))
+		return
 
-		var/willing = null //We don't want to allow people to be forced into despawning.
-		var/mob/M = G.affecting
+	if(!check_occupant_allowed(affecting))
+		return
 
-		if(M.client)
-			if(alert(M,"Would you like to enter long-term storage?",,"Yes","No") == "Yes")
-				if(!M || !G || !G:affecting) return
-				willing = 1
-		else
+	var/willing = null //We don't want to allow people to be forced into despawning.
+
+	if(affecting != user && affecting.client)
+		if(alert(affecting,"Would you like to enter long-term storage?",,"Yes","No") == "Yes")
+			if(!affecting) return
 			willing = 1
+	else
+		willing = 1
 
-		if(willing)
+	if(willing)
 
-			visible_message("[user] starts putting [G:affecting:name] into \the [src].", 3)
+		visible_message("[user] starts putting [affecting] into \the [src].", 3)
 
-			if(do_after(user, 20))
-				if(!M || !G || !G.affecting) return
-				if( !Adjacent(M) ) return
+		if(!do_after(user, 20, src))
+			return
 
-			set_occupant(M)
-			M << "<span class='notice'>[on_enter_occupant_message]</span>"
-			M << "<span class='notice'><b>If you ghost, log out or close your client now, your character will shortly be permanently removed from the round.</b></span>"
+		if(!user || !Adjacent(user))
+			return
+		if(!affecting || !Adjacent(affecting))
+			return
 
-			// Book keeping!
-			var/turf/location = get_turf(src)
-			log_admin("[key_name_admin(user)] put [key_name_admin(M)] in stasis pod. (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[location.x];Y=[location.y];Z=[location.z]'>JMP</a>)")
-			message_admins("<span class='notice'>[key_name_admin(user)] put [key_name_admin(M)] in stasis pod.</span>")
+		set_occupant(affecting)
+		affecting << "<span class='notice'>[on_enter_occupant_message]</span>"
+		affecting << "<span class='notice'><b>If you ghost, log out or close your client now, your character will shortly be permanently removed from the round.</b></span>"
 
-			//Despawning occurs when process() is called with an occupant without a client.
-			src.add_fingerprint(M)
-			src.add_fingerprint(user)
+		// Book keeping!
+		if(user == affecting)
+			log_game("[key_name(user)] enter stasis pod.", src, 0)
+		else
+			log_game("[key_name(user)] put [key_name(affecting)] in stasis pod.", src, 0)
+			src.add_fingerprint(affecting)
+
+		//Despawning occurs when process() is called with an occupant without a client.
+		src.add_fingerprint(user)
 
 /obj/machinery/cryopod/verb/eject()
 	set name = "Eject Pod"

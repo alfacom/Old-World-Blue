@@ -10,6 +10,7 @@
 	var/drone_only
 
 /datum/language/binary/broadcast(var/mob/living/speaker,var/message,var/speaker_mask)
+	log_say("[key_name(speaker)] : ([name]) [message]")
 
 	if(!speaker.binarycheck())
 		return
@@ -28,7 +29,7 @@
 
 		if(drone_only && !istype(S,/mob/living/silicon/robot/drone))
 			continue
-		else if(istype(S , /mob/living/silicon/ai))
+		else if(isAI(S))
 			message_start = "<i><span class='game say'>[name], <a href='byond://?src=\ref[S];track2=\ref[S];track=\ref[speaker];trackname=[html_encode(speaker.name)]'><span class='name'>[speaker.name]</span></a>"
 		else if (!S.binarycheck())
 			continue
@@ -39,7 +40,7 @@
 	listening -= src
 
 	for (var/mob/living/M in listening)
-		if(istype(M, /mob/living/silicon) || M.binarycheck())
+		if(issilicon(M) || M.binarycheck())
 			continue
 		M.show_message("<i><span class='game say'><span class='name'>synthesised voice</span> <span class='message'>beeps, \"beep beep beep\"</span></span></i>",2)
 

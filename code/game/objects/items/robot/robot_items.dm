@@ -23,9 +23,11 @@
 		qdel(src)
 		return
 
-	M.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been attacked with [src.name] by [user.name] ([user.ckey])</font>")
-	user.attack_log += text("\[[time_stamp()]\] <font color='red'>Used the [src.name] to attack [M.name] ([M.ckey])</font>")
-	msg_admin_attack("[user.name] ([user.ckey]) used the [src.name] to attack [M.name] ([M.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+	admin_attack_log(user, M,
+		"Used the [src.name] to attack [key_name(M)]",
+		"Has been attacked with [src.name] by [key_name(user)]",
+		"used the [src.name] to attack"
+	)
 
 	if(!user.cell || !user.cell.checked_use(1250)) //Slightly more than a baton.
 		user.visible_message("<span class='danger'>\The [user] has prodded \the [M] with its arm!</span>")
@@ -62,14 +64,14 @@
 	name = "\proper thermal vision"
 	sight_mode = BORGTHERM
 	icon_state = "thermal"
-	icon = 'icons/obj/clothing/glasses.dmi'
+	icon = 'icons/inv_slots/glasses/icon.dmi'
 
 
 /obj/item/borg/sight/meson
 	name = "\proper meson vision"
 	sight_mode = BORGMESON
 	icon_state = "meson"
-	icon = 'icons/obj/clothing/glasses.dmi'
+	icon = 'icons/inv_slots/glasses/icon.dmi'
 
 /obj/item/borg/sight/hud
 	name = "hud"
@@ -79,7 +81,7 @@
 /obj/item/borg/sight/hud/med
 	name = "medical hud"
 	icon_state = "healthhud"
-	icon = 'icons/obj/clothing/glasses.dmi'
+	icon = 'icons/inv_slots/glasses/icon.dmi'
 
 	New()
 		..()
@@ -90,7 +92,7 @@
 /obj/item/borg/sight/hud/sec
 	name = "security hud"
 	icon_state = "securityhud"
-	icon = 'icons/obj/clothing/glasses.dmi'
+	icon = 'icons/inv_slots/glasses/icon.dmi'
 
 	New()
 		..()

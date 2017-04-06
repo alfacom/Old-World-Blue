@@ -5,7 +5,7 @@
 	item_state = "brown"
 	permeability_coefficient = 0.05
 	item_flags = NOSLIP
-	origin_tech = "syndicate=3"
+	origin_tech = list(TECH_ILLEGAL = 3)
 	var/list/clothing_choices = list()
 	siemens_coefficient = 0.8
 	species_restricted = null
@@ -44,11 +44,6 @@
 	species_restricted = null
 	body_parts_covered = 0
 	wizard_garb = 1
-
-/obj/item/clothing/shoes/gazelle
-	name = "gazelle"
-	desc = "A pair of common space gazelle"
-	icon_state = "gazelle"
 
 //ZONE-tan Loadout
 /obj/item/clothing/shoes/zone
@@ -165,3 +160,10 @@
 	icon_state = "sandals-pink"
 	item_state = "sandals-pink"
 	species_restricted = null
+
+
+
+/obj/item/clothing/shoes/jackboots/combat/nikiton
+	name = "Army boots"
+	desc = "Army boots. They look threateningly."
+	icon_state = "swat"

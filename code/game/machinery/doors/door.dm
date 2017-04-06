@@ -65,6 +65,7 @@
 			bound_height = width * world.icon_size
 
 	health = maxhealth
+	update_icon()
 
 	update_nearby_tiles(need_rebuild=1)
 	return
@@ -271,6 +272,7 @@
 	//psa to whoever coded this, there are plenty of objects that need to call attack() on doors without bludgeoning them.
 	if(src.density && istype(I, /obj/item/weapon) && user.a_intent == I_HURT && !istype(I, /obj/item/weapon/card))
 		var/obj/item/weapon/W = I
+		user.setClickCooldown(DEFAULT_ATTACK_COOLDOWN)
 		if(W.damtype == BRUTE || W.damtype == BURN)
 			user.do_attack_animation(src)
 			if(W.force < min_force)
@@ -285,13 +287,6 @@
 
 	if(src.operating) return
 
-	if(src.density && (operable() && istype(I, /obj/item/weapon/card/emag)))
-		do_animate("spark")
-		sleep(6)
-		open()
-		operating = -1
-		return 1
-
 	if(src.allowed(user) && operable())
 		if(src.density)
 			open()
@@ -302,6 +297,14 @@
 	if(src.density)
 		do_animate("deny")
 	return
+
+/obj/machinery/door/emag_act(var/remaining_charges)
+	if(density && operable())
+		do_animate("spark")
+		sleep(6)
+		open()
+		operating = -1
+		return 1
 
 /obj/machinery/door/proc/take_damage(var/damage)
 	var/initialhealth = src.health
@@ -409,12 +412,12 @@
 	set_opacity(0)
 	sleep(3)
 	src.density = 0
+	update_nearby_tiles()
 	sleep(7)
 	src.layer = open_layer
 	explosion_resistance = 0
 	update_icon()
 	set_opacity(0)
-	update_nearby_tiles()
 	operating = 0
 
 	if(autoclose)
@@ -436,12 +439,12 @@
 	src.density = 1
 	explosion_resistance = initial(explosion_resistance)
 	src.layer = closed_layer
+	update_nearby_tiles()
 	sleep(7)
 	update_icon()
 	if(visible && !glass)
 		set_opacity(1)	//caaaaarn!
 	operating = 0
-	update_nearby_tiles()
 
 	//I shall not add a check every x ticks if a door has closed over some fire.
 	var/obj/fire/fire = locate() in loc

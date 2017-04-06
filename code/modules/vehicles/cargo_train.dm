@@ -75,8 +75,7 @@
 /obj/vehicle/train/cargo/engine/attackby(obj/item/weapon/W as obj, mob/user as mob)
 	if(istype(W, /obj/item/weapon/key/cargo_train))
 		if(!key)
-			user.drop_item()
-			W.forceMove(src)
+			user.drop_from_inventory(W, src)
 			key = W
 			verbs += /obj/vehicle/train/cargo/engine/verb/remove_key
 		return
@@ -165,11 +164,11 @@
 	if(is_train_head() && ishuman(load))
 		var/mob/living/carbon/human/D = load
 		D << "\red \b You ran over [H]!"
-		visible_message("<B>\red \The [src] ran over [H]!</B>")
-		attack_log += text("\[[time_stamp()]\] <font color='red'>ran over [H.name] ([H.ckey]), driven by [D.name] ([D.ckey])</font>")
-		msg_admin_attack("[D.name] ([D.ckey]) ran over [H.name] ([H.ckey]). (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>)")
+		visible_message(SPAN_DANG("\The [src] ran over [H]!"))
+		attack_log += text("\[[time_stamp()]\] <font color='red'>ran over [key_name(H)], driven by [key_name(D)]</font>")
+		self_attack_log(D, "ran over [key_name(H)].", 1)
 	else
-		attack_log += text("\[[time_stamp()]\] <font color='red'>ran over [H.name] ([H.ckey])</font>")
+		attack_log += text("\[[time_stamp()]\] <font color='red'>ran over [key_name(H)]</font>")
 
 
 //-------------------------------------------
@@ -192,7 +191,7 @@
 	.=..()
 	if(.<=3)
 		user << "The power light is [on ? "on" : "off"].\nThere are[key ? "" : " no"] keys in the ignition."
-		user << "The charge meter reads [cell? round(cell.percent(), 0.01) : 0]%"
+		user << "The charge meter reads [cell? cell.percent() : 0]%"
 
 /obj/vehicle/train/cargo/engine/verb/start_engine()
 	set name = "Start engine"
@@ -245,9 +244,7 @@
 	if(on)
 		turn_off()
 
-	key.loc = usr.loc
-	if(!usr.get_active_hand())
-		usr.put_in_hands(key)
+	usr.put_in_hands(key)
 	key = null
 
 	verbs -= /obj/vehicle/train/cargo/engine/verb/remove_key
@@ -357,8 +354,8 @@
 	if(!is_train_head() || !on)
 		move_delay = initial(move_delay)		//so that engines that have been turned off don't lag behind
 	else
-		move_delay = max(0, (-car_limit * active_engines) + train_length - active_engines)	//limits base overweight so you cant overspeed trains
-		move_delay *= (1 / max(1, active_engines)) * 2 										//overweight penalty (scaled by the number of engines)
+		move_delay = max(1, (-car_limit * active_engines) + train_length - active_engines)	//limits base overweight so you cant overspeed trains
+		move_delay *= (2 / max(1, active_engines))											//overweight penalty (scaled by the number of engines)
 		move_delay += config.run_speed 														//base reference speed
 		move_delay *= 1.1																	//makes cargo trains 10% slower than running when not overweight
 

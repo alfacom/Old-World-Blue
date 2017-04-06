@@ -1,15 +1,25 @@
 /obj/item/weapon/storage/belt
 	name = "belt"
 	desc = "Can hold various things."
-	icon = 'icons/obj/clothing/belts.dmi'
-	icon_state = "utilitybelt"
-	item_state = "utility"
-	storage_slots = 7
+	icon = 'icons/inv_slots/belts/icon.dmi'
+	icon_state = "utility"
+	storage_slots = 0
 	max_storage_space = 28 //This should ensure belts always have enough room to store whatever.
 	max_w_class = 3
 	slot_flags = SLOT_BELT
 	attack_verb = list("whipped", "lashed", "disciplined")
 
+	var/show_above_suit = 0
+
+/obj/item/weapon/storage/belt/verb/toggle_layer()
+	set name = "Switch Belt Layer"
+	set category = "Object"
+
+	if(show_above_suit == -1)
+		usr << "<span class='notice'>\The [src] cannot be worn above your suit!</span>"
+		return
+	show_above_suit = !show_above_suit
+	update_icon()
 
 /obj/item/weapon/storage/update_icon()
 	if (ismob(src.loc))
@@ -20,8 +30,7 @@
 /obj/item/weapon/storage/belt/utility
 	name = "tool-belt" //Carn: utility belt is nicer, but it bamboozles the text parsing.
 	desc = "Can hold various tools."
-	icon_state = "utilitybelt"
-	item_state = "utility"
+	icon_state = "utility"
 	can_hold = list(
 		///obj/item/weapon/combitool,
 		/obj/item/weapon/crowbar,
@@ -72,8 +81,7 @@
 /obj/item/weapon/storage/belt/medical
 	name = "medical belt"
 	desc = "Can hold various medical equipment."
-	icon_state = "medicalbelt"
-	item_state = "medical"
+	icon_state = "medical"
 	can_hold = list(
 		/obj/item/device/healthanalyzer,
 		/obj/item/weapon/dnainjector,
@@ -103,13 +111,11 @@
 	name = "EMT utility belt"
 	desc = "A sturdy black webbing belt with attached pouches."
 	icon_state = "emsbelt"
-	item_state = "emsbelt"
 
 /obj/item/weapon/storage/belt/security
 	name = "security belt"
 	desc = "Can hold security gear like handcuffs and flashes."
-	icon_state = "securitybelt"
-	item_state = "security"
+	icon_state = "security"
 	max_w_class = 3
 	can_hold = list(
 		/obj/item/weapon/grenade,
@@ -132,14 +138,13 @@
 		/obj/item/weapon/melee,
 		/obj/item/clothing/accessory/badge,
 		/obj/item/weapon/gun/projectile/sec,
-		/obj/item/taperoll/police
+		/obj/item/taperoll
 		)
 
 /obj/item/weapon/storage/belt/detective
 	name = "forensic utility belt"
 	desc = "A belt for holding forensics equipment."
-	icon_state = "securitybelt"
-	item_state = "security"
+	icon_state = "security"
 	storage_slots = 7
 	max_w_class = 3
 	can_hold = list(
@@ -166,7 +171,7 @@
 		/obj/item/device/megaphone,
 		/obj/item/device/radio/headset,
 		/obj/item/clothing/gloves,
-		/obj/item/taperoll/police,
+		/obj/item/taperoll,
 		/obj/item/weapon/reagent_containers/spray/pepper,
 		/obj/item/weapon/handcuffs,
 		/obj/item/device/flash,
@@ -179,8 +184,7 @@
 /obj/item/weapon/storage/belt/soulstone
 	name = "soul stone belt"
 	desc = "Designed for ease of access to the shards during a fight, as to not let a single enemy spirit slip away"
-	icon_state = "soulstonebelt"
-	item_state = "soulstonebelt"
+	icon_state = "soulstone"
 	storage_slots = 6
 	can_hold = list(
 		/obj/item/device/soulstone
@@ -199,18 +203,16 @@
 /obj/item/weapon/storage/belt/champion
 	name = "championship belt"
 	desc = "Proves to the world that you are the strongest!"
-	icon_state = "championbelt"
-	item_state = "champion"
+	icon_state = "champion"
 	storage_slots = 1
 	can_hold = list(
-		"/obj/item/clothing/mask/luchador"
+		/obj/item/clothing/mask/luchador
 		)
 
 /obj/item/weapon/storage/belt/security/tactical
 	name = "combat belt"
 	desc = "Can hold security gear like handcuffs and flashes, with more pouches for more storage."
 	icon_state = "swatbelt"
-	item_state = "swatbelt"
 	storage_slots = 9
 	max_w_class = 3
 	max_storage_space = 28
@@ -219,7 +221,6 @@
 	name = "batbelt"
 	desc = "For all your crime-fighting bat needs."
 	icon_state = "bmbelt"
-	item_state = "bmbelt"
 	storage_slots = 7
 	max_w_class = 3
 	max_storage_space = 28
@@ -243,29 +244,47 @@
 		/obj/item/device/megaphone,
 		/obj/item/weapon/melee,
 		/obj/item/weapon/gun/projectile/sec,
-		/obj/item/taperoll/police
+		/obj/item/taperoll
 		)
 
 /obj/item/weapon/storage/belt/fannypack
 	name = "fannypack"
 	desc = "A dorky fannypack for keeping small items in."
 	icon_state = "fannypack_leather"
-	item_state = "fannypack_leather"
 	storage_slots = 3
 	max_w_class = 2
 
 /obj/item/weapon/storage/belt/fannypack/black
 	name = "black fannypack"
 	icon_state = "fannypack_black"
-	item_state = "fannypack_black"
 
 /obj/item/weapon/storage/belt/fannypack/red
 	name = "red fannypack"
 	icon_state = "fannypack_red"
-	item_state = "fannypack_red"
-
 
 /obj/item/weapon/storage/belt/fannypack/white
 	name = "white fannypack"
 	icon_state = "fannypack_white"
-	item_state = "fannypack_white"
+
+/obj/item/weapon/storage/belt/janitor
+	name = "janitorial belt"
+	desc = "A belt used to hold most janitorial supplies."
+	icon_state = "janibelt"
+	storage_slots = 7
+	max_w_class = 3
+	can_hold = list(
+		/obj/item/clothing/glasses,
+		/obj/item/device/flashlight,
+		/obj/item/weapon/grenade,
+		/obj/item/device/pda,
+		/obj/item/device/radio/headset,
+		/obj/item/clothing/gloves,
+		/obj/item/clothing/mask/surgical, //sterile mask,
+		/obj/item/device/assembly/mousetrap,
+		/obj/item/weapon/light/bulb,
+		/obj/item/weapon/light/tube,
+		/obj/item/weapon/flame/lighter,
+		/obj/item/device/megaphone,
+		/obj/item/weapon/reagent_containers/spray,
+		/obj/item/weapon/soap
+		)

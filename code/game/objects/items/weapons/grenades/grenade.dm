@@ -11,8 +11,10 @@
 	slot_flags = SLOT_BELT
 	var/active = 0
 	var/det_time = 50
-
 /obj/item/weapon/grenade/proc/clown_check(var/mob/living/user)
+	return 1 // Allows to use grenades at all
+	//TODO: DNA3 clown_block
+/*
 	if((CLUMSY in user.mutations) && prob(50))
 		user << "<span class='warning'>Huh? How does this thing work?</span>"
 
@@ -21,8 +23,8 @@
 		spawn(5)
 			prime()
 		return 0
-	return 1
 
+*/
 
 /*/obj/item/weapon/grenade/afterattack(atom/target as mob|obj|turf|area, mob/user as mob)
 	if (istype(target, /obj/item/weapon/storage)) return ..() // Trying to put it in a full container
@@ -71,7 +73,7 @@
 		return
 
 	if(user)
-		msg_admin_attack("[user.name] ([user.ckey]) primed \a [src] (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[user.x];Y=[user.y];Z=[user.z]'>JMP</a>)")
+		self_attack_log(user, "primed \a [src]", 1)
 
 	icon_state = initial(icon_state) + "_active"
 	active = 1

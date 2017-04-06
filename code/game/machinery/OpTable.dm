@@ -46,11 +46,14 @@
 		qdel(src)
 
 /obj/machinery/optable/attack_hand(mob/user as mob)
+	//TODO: DNA3 hulk
+	/*
 	if (HULK in usr.mutations)
 		usr << text("\blue You destroy the table.")
 		visible_message("\red [usr] destroys the operating table!")
 		src.density = 0
 		qdel(src)
+	*/
 	return
 
 /obj/machinery/optable/CanPass(atom/movable/mover, turf/target, height=0, air_group=0)
@@ -64,9 +67,9 @@
 
 /obj/machinery/optable/MouseDrop_T(obj/O as obj, mob/user as mob)
 
-	if ((!( istype(O, /obj/item/weapon) ) || user.get_active_hand() != O))
+	if (!istype(O, /obj/item/weapon) || (user.get_active_hand() != O))
 		return
-	user.drop_item()
+	user.unEquip(O)
 	if (O.loc != src.loc)
 		step(O, get_dir(O, src))
 	return

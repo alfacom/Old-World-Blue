@@ -74,15 +74,8 @@
 
 /obj/machinery/floodlight/attack_hand(mob/user as mob)
 	if(open && cell)
-		if(ishuman(user))
-			if(!user.get_active_hand())
-				user.put_in_hands(cell)
-				cell.loc = user.loc
-		else
-			cell.loc = loc
-
+		user.put_in_hands(cell)
 		cell.add_fingerprint(user)
-		cell.update_icon()
 
 		src.cell = null
 		user << "You remove the power cell"
@@ -124,8 +117,7 @@
 			if(cell)
 				user << "There is a power cell already installed."
 			else
-				user.drop_item()
-				W.loc = src
+				user.drop_from_inventory(W, src)
 				cell = W
 				user << "You insert the power cell."
 	update_icon()

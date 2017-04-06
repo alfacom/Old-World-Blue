@@ -23,8 +23,20 @@
 
 	src.gender = gender
 	reset_hair()
+	fix_body_build()
+	force_update_limbs()
 	update_body()
 	update_dna()
+	return 1
+
+/mob/living/carbon/human/proc/change_body_build(var/prefered = "Default")
+	body_build = species.get_body_build(gender, prefered)
+	fix_body_build()
+	force_update_limbs()
+	update_body()
+	regenerate_icons()
+	update_dna()
+
 	return 1
 
 /mob/living/carbon/human/proc/change_hair(var/hair_style)
@@ -58,20 +70,8 @@
 	return 1
 
 /mob/living/carbon/human/proc/reset_hair()
-	var/list/valid_hairstyles = generate_valid_hairstyles()
-	var/list/valid_facial_hairstyles = generate_valid_facial_hairstyles()
-
-	if(valid_hairstyles.len)
-		h_style = pick(valid_hairstyles)
-	else
-		//this shouldn't happen
-		h_style = "Bald"
-
-	if(valid_facial_hairstyles.len)
-		f_style = pick(valid_facial_hairstyles)
-	else
-		//this shouldn't happen
-		f_style = "Shaved"
+	h_style = pick(get_hair_styles_list(species.get_bodytype(), gender))
+	f_style = pick(get_facial_styles_list(species.get_bodytype(), gender))
 
 	update_hair()
 
@@ -137,55 +137,21 @@
 
 /mob/living/carbon/human/proc/generate_valid_species(var/check_whitelist = 1, var/list/whitelist = list(), var/list/blacklist = list())
 	var/list/valid_species = new()
-	for(var/current_species_name in all_species)
-		var/datum/species/current_species = all_species[current_species_name]
+	var/possible_species = (whitelist && whitelist.len) ? whitelist : all_species - blacklist
 
-		if(check_whitelist && config.usealienwhitelist && !check_rights(R_ADMIN, 0, src)) //If we're using the whitelist, make sure to check it!
+	for(var/current_species_name in possible_species)
+		var/datum/species/current_species = all_species[current_species_name]
+		if(!check_rights(R_ADMIN, 0, src)) //If we're using the whitelist, make sure to check it!
 			if(!(current_species.flags & CAN_JOIN))
 				continue
-			if(whitelist.len && !(current_species_name in whitelist))
-				continue
-			if(blacklist.len && (current_species_name in blacklist))
-				continue
-			if((current_species.flags & IS_WHITELISTED) && !is_alien_whitelisted(src, current_species_name))
+			if(check_whitelist && config.usealienwhitelist && (current_species.flags & IS_WHITELISTED) && !is_alien_whitelisted(src, current_species_name))
 				continue
 
 		valid_species += current_species_name
 
 	return valid_species
 
-/mob/living/carbon/human/proc/generate_valid_hairstyles(var/check_gender = 1)
-	var/list/valid_hairstyles = new()
-	for(var/hairstyle in hair_styles_list)
-		var/datum/sprite_accessory/S = hair_styles_list[hairstyle]
-
-		if(check_gender && gender == MALE && S.gender == FEMALE)
-			continue
-		if(check_gender && gender == FEMALE && S.gender == MALE)
-			continue
-		if(!(species.get_bodytype() in S.species_allowed))
-			continue
-		valid_hairstyles += hairstyle
-
-	return valid_hairstyles
-
-/mob/living/carbon/human/proc/generate_valid_facial_hairstyles()
-	var/list/valid_facial_hairstyles = new()
-	for(var/facialhairstyle in facial_hair_styles_list)
-		var/datum/sprite_accessory/S = facial_hair_styles_list[facialhairstyle]
-
-		if(gender == MALE && S.gender == FEMALE)
-			continue
-		if(gender == FEMALE && S.gender == MALE)
-			continue
-		if(!(species.get_bodytype() in S.species_allowed))
-			continue
-
-		valid_facial_hairstyles += facialhairstyle
-
-	return valid_facial_hairstyles
-
 /mob/living/carbon/human/proc/force_update_limbs()
 	for(var/obj/item/organ/external/O in organs)
-		O.sync_colour_to_human(src)
+		O.sync_to_owner()
 	update_body(0)

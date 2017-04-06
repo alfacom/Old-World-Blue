@@ -1,8 +1,13 @@
 //This file was auto-corrected by findeclaration.exe on 25.5.2012 20:42:32
 
-//NOTE: Breathing happens once per FOUR TICKS, unless the last breath fails. In which case it happens once per ONE TICK! So oxyloss healing is done once per 4 ticks while oxyloss damage is applied once per tick!
-#define HUMAN_MAX_OXYLOSS 1 //Defines how much oxyloss humans can get per tick. A tile with no air at all (such as space) applies this value, otherwise it's a percentage of it.
-#define HUMAN_CRIT_MAX_OXYLOSS ( 2.0 / 6) //The amount of damage you'll get when in critical condition. We want this to be a 5 minute deal = 300s. There are 50HP to get through, so (1/6)*last_tick_duration per second. Breaths however only happen every 4 ticks. last_tick_duration = ~2.0 on average
+//NOTE: Breathing happens once per FOUR TICKS, unless the last breath fails.
+// In which case it happens once per ONE TICK! So oxyloss healing is done once per 4 ticks while oxyloss damage is applied once per tick!
+
+//Defines how much oxyloss humans can get per tick. A tile with no air at all (such as space) applies this value, otherwise it's a percentage of it.
+#define HUMAN_MAX_OXYLOSS 1
+//The amount of damage you'll get when in critical condition. We want this to be a 5 minute deal = 300s.
+// There are 50HP to get through, so (1/6)*last_tick_duration per second. Breaths however only happen every 4 ticks. last_tick_duration = ~2.0 on average
+#define HUMAN_CRIT_MAX_OXYLOSS ( 2.0 / 6)
 
 #define HEAT_DAMAGE_LEVEL_1 2 //Amount of damage applied when your body temperature just passes the 360.15k safety point
 #define HEAT_DAMAGE_LEVEL_2 4 //Amount of damage applied when your body temperature passes the 400K point
@@ -97,6 +102,8 @@
 	return 1
 
 /mob/living/carbon/human/breathe()
+	if(!should_have_organ(O_LUNGS))
+		return
 	if(!in_stasis)
 		..()
 
@@ -164,7 +171,8 @@
 			make_jittery(1000)
 	if (disabilities & COUGHING)
 		if ((prob(5) && paralysis <= 1))
-			drop_item()
+			drop_active_hand()
+			drop_inactive_hand()
 			spawn( 0 )
 				emote("cough")
 				return
@@ -194,7 +202,7 @@
 	if(getBrainLoss() >= 35)
 		if(7 <= rn && rn <= 9) if(get_active_hand())
 			src << "<span class='danger'>Your hand won't respond properly, you drop what you're holding!</span>"
-			drop_item()
+			drop_active_hand()
 	if(getBrainLoss() >= 45)
 		if(10 <= rn && rn <= 12)
 			if(prob(50))
@@ -211,16 +219,10 @@
 		return
 
 	if(getFireLoss())
-		if((COLD_RESISTANCE in mutations) || (prob(1)))
+		if(prob(1))
 			heal_organ_damage(0,1)
 
-	// DNA2 - Gene processing.
-	// The HULK stuff that was here is now in the hulk gene.
-	for(var/datum/dna/gene/gene in dna_genes)
-		if(!gene.block)
-			continue
-		if(gene.is_active(src))
-			gene.OnMobLife(src)
+	//TODO: DNA3 on_mob_life()
 
 	radiation = Clamp(radiation,0,100)
 
@@ -349,7 +351,7 @@
 	var/safe_pressure_min = species.breath_pressure // Minimum safe partial pressure of breathable gas in kPa
 
 	// Lung damage increases the minimum safe pressure.
-	if(species.has_organ[O_LUNGS])
+	if(should_have_organ(O_LUNGS))
 		var/obj/item/organ/internal/lungs/L = internal_organs_by_name[O_LUNGS]
 		if(isnull(L))
 			safe_pressure_min = INFINITY //No lungs, how are you breathing?
@@ -492,7 +494,7 @@
 
 
 	// Hot air hurts :(
-	if((breath.temperature < species.cold_level_1 || breath.temperature > species.heat_level_1) && !(COLD_RESISTANCE in mutations))
+	if(breath.temperature < species.cold_level_1 || breath.temperature > species.heat_level_1)
 
 		if(breath.temperature <= species.cold_level_1)
 			if(prob(20))
@@ -581,7 +583,8 @@
 		else
 			loc_temp = environment.temperature
 
-		if(adjusted_pressure < species.warning_high_pressure && adjusted_pressure > species.warning_low_pressure && abs(loc_temp - bodytemperature) < 20 && bodytemperature < species.heat_level_1 && bodytemperature > species.cold_level_1)
+		if(adjusted_pressure < species.warning_high_pressure && adjusted_pressure > species.warning_low_pressure &&\
+				abs(loc_temp - bodytemperature) < 20 && bodytemperature < species.heat_level_1 && bodytemperature > species.cold_level_1)
 			pressure_alert = 0
 			return // Temperatures are within normal ranges, fuck all this processing. ~Ccomp
 
@@ -647,13 +650,10 @@
 	else if(adjusted_pressure >= species.hazard_low_pressure)
 		pressure_alert = -1
 	else
-		if( !(COLD_RESISTANCE in mutations))
-			take_overall_damage(brute=LOW_PRESSURE_DAMAGE, used_weapon = "Low Pressure")
-			if(getOxyLoss() < 55) // 11 OxyLoss per 4 ticks when wearing internals;    unconsciousness in 16 ticks, roughly half a minute
-				adjustOxyLoss(4)  // 16 OxyLoss per 4 ticks when no internals present; unconsciousness in 13 ticks, roughly twenty seconds
-			pressure_alert = -2
-		else
-			pressure_alert = -1
+		take_overall_damage(brute=LOW_PRESSURE_DAMAGE, used_weapon = "Low Pressure")
+		if(getOxyLoss() < 55) // 11 OxyLoss per 4 ticks when wearing internals;    unconsciousness in 16 ticks, roughly half a minute
+			adjustOxyLoss(4)  // 16 OxyLoss per 4 ticks when no internals present; unconsciousness in 13 ticks, roughly twenty seconds
+		pressure_alert = -2
 
 	return
 
@@ -734,10 +734,10 @@
 	return get_thermal_protection(thermal_protection_flags)
 
 /mob/living/carbon/human/get_cold_protection(temperature)
-	if(COLD_RESISTANCE in mutations)
-		return 1 //Fully protected from the cold.
-
-	temperature = max(temperature, 2.7) //There is an occasional bug where the temperature is miscalculated in ares with a small amount of gas on them, so this is necessary to ensure that that bug does not affect this calculation. Space's temperature is 2.7K and most suits that are intended to protect against any cold, protect down to 2.0K.
+	//There is an occasional bug where the temperature is miscalculated in ares with a small amount of gas on them,
+	// so this is necessary to ensure that that bug does not affect this calculation.
+	// Space's temperature is 2.7K and most suits that are intended to protect against any cold, protect down to 2.0K.
+	temperature = max(temperature, 2.7)
 	var/thermal_protection_flags = get_cold_protection_flags(temperature)
 	return get_thermal_protection(thermal_protection_flags)
 
@@ -794,7 +794,7 @@
 
 	if(status_flags & GODMODE)	return 0	//godmode
 
-	var/obj/item/organ/internal/node/light_organ = locate() in internal_organs //LETHALGHOST: Check this.
+	var/obj/item/organ/internal/node/light_organ = locate() in internal_organs
 
 	if(!isSynthetic())
 		if(light_organ && !light_organ.is_broken())
@@ -877,7 +877,7 @@
 	else				//ALIVE. LIGHTS ARE ON
 		updatehealth()	//TODO
 
-		if(health <= config.health_threshold_dead || (species.has_organ[O_BRAIN] && !has_brain()))
+		if(health <= config.health_threshold_dead || (should_have_organ(O_BRAIN) && !has_brain()))
 			death()
 			blinded = 1
 			silent = 0
@@ -1054,7 +1054,7 @@
 		if(copytext(hud.icon_state,1,4) == "hud") //ugly, but icon comparison is worse, I believe
 			client.images.Remove(hud)
 
-	client.screen.Remove(global_hud.blurry, global_hud.druggy, global_hud.vimpaired, global_hud.darkMask, global_hud.nvg, global_hud.thermal, global_hud.meson, global_hud.science, global_hud.horny) //add aphrodisiac
+	client.screen.Remove(global_hud.blurry, global_hud.druggy, global_hud.vimpaired, global_hud.darkMask, global_hud.nvg, global_hud.thermal, global_hud.meson, global_hud.science, global_hud.horny)
 
 	update_action_buttons()
 
@@ -1132,7 +1132,16 @@
 		sight |= SEE_TURFS|SEE_MOBS|SEE_OBJS|SEE_SELF
 		see_in_dark = 8
 		if(!druggy)		see_invisible = SEE_INVISIBLE_LEVEL_TWO
-		if(healths)		healths.icon_state = "health7"	//DEAD healthmeter
+		if(healths)
+			var/list/health_images = list()
+			for(var/obj/item/organ/external/E in organs)
+				health_images += E.get_damage_hud_image("dead")
+			health_images += image('icons/mob/screen1_health.dmi',"dead")
+
+			healths.icon_state = "blank"
+			healths.overlays.Cut()
+			healths.overlays += health_images
+
 		if(client)
 			if(client.view != world.view) // If mob dies while zoomed in with device, unzoom them.
 				for(var/obj/item/item in contents)
@@ -1144,11 +1153,6 @@
 		sight = species.vision_flags
 		see_in_dark = species.darksight
 		see_invisible = see_in_dark>2 ? SEE_INVISIBLE_LEVEL_ONE : SEE_INVISIBLE_LIVING
-
-		if(XRAY in mutations)
-			sight |= SEE_TURFS|SEE_MOBS|SEE_OBJS
-			see_in_dark = 8
-			if(!druggy)		see_invisible = SEE_INVISIBLE_LEVEL_TWO
 
 		if(seer)
 			var/obj/effect/rune/R = locate() in loc
@@ -1170,22 +1174,44 @@
 			process_glasses(equipped_glasses)
 
 		if(healths)
+			// Generate a by-limb health display.
+			healths.icon_state = "blank"
+			healths.overlays.Cut()
+
+			var/list/health_images = list()
+			var/forced_state = null
 			if (analgesic > 100)
-				healths.icon_state = "health_numb"
+				for(var/obj/item/organ/external/E in organs)
+					health_images += E.get_damage_hud_image("numb")
+					health_images += image('icons/mob/screen1_health.dmi',"numb")
 			else
-				switch(hal_screwyhud)
-					if(1)	healths.icon_state = "health6"
-					if(2)	healths.icon_state = "health7"
-					else
-						//switch(health - halloss)
-						switch(100 - ((species && species.flags & NO_PAIN & !IS_SYNTHETIC) ? 0 : traumatic_shock))
-							if(100 to INFINITY)		healths.icon_state = "health0"
-							if(80 to 100)			healths.icon_state = "health1"
-							if(60 to 80)			healths.icon_state = "health2"
-							if(40 to 60)			healths.icon_state = "health3"
-							if(20 to 40)			healths.icon_state = "health4"
-							if(0 to 20)				healths.icon_state = "health5"
-							else					healths.icon_state = "health6"
+				var/no_damage = 1
+				var/trauma_val = 0 // Used in calculating softcrit/hardcrit indicators.
+				if(!(species.flags & NO_PAIN))
+					trauma_val = max(traumatic_shock,halloss)/species.total_health
+				forced_state = trauma_val*0.3
+
+				// Collect and apply the images all at once to avoid appearance churn.
+				for(var/obj/item/organ/external/E in organs)
+					if(no_damage && (E.brute_dam || E.burn_dam))
+						no_damage = 0
+					health_images += E.get_damage_hud_image(forced_state)
+
+				// Apply a fire overlay if we're burning.
+				if(on_fire)
+					health_images += image('icons/mob/screen1_health.dmi',"burning")
+
+				// Show a general pain/crit indicator if needed.
+				if(trauma_val)
+					if(!(species.flags & NO_PAIN))
+						if(trauma_val > 0.7)
+							health_images += image('icons/mob/screen1_health.dmi',"softcrit")
+						if(trauma_val >= 1)
+							health_images += image('icons/mob/screen1_health.dmi',"hardcrit")
+				else if(no_damage)
+					health_images += image('icons/mob/screen1_health.dmi',"fullhealth")
+
+			healths.overlays += health_images
 
 		if(nutrition_icon)
 			switch(nutrition)
@@ -1300,7 +1326,8 @@
 				src.sight |= SEE_TURFS|SEE_MOBS|SEE_OBJS
 		else
 			var/isRemoteObserve = 0
-			if((mRemote in mutations) && remoteview_target)
+			//TODO: DNA3 remote_view
+			if(remoteview_target)
 				if(remoteview_target.stat==CONSCIOUS)
 					isRemoteObserve = 1
 			if(!isRemoteObserve && client && !client.adminobs)
@@ -1309,7 +1336,7 @@
 	return 1
 
 /mob/living/carbon/human/proc/process_glasses(var/obj/item/clothing/glasses/G)
-	if(G && G.active)
+	if(istype(G) && G.active)
 		see_in_dark += G.darkness_view
 		if(G.overlay)
 			client.screen |= G.overlay
@@ -1387,7 +1414,7 @@
 		src << "<span class='danger'>[pick("It hurts so much", "You really need some painkillers", "Dear god, the pain")]!</span>"
 
 	if(shock_stage >= 30)
-		if(shock_stage == 30) emote("me",1,"is having trouble keeping their eyes open.")
+		if(shock_stage == 30) custom_emote(1,"is having trouble keeping their eyes open.")
 		eye_blurry = max(2, eye_blurry)
 		stuttering = max(stuttering, 5)
 
@@ -1395,7 +1422,7 @@
 		src << "<span class='danger'>[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!</span>"
 
 	if (shock_stage >= 60)
-		if(shock_stage == 60) emote("me",1,"'s body becomes limp.")
+		if(shock_stage == 60) custom_emote(1,"'s body becomes limp.")
 		if (prob(2))
 			src << "<span class='danger'>[pick("The pain is excruciating", "Please, just end the pain", "Your whole body is going numb")]!</span>"
 			Weaken(20)
@@ -1411,7 +1438,7 @@
 			Paralyse(5)
 
 	if(shock_stage == 150)
-		emote("me",1,"can no longer stand, collapsing!")
+		custom_emote(1,"can no longer stand, collapsing!")
 		Weaken(20)
 
 	if(shock_stage >= 150)
@@ -1497,9 +1524,6 @@
 
 	if (BITTEST(hud_updateflag, STATUS_HUD))
 		var/foundVirus = 0
-		for(var/datum/disease/D in viruses)
-			if(!D.hidden[SCANNER])
-				foundVirus++
 		for (var/ID in virus2)
 			if (ID in virusDB)
 				foundVirus = 1

@@ -78,6 +78,9 @@
 		if (src.occupant)
 			user << "\blue <B>The scanner is already occupied!</B>"
 			return
+		if(G.affecting.buckled)
+			user << "\blue <B>Unbuckle the subject before attempting to move them.</B>"
+			return
 		if (G.affecting.abiotic())
 			user << "\blue <B>Subject cannot have abiotic items on.</B>"
 			return
@@ -97,6 +100,35 @@
 		qdel(G)
 		return
 	else ..()
+
+
+/obj/machinery/bodyscanner/MouseDrop_T(var/mob/target, var/mob/user)
+	if(!ismob(target))
+		return
+	if (src.occupant)
+		user << "\blue <B>The scanner is already occupied!</B>"
+		return
+	if (target.abiotic())
+		user << "\blue <B>Subject cannot have abiotic items on.</B>"
+		return
+	if (target.buckled)
+		user << "\blue <B>Unbuckle the subject before attempting to move them.</B>"
+		return
+	user.visible_message("<span class='notice'>\The [user] begins placing \the [target] into \the [src].</span>", "<span class='notice'>You start placing \the [target] into \the [src].</span>")
+	if(!do_after(user, 30, src))
+		return
+	var/mob/M = target
+	if (M.client)
+		M.client.perspective = EYE_PERSPECTIVE
+		M.client.eye = src
+	M.loc = src
+	src.occupant = M
+	update_use_power(2)
+	src.icon_state = "body_scanner_1"
+	for(var/obj/O in src)
+		O.loc = src.loc
+	src.add_fingerprint(user)
+	return
 
 /obj/machinery/bodyscanner/ex_act(severity)
 	switch(severity)
@@ -287,7 +319,6 @@
 		"blood_amount" = H.vessel.get_reagent_amount("blood"),
 		"percent" = round(H.vessel.get_reagent_amount("blood") / H.species.blood_volume*100),
 		"disabilities" = H.sdisabilities,
-		"tg_diseases_list" = H.viruses.Copy(),
 		"lung_ruptured" = H.is_lung_ruptured(),
 		"external_organs" = H.organs.Copy(),
 		"internal_organs" = H.internal_organs.Copy(),
@@ -332,10 +363,6 @@
 	dat += text("[]\tBicaridine: [] units<BR>", (occ["bicaridine_amount"] < 30 ? "<font color='black'>" : "<font color='red'>"), occ["bicaridine_amount"])
 	dat += text("[]\tDexalin: [] units<BR>", (occ["dexalin_amount"] < 30 ? "<font color='black'>" : "<font color='red'>"), occ["dexalin_amount"])
 
-	for(var/datum/disease/D in occ["tg_diseases_list"])
-		if(!D.hidden[SCANNER])
-			dat += text("<font color='red'><B>Warning: [D.form] Detected</B>\nName: [D.name].\nType: [D.spread].\nStage: [D.stage]/[D.max_stages].\nPossible Cure: [D.cure]</FONT><BR>")
-
 	dat += "<HR><table border='1'>"
 	dat += "<tr>"
 	dat += "<th>Organ</th>"
@@ -360,7 +387,7 @@
 		for(var/datum/wound/W in e.wounds) if(W.internal)
 			internal_bleeding = "<br>Internal bleeding"
 			break
-		if(istype(e, /obj/item/organ/external/chest) && occ["lung_ruptured"])
+		if(e.organ_tag == BP_CHEST && occ["lung_ruptured"])
 			lung_ruptured = "Lung ruptured:"
 		if(e.status & ORGAN_SPLINTED)
 			splint = "Splinted:"
@@ -368,8 +395,11 @@
 			bled = "Bleeding:"
 		if(e.status & ORGAN_BROKEN)
 			AN = "[e.broken_description]:"
-		if(e.status & ORGAN_ROBOT)
-			robot = "Prosthetic:"
+		switch(e.robotic)
+			if(ORGAN_ASSISTED)
+				robot = "Assisted:"
+			if(ORGAN_ROBOT)
+				robot = "Prosthetic:"
 		if(e.open)
 			open = "Open:"
 

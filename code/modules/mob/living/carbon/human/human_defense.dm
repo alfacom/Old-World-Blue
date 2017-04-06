@@ -14,10 +14,10 @@ emp_act
 	if(!has_organ(def_zone))
 		return PROJECTILE_FORCE_MISS //if they don't have the organ in question then the projectile just passes by.
 
-	var/obj/item/organ/external/organ = get_organ()
+	var/obj/item/organ/external/organ = get_organ(def_zone)
 
 	//Shields
-	if(check_shields(P.damage, "the [P.name]"))
+	if(check_shields(P.damage, P, null, "the [P.name]"))
 		P.on_hit(src, 2, def_zone)
 		return 2
 
@@ -70,14 +70,14 @@ emp_act
 				c_hand = r_hand
 
 			if(c_hand && (stun_amount || agony_amount > 10))
-				msg_admin_attack("[src.name] ([src.ckey]) was disarmed by a stun effect")
+				self_attack_log(src, "was disarmed by a stun effect", 0)
 
 				drop_from_inventory(c_hand)
-				if (affected.status & ORGAN_ROBOT)
-					emote("me", 1, "drops what they were holding, their [affected.name] malfunctioning!")
+				if (affected.robotic >= ORGAN_ROBOT)
+					custom_emote(1, "drops what they were holding, their [affected.name] malfunctioning!")
 				else
 					var/emote_scream = pick("screams in pain and ", "lets out a sharp cry and ", "cries out and ")
-					emote("me", 1, "[(species && species.flags & NO_PAIN) ? "" : emote_scream ]drops what they were holding in their [affected.name]!")
+					custom_emote(1, "[(species && species.flags & NO_PAIN) ? "" : emote_scream ]drops what they were holding in their [affected.name]!")
 
 	..(stun_amount, agony_amount, def_zone)
 
@@ -148,32 +148,9 @@ emp_act
 			return gear
 	return null
 
-/mob/living/carbon/human/proc/check_shields(var/damage = 0, var/attack_text = "the attack")
-	if(l_hand && istype(l_hand, /obj/item/weapon))//Current base is the prob(50-d/3)
-		var/obj/item/weapon/I = l_hand
-		if(I.IsShield() && (prob(50 - round(damage / 3))))
-			visible_message("\red <B>[src] blocks [attack_text] with the [l_hand.name]!</B>")
-			return 1
-	if(r_hand && istype(r_hand, /obj/item/weapon))
-		var/obj/item/weapon/I = r_hand
-		if(I.IsShield() && (prob(50 - round(damage / 3))))
-			visible_message("\red <B>[src] blocks [attack_text] with the [r_hand.name]!</B>")
-			return 1
-	if(wear_suit && istype(wear_suit, /obj/item/))
-		var/obj/item/I = wear_suit
-		if(I.IsShield() && (prob(35)))
-			visible_message("\red <B>The reactive teleport system flings [src] clear of [attack_text]!</B>")
-			var/list/turfs = new/list()
-			for(var/turf/T in orange(6))
-				if(istype(T,/turf/space)) continue
-				if(T.density) continue
-				if(T.x>world.maxx-6 || T.x<6)	continue
-				if(T.y>world.maxy-6 || T.y<6)	continue
-				turfs += T
-			if(!turfs.len) turfs += pick(/turf in orange(6))
-			var/turf/picked = pick(turfs)
-			if(!isturf(picked)) return
-			src.loc = picked
+/mob/living/carbon/human/proc/check_shields(var/damage = 0, var/atom/damage_source = null, var/mob/attacker = null, var/attack_text = "the attack")
+	for(var/obj/item/shield in list(l_hand, r_hand, wear_suit))
+		if(shield && shield.handle_shield(src, damage, damage_source, attacker, attack_text))
 			return 1
 	return 0
 
@@ -212,23 +189,10 @@ emp_act
 	if(user.a_intent == "disarm") effective_force = round(I.force/2)
 	var/hit_area = affecting.name
 
-	if((user != src) && check_shields(effective_force, "the [I.name]"))
+	if((user != src) && check_shields(effective_force, I, user, "the [I.name]"))
 		return 0
 
-	if(istype(I,/obj/item/weapon/card/emag))
-		if(!(affecting.status & ORGAN_ROBOT))
-			user << "\red That limb isn't robotic."
-			return
-		if(affecting.sabotaged)
-			user << "\red [src]'s [affecting.name] is already sabotaged!"
-		else
-			user << "\red You sneakily slide [I] into the dataport on [src]'s [affecting.name] and short out the safeties."
-			var/obj/item/weapon/card/emag/emag = I
-			emag.uses--
-			affecting.sabotaged = 1
-		return 1
-
-	if(I.attack_verb.len)
+	if(I.attack_verb)
 		visible_message("\red <B>[user] [pick(I.attack_verb)] [src] in the [hit_area] with [I.name]!</B>")
 	else
 		visible_message("\red <B>[user] attacked [src] in the [hit_area] with [I.name]!</B>")
@@ -341,7 +305,7 @@ emp_act
 
 		O.throwing = 0		//it hit, so stop moving
 
-		if ((O.thrower != src) && check_shields(throw_damage, "[O]"))
+		if ((O.thrower != src) && check_shields(throw_damage, O, thrower, "[O]"))
 			return
 
 		var/obj/item/organ/external/affecting = get_organ(zone)
@@ -357,10 +321,11 @@ emp_act
 			var/mob/M = O.thrower
 			var/client/assailant = M.client
 			if(assailant)
-				src.attack_log += text("\[[time_stamp()]\] <font color='orange'>Has been hit with a [O], thrown by [M.name] ([assailant.ckey])</font>")
-				M.attack_log += text("\[[time_stamp()]\] <font color='red'>Hit [src.name] ([src.ckey]) with a thrown [O]</font>")
-				if(!istype(src,/mob/living/simple_animal/mouse))
-					msg_admin_attack("[src.name] ([src.ckey]) was hit by a [O], thrown by [M.name] ([assailant.ckey]) (<A HREF='?_src_=holder;adminplayerobservecoodjump=1;X=[src.x];Y=[src.y];Z=[src.z]'>JMP</a>)")
+				admin_attack_log(M, src,
+					"Hit [key_name(src)] with a thrown [O]",
+					"Has been hit with a [O], thrown by [key_name(M)]",
+					"throw [O] to"
+				)
 
 		//thrown weapon embedded object code.
 		if(dtype == BRUTE && istype(O,/obj/item))

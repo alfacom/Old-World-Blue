@@ -33,10 +33,7 @@
 	name = "gun"
 	desc = "Its a gun. It's pretty terrible, though."
 	icon = 'icons/obj/gun.dmi'
-	item_icons = list(
-		slot_l_hand_str = 'icons/mob/items/lefthand_guns.dmi',
-		slot_r_hand_str = 'icons/mob/items/righthand_guns.dmi',
-		)
+	sprite_group = SPRITE_GUNS
 	icon_state = "detective"
 	item_state = "gun"
 	flags =  CONDUCT
@@ -47,7 +44,7 @@
 	throw_speed = 4
 	throw_range = 5
 	force = 5
-	origin_tech = "combat=1"
+	origin_tech = list(TECH_COMBAT = 1)
 	attack_verb = list("struck", "hit", "bashed")
 	zoomdevicename = "scope"
 
@@ -99,11 +96,17 @@
 	if(!user.IsAdvancedToolUser())
 		return 0
 
+
+	//TODO: DNA3 hulk
+	/*
 	var/mob/living/M = user
 
 	if(HULK in M.mutations)
 		M << "<span class='danger'>Your fingers are much too large for the trigger guard!</span>"
 		return 0
+	*/
+	//TODO: DNA3 clown_block
+	/*
 	if((CLUMSY in M.mutations) && prob(40)) //Clumsy handling
 		var/obj/P = consume_next_projectile()
 		if(P)
@@ -113,10 +116,11 @@
 					"<span class='danger'>[user] shoots \himself in the foot with \the [src]!</span>",
 					"<span class='danger'>You shoot yourself in the foot with \the [src]!</span>"
 					)
-				M.drop_item()
+				M.drop_from_inventory(src)
 		else
 			handle_click_empty(user)
 		return 0
+	*/
 	return 1
 
 /obj/item/weapon/gun/emp_act(severity)
@@ -159,6 +163,8 @@
 			user << "<span class='warning'>[src] is not ready to fire again!</span>"
 		return
 
+	self_attack_log(user, "shot [target] ([target.x],[target.y],[target.z]) with [src]", 1)
+
 	//unpack firemode data
 	var/datum/firemode/firemode = firemodes[sel_mode]
 	var/_burst = firemode.burst
@@ -167,7 +173,7 @@
 	var/_move_delay = firemode.move_delay
 
 	var/shoot_time = (_burst - 1)*_burst_delay
-	user.next_move = world.time + shoot_time  //no clicking on things while shooting
+	user.setClickCooldown(shoot_time) //no clicking on things while shooting
 	if(user.client) user.client.move_delay = world.time + shoot_time //no moving while shooting either
 	next_fire_time = world.time + shoot_time
 
@@ -200,7 +206,7 @@
 	update_held_icon()
 
 	//update timing
-	user.next_move = world.time + 4
+	user.setClickCooldown(DEFAULT_QUICK_COOLDOWN)
 	if(user.client) user.client.move_delay = world.time + _move_delay
 	next_fire_time = world.time + _fire_delay
 
